@@ -453,6 +453,7 @@ inline uint8_t GetBootUart() {
 #endif
 
 void HandleChar(int c);
+void LoadProgram();
 
 /* main program starts here */
 int main(void)
@@ -632,7 +633,202 @@ void HandleChar(int ch) {
 					address.word++;
 				}			
 			}
-			else {					        //Write to FLASH one page at a time
+			else {
+                            LoadProgram();
+			}
+			putch(0x14);
+			putch(0x10);
+		} else {
+			if (++error_count == MAX_ERROR_COUNT)
+				app_start();
+		}		
+	}
+
+
+	/* Read memory block mode, length is big endian.  */
+	else if(ch=='t') {
+		length.byte[1] = getch();
+		length.byte[0] = getch();
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+		if (address.word>0x7FFF) flags.rampz = 1;		// No go with m256, FIXME
+		else flags.rampz = 0;
+#endif
+		address.word = address.word << 1;	        // address * 2 -> byte location
+		if (getch() == 'E') flags.eeprom = 1;
+		else flags.eeprom = 0;
+		if (getch() == ' ') {		                // Command terminator
+			putch(0x14);
+			for (w=0;w < length.word;w++) {		        // Can handle odd and even lengths okay
+				if (flags.eeprom) {	                        // Byte access EEPROM read
+#if defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
+					while(EECR & (1<<EEPE));
+					EEAR = (uint16_t)(void *)address.word;
+					EECR |= (1<<EERE);
+					putch(EEDR);
+#else
+					putch(eeprom_read_byte((void *)address.word));
+#endif
+					address.word++;
+				}
+				else {
+
+					if (!flags.rampz) putch(pgm_read_byte_near(address.word));
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+					else putch(pgm_read_byte_far(address.word + 0x10000));
+					// Hmmmm, yuck  FIXME when m256 arrvies
+#endif
+					address.word++;
+				}
+			}
+			putch(0x10);
+		}
+	}
+
+
+	/* Get device signature bytes  */
+	else if(ch=='u') {
+		if (getch() == ' ') {
+			putch(0x14);
+			putch(SIG1);
+			putch(SIG2);
+			putch(SIG3);
+			putch(0x10);
+		} else {
+			if (++error_count == MAX_ERROR_COUNT)
+				app_start();
+		}
+	}
+
+
+	/* Read oscillator calibration byte */
+	else if(ch=='v') {
+		byte_response(0x00);
+	}
+
+
+#if defined MONITOR 
+
+	/* here come the extended monitor commands by Erik Lins */
+
+	/* check for three times exclamation mark pressed */
+	else if(ch=='!') {
+		ch = getch();
+		if(ch=='!') {
+		ch = getch();
+		if(ch=='!') {
+			PGM_P welcome = "";
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+			uint16_t extaddr;
+#endif
+			uint8_t addrl, addrh;
+
+#if defined __AVR_ATmega1280__ 
+    #define MONITOR_WELCOME "ATmegaBOOT / Arduino Mega - (C) Arduino LLC - 090930\n\r";
+#endif
+
+#if defined MONITOR_WELCOME
+#elif defined CRUMB128
+    #define MONITOR_WELCOME "ATmegaBOOT / Crumb128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
+#elif defined PROBOMEGA128
+    #define MONITOR_WELCOME "ATmegaBOOT / PROBOmega128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
+#elif defined SAVVY128
+    #define MONITOR_WELCOME "ATmegaBOOT / Savvy128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
+#endif
+			const char* welcome = "ATmegaBOOT / Unknown\n\r";
+
+			/* turn on LED */
+			LED_DDR |= _BV(LED);
+			LED_PORT &= ~_BV(LED);
+
+			/* print a welcome message and command overview */
+			for(i=0; welcome[i] != '\0'; ++i) {
+				putch(welcome[i]);
+			}
+
+			/* test for valid commands */
+			for(;;) {
+				putch('\n');
+				putch('\r');
+				putch(':');
+				putch(' ');
+
+				ch = getch();
+				putch(ch);
+
+				/* toggle LED */
+				if(ch == 't') {
+					if(bit_is_set(LED_PIN,LED)) {
+						LED_PORT &= ~_BV(LED);
+						putch('1');
+					} else {
+						LED_PORT |= _BV(LED);
+						putch('0');
+					}
+				} 
+
+				/* read byte from address */
+				else if(ch == 'r') {
+					ch = getch(); putch(ch);
+					addrh = gethex();
+					addrl = gethex();
+					putch('=');
+					ch = *(uint8_t *)((addrh << 8) + addrl);
+					puthex(ch);
+				}
+
+				/* write a byte to address  */
+				else if(ch == 'w') {
+					ch = getch(); putch(ch);
+					addrh = gethex();
+					addrl = gethex();
+					ch = getch(); putch(ch);
+					ch = gethex();
+					*(uint8_t *)((addrh << 8) + addrl) = ch;
+				}
+
+				/* read from uart and echo back */
+				else if(ch == 'u') {
+					for(;;) {
+						putch(getch());
+					}
+				}
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+				/* external bus loop  */
+				else if(ch == 'b') {
+					putch('b');
+					putch('u');
+					putch('s');
+					MCUCR = 0x80;
+					XMCRA = 0;
+					XMCRB = 0;
+					extaddr = 0x1100;
+					for(;;) {
+						ch = *(volatile uint8_t *)extaddr;
+						if(++extaddr == 0) {
+							extaddr = 0x1100;
+						}
+					}
+				}
+#endif
+
+				else if(ch == 'j') {
+					app_start();
+				}
+
+			} /* end of monitor functions */
+
+		}
+		}
+	}
+	/* end of monitor */
+#endif
+	else if (++error_count == MAX_ERROR_COUNT) {
+		app_start();
+	}
+}
+
+void LoadProgram() {
+                            	//Write to FLASH one page at a time
 				if (address.byte[1]>127) address_high = 0x01;	//Only possible with m128, m256 will need 3rd address byte. FIXME
 				else address_high = 0x00;
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__)
@@ -749,192 +945,6 @@ void HandleChar(int ch) {
 					 );
 				/* Should really add a wait for RWW section to be enabled, don't actually need it since we never */
 				/* exit the bootloader without a power cycle anyhow */
-			}
-			putch(0x14);
-			putch(0x10);
-		} else {
-			if (++error_count == MAX_ERROR_COUNT)
-				app_start();
-		}		
-	}
-
-
-	/* Read memory block mode, length is big endian.  */
-	else if(ch=='t') {
-		length.byte[1] = getch();
-		length.byte[0] = getch();
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-		if (address.word>0x7FFF) flags.rampz = 1;		// No go with m256, FIXME
-		else flags.rampz = 0;
-#endif
-		address.word = address.word << 1;	        // address * 2 -> byte location
-		if (getch() == 'E') flags.eeprom = 1;
-		else flags.eeprom = 0;
-		if (getch() == ' ') {		                // Command terminator
-			putch(0x14);
-			for (w=0;w < length.word;w++) {		        // Can handle odd and even lengths okay
-				if (flags.eeprom) {	                        // Byte access EEPROM read
-#if defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
-					while(EECR & (1<<EEPE));
-					EEAR = (uint16_t)(void *)address.word;
-					EECR |= (1<<EERE);
-					putch(EEDR);
-#else
-					putch(eeprom_read_byte((void *)address.word));
-#endif
-					address.word++;
-				}
-				else {
-
-					if (!flags.rampz) putch(pgm_read_byte_near(address.word));
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-					else putch(pgm_read_byte_far(address.word + 0x10000));
-					// Hmmmm, yuck  FIXME when m256 arrvies
-#endif
-					address.word++;
-				}
-			}
-			putch(0x10);
-		}
-	}
-
-
-	/* Get device signature bytes  */
-	else if(ch=='u') {
-		if (getch() == ' ') {
-			putch(0x14);
-			putch(SIG1);
-			putch(SIG2);
-			putch(SIG3);
-			putch(0x10);
-		} else {
-			if (++error_count == MAX_ERROR_COUNT)
-				app_start();
-		}
-	}
-
-
-	/* Read oscillator calibration byte */
-	else if(ch=='v') {
-		byte_response(0x00);
-	}
-
-
-#if defined MONITOR 
-
-	/* here come the extended monitor commands by Erik Lins */
-
-	/* check for three times exclamation mark pressed */
-	else if(ch=='!') {
-		ch = getch();
-		if(ch=='!') {
-		ch = getch();
-		if(ch=='!') {
-			PGM_P welcome = "";
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-			uint16_t extaddr;
-#endif
-			uint8_t addrl, addrh;
-
-#ifdef CRUMB128
-			welcome = "ATmegaBOOT / Crumb128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
-#elif defined PROBOMEGA128
-			welcome = "ATmegaBOOT / PROBOmega128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
-#elif defined SAVVY128
-			welcome = "ATmegaBOOT / Savvy128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
-#elif defined __AVR_ATmega1280__ 
-			welcome = "ATmegaBOOT / Arduino Mega - (C) Arduino LLC - 090930\n\r";
-#endif
-
-			/* turn on LED */
-			LED_DDR |= _BV(LED);
-			LED_PORT &= ~_BV(LED);
-
-			/* print a welcome message and command overview */
-			for(i=0; welcome[i] != '\0'; ++i) {
-				putch(welcome[i]);
-			}
-
-			/* test for valid commands */
-			for(;;) {
-				putch('\n');
-				putch('\r');
-				putch(':');
-				putch(' ');
-
-				ch = getch();
-				putch(ch);
-
-				/* toggle LED */
-				if(ch == 't') {
-					if(bit_is_set(LED_PIN,LED)) {
-						LED_PORT &= ~_BV(LED);
-						putch('1');
-					} else {
-						LED_PORT |= _BV(LED);
-						putch('0');
-					}
-				} 
-
-				/* read byte from address */
-				else if(ch == 'r') {
-					ch = getch(); putch(ch);
-					addrh = gethex();
-					addrl = gethex();
-					putch('=');
-					ch = *(uint8_t *)((addrh << 8) + addrl);
-					puthex(ch);
-				}
-
-				/* write a byte to address  */
-				else if(ch == 'w') {
-					ch = getch(); putch(ch);
-					addrh = gethex();
-					addrl = gethex();
-					ch = getch(); putch(ch);
-					ch = gethex();
-					*(uint8_t *)((addrh << 8) + addrl) = ch;
-				}
-
-				/* read from uart and echo back */
-				else if(ch == 'u') {
-					for(;;) {
-						putch(getch());
-					}
-				}
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-				/* external bus loop  */
-				else if(ch == 'b') {
-					putch('b');
-					putch('u');
-					putch('s');
-					MCUCR = 0x80;
-					XMCRA = 0;
-					XMCRB = 0;
-					extaddr = 0x1100;
-					for(;;) {
-						ch = *(volatile uint8_t *)extaddr;
-						if(++extaddr == 0) {
-							extaddr = 0x1100;
-						}
-					}
-				}
-#endif
-
-				else if(ch == 'j') {
-					app_start();
-				}
-
-			} /* end of monitor functions */
-
-		}
-		}
-	}
-	/* end of monitor */
-#endif
-	else if (++error_count == MAX_ERROR_COUNT) {
-		app_start();
-	}
 }
 
 char gethexnib(void) {
