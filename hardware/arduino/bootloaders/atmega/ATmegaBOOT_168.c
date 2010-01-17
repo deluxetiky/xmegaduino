@@ -73,9 +73,17 @@
 #include <avr/wdt.h>
 #include <util/delay.h>
 
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
+    #define USE_BUILT_IN_AVR_EEPROM_H 1
+#endif
+
+#if !defined(USE_BUILT_IN_AVR_EEPROM_H)
+    #define USE_BUILT_IN_AVR_EEPROM_H 1
+#endif
+
 /* the current avr-libc eeprom functions do not support the ATmega168 */
 /* own eeprom write/read functions are used instead */
-#if !defined(__AVR_ATmega168__) || !defined(__AVR_ATmega328P__)
+#if USE_BUILT_IN_AVR_EEPROM_H 
 #include <avr/eeprom.h>
 #endif
 
@@ -117,7 +125,9 @@
 #define BL1     PINF6
 #elif defined __AVR_ATmega1280__ 
 /* we just don't do anything for the MEGA and enter bootloader on reset anyway*/
-#else
+#endif
+
+#if !defined(BL0)
 /* other ATmegas have only one UART, so only one pin is defined to enter bootloader */
 #define BL_DDR  DDRD
 #define BL_PORT PORTD
@@ -134,7 +144,9 @@
 #define LED_PORT PORTB
 #define LED_PIN  PINB
 #define LED      PINB7
-#else
+#endif
+
+#if !defined(LED)
 /* Onboard LED is connected to pin PB5 in Arduino NG, Diecimila, and Duomilanuove */ 
 /* other boards like e.g. Crumb8, Crumb168 are using PB2 */
 #define LED_DDR  DDRB
@@ -287,19 +299,23 @@ void (*app_start)(void) = 0x0000;
     }
 #endif
 
-	/* set pin direction for bootloader pin and enable pullup */
-	/* for ATmega128, two pins need to be initialized */
+/* set pin direction for bootloader pin and enable pullup */
+/* for ATmega128, two pins need to be initialized */
 #ifdef __AVR_ATmega128__
     #define INIT_BL0_DIRECTION 1
     #define INIT_BL1_DIRECTION 1
-#else
+#endif
+#if !defined(INIT_BL0_DIRECTION )
     /* We run the bootloader regardless of the state of this pin.  Thus, don't
     put it in a different state than the other pins.  --DAM, 070709
     This also applies to Arduino Mega -- DC, 080930
     */
     #define INIT_BL0_DIRECTION 0
+#endif
+#if !defined(INIT_BL1_DIRECTION )
     #define INIT_BL1_DIRECTION 0
 #endif
+
 inline void SetBootloaderPinDirections() {
 #if INIT_BL0_DIRECTION
    	BL_DDR &= ~_BV(BL0);
@@ -313,44 +329,41 @@ inline void SetBootloaderPinDirections() {
 }
 
 #ifdef __AVR_ATmega128__
-    inline uint8_t GetBootUart() {
-    	/* check which UART should be used for booting */
-    	if(bit_is_clear(BL_PIN, BL0)) {
-    		return 1
-    	}
-    	else if(bit_is_clear(BL_PIN, BL1)) {
-    		return 2;
-    	}
+    #define START_APP_IF_FLASH_PROGRAMED 1
+#endif
 
-	    /* no UART was selected */
+#if !defined(START_APP_IF_FLASH_PROGRAMED)
+    #define START_APP_IF_FLASH_PROGRAMED 0
+#endif
 
-        /* if flash is programmed already, start app, otherwise, start bootloader */
-        if(pgm_read_byte_near(0x0000) == 0xFF) {
-            app_start();
-        }
+inline uint8_t GetBootUart() {
+#if INIT_BL0_DIRECTION
+	/* check which UART should be used for booting */
+   	if(bit_is_clear(BL_PIN, BL0)) {
+   		return 1
+   	}
+#endif
+#if INIT_BL1_DIRECTION
+   	else if(bit_is_clear(BL_PIN, BL1)) {
+   		return 2;
+   	}
+#endif
 
-        /* default to uart 0 */
-        return 1;
-    }
-#elif defined __AVR_ATmega1280__
-	/* the mega1280 chip has four serial ports ... we could eventually use any of them, or not? */
-	/* however, we don't wanna confuse people, to avoid making a mess, we will stick to RXD0, TXD0 */
-    inline uint8_t GetBootUart() {
-	    return 1;
-    }
-#else
-    inline uint8_t GetBootUart() {
-	    return 1;
-	    /* check if bootloader pin is set low */
-    	/* we don't start this part neither for the m8, nor m168 */
-    	//if(bit_is_set(BL_PIN, BL0)) {
-    	//      app_start();
-    	//}
+    /* no UART was selected */
+#if START_APP_IF_FLASH_PROGRAMED
+    /* if flash is programmed already, start app, otherwise, start bootloader */
+    if(pgm_read_byte_near(0x0000) == 0xFF) {
+        app_start();
     }
 #endif
 
+    /* default to uart 0 */
+    return 1;
+}
+
 
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+    #define HAVE_INIT_BOOT_UART 1
     inline void InitBootUart() {
     	if(bootuart == 1) {
     		UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
@@ -370,6 +383,7 @@ inline void SetBootloaderPinDirections() {
         app_start();
     }
 #elif defined __AVR_ATmega163__
+    #define HAVE_INIT_BOOT_UART 1
     inline void InitBootUart() {
     	UBRR = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
     	UBRRHI = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
@@ -377,6 +391,7 @@ inline void SetBootloaderPinDirections() {
     	UCSRB = _BV(TXEN)|_BV(RXEN);	
     }
 #elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
+    #define HAVE_INIT_BOOT_UART 1
     inline void InitBootUart() {
 
 #ifdef DOUBLE_SPEED
@@ -393,6 +408,7 @@ inline void SetBootloaderPinDirections() {
 
     }
 #elif defined __AVR_ATmega8__
+    #define HAVE_INIT_BOOT_UART 1
     inline void InitBootUart() {
     	/* m8 */
     	UBRRH = (((F_CPU/BAUD_RATE)/16)-1)>>8; 	// set baud rate
@@ -400,7 +416,9 @@ inline void SetBootloaderPinDirections() {
     	UCSRB = (1<<RXEN)|(1<<TXEN);  // enable Rx & Tx
     	UCSRC = (1<<URSEL)|(1<<UCSZ1)|(1<<UCSZ0);  // config USART; 8N1
     }
-#else
+#endif
+
+#if !defined(HAVE_INIT_BOOT_UART)
     inline void InitBootUart() {
     	/* m16,m32,m169,m8515,m8535 */
     	UBRRL = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
@@ -434,11 +452,12 @@ inline void SetBootloaderPinDirections() {
     }
 #endif
 
+void HandleChar(int c);
+
 /* main program starts here */
 int main(void)
 {
-	uint8_t ch,ch2;
-	uint16_t w;
+	uint8_t ch;
 
     CheckWatchDogAtStartup();
 
@@ -466,9 +485,17 @@ int main(void)
 
 	/* forever loop */
 	for (;;) {
+	    /* get character from UART */
+    	ch = getch();
 
-	/* get character from UART */
-	ch = getch();
+        HandleChar(ch);
+	} /* end of forever loop */
+
+}
+
+void HandleChar(int ch) {
+    uint8_t  ch2;
+	uint16_t w;
 
 	/* A bunch of if...else if... gives smaller code than switch...case ! */
 
@@ -908,10 +935,7 @@ int main(void)
 	else if (++error_count == MAX_ERROR_COUNT) {
 		app_start();
 	}
-	} /* end of forever loop */
-
 }
-
 
 char gethexnib(void) {
 	char a;
