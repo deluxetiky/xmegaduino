@@ -122,7 +122,7 @@
 #define BL_DDR  DDRD
 #define BL_PORT PORTD
 #define BL_PIN  PIND
-#define BL      PIND6
+#define BL0     PIND6
 #endif
 
 
@@ -263,12 +263,176 @@ uint8_t address_high;
 uint8_t pagesz=0x80;
 
 uint8_t i;
-uint8_t bootuart = 0;
+static uint8_t bootuart = 0;
 
 uint8_t error_count = 0;
 
 void (*app_start)(void) = 0x0000;
 
+#ifdef WATCHDOG_MODS
+    inline void CheckWatchDogAtStartup() {
+    	ch = MCUSR;
+    	MCUSR = 0;
+
+    	WDTCSR |= _BV(WDCE) | _BV(WDE);
+    	WDTCSR = 0;
+
+    	// Check if the WDT was used to reset, in which case we dont bootload and skip straight to the code. woot.
+    	if (! (ch &  _BV(EXTRF))) // if its a not an external reset...
+    		app_start();  // skip bootloader
+    }
+#else
+    inline void CheckWatchDogAtStartup() {
+	    asm volatile("nop\n\t");
+    }
+#endif
+
+	/* set pin direction for bootloader pin and enable pullup */
+	/* for ATmega128, two pins need to be initialized */
+#ifdef __AVR_ATmega128__
+    #define INIT_BL0_DIRECTION 1
+    #define INIT_BL1_DIRECTION 1
+#else
+    /* We run the bootloader regardless of the state of this pin.  Thus, don't
+    put it in a different state than the other pins.  --DAM, 070709
+    This also applies to Arduino Mega -- DC, 080930
+    */
+    #define INIT_BL0_DIRECTION 0
+    #define INIT_BL1_DIRECTION 0
+#endif
+inline void SetBootloaderPinDirections() {
+#if INIT_BL0_DIRECTION
+   	BL_DDR &= ~_BV(BL0);
+   	BL_PORT |= _BV(BL0);
+#endif
+
+#if INIT_BL1_DIRECTION
+   	BL_DDR &= ~_BV(BL1);
+   	BL_PORT |= _BV(BL1);
+#endif
+}
+
+#ifdef __AVR_ATmega128__
+    inline uint8_t GetBootUart() {
+    	/* check which UART should be used for booting */
+    	if(bit_is_clear(BL_PIN, BL0)) {
+    		return 1
+    	}
+    	else if(bit_is_clear(BL_PIN, BL1)) {
+    		return 2;
+    	}
+
+	    /* no UART was selected */
+
+        /* if flash is programmed already, start app, otherwise, start bootloader */
+        if(pgm_read_byte_near(0x0000) == 0xFF) {
+            app_start();
+        }
+
+        /* default to uart 0 */
+        return 1;
+    }
+#elif defined __AVR_ATmega1280__
+	/* the mega1280 chip has four serial ports ... we could eventually use any of them, or not? */
+	/* however, we don't wanna confuse people, to avoid making a mess, we will stick to RXD0, TXD0 */
+    inline uint8_t GetBootUart() {
+	    return 1;
+    }
+#else
+    inline uint8_t GetBootUart() {
+	    return 1;
+	    /* check if bootloader pin is set low */
+    	/* we don't start this part neither for the m8, nor m168 */
+    	//if(bit_is_set(BL_PIN, BL0)) {
+    	//      app_start();
+    	//}
+    }
+#endif
+
+
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+    inline void InitBootUart() {
+    	if(bootuart == 1) {
+    		UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+    		UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+    		UCSR0A = 0x00;
+    		UCSR0C = 0x06;
+    		UCSR0B = _BV(TXEN0)|_BV(RXEN0);
+    	}
+    	if(bootuart == 2) {
+    		UBRR1L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+    		UBRR1H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+    		UCSR1A = 0x00;
+    		UCSR1C = 0x06;
+    		UCSR1B = _BV(TXEN1)|_BV(RXEN1);
+    	}
+        // bootuart should be set, if not, start app.
+        app_start();
+    }
+#elif defined __AVR_ATmega163__
+    inline void InitBootUart() {
+    	UBRR = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+    	UBRRHI = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+    	UCSRA = 0x00;
+    	UCSRB = _BV(TXEN)|_BV(RXEN);	
+    }
+#elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
+    inline void InitBootUart() {
+
+#ifdef DOUBLE_SPEED
+    	UCSR0A = (1<<U2X0); //Double speed mode USART0
+    	UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*8L)-1);
+    	UBRR0H = (F_CPU/(BAUD_RATE*8L)-1) >> 8;
+#else
+    	UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+    	UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+#endif
+
+    	UCSR0B = (1<<RXEN0) | (1<<TXEN0);
+    	UCSR0C = (1<<UCSZ00) | (1<<UCSZ01);
+
+    }
+#elif defined __AVR_ATmega8__
+    inline void InitBootUart() {
+    	/* m8 */
+    	UBRRH = (((F_CPU/BAUD_RATE)/16)-1)>>8; 	// set baud rate
+    	UBRRL = (((F_CPU/BAUD_RATE)/16)-1);
+    	UCSRB = (1<<RXEN)|(1<<TXEN);  // enable Rx & Tx
+    	UCSRC = (1<<URSEL)|(1<<UCSZ1)|(1<<UCSZ0);  // config USART; 8N1
+    }
+#else
+    inline void InitBootUart() {
+    	/* m16,m32,m169,m8515,m8535 */
+    	UBRRL = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+    	UBRRH = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+    	UCSRA = 0x00;
+    	UCSRC = 0x06;
+    	UCSRB = _BV(TXEN)|_BV(RXEN);
+    }
+#endif
+
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
+    #define LINE_NOISE_PIN  PIND0
+    #define DDR_LINE_NOISE  DDRD
+    #define PORT_LINE_NOISE PORTD
+#elif defined __AVR_ATmega1280__
+    #define LINE_NOISE_PIN  PINE0
+    #define DDR_LINE_NOISE  DDRE
+    #define PORT_LINE_NOISE PORTE
+#endif
+
+#if defined(LINE_NOISE_PIN)
+    inline void SuppressLineNoise() {
+    	/* Enable internal pull-up resistor on pin D0 (RX), in order
+    	to supress line noise that prevents the bootloader from
+    	timing out (DAM: 20070509) */
+    	DDR_LINE_NOISE  &= ~_BV(LINE_NOISE_PIN);
+    	PORT_LINE_NOISE |= _BV(LINE_NOISE_PIN);
+    }
+#else
+    inline void SuppressLineNoise() {
+    }
+#endif
 
 /* main program starts here */
 int main(void)
@@ -276,141 +440,12 @@ int main(void)
 	uint8_t ch,ch2;
 	uint16_t w;
 
-#ifdef WATCHDOG_MODS
-	ch = MCUSR;
-	MCUSR = 0;
+    CheckWatchDogAtStartup();
 
-	WDTCSR |= _BV(WDCE) | _BV(WDE);
-	WDTCSR = 0;
-
-	// Check if the WDT was used to reset, in which case we dont bootload and skip straight to the code. woot.
-	if (! (ch &  _BV(EXTRF))) // if its a not an external reset...
-		app_start();  // skip bootloader
-#else
-	asm volatile("nop\n\t");
-#endif
-
-	/* set pin direction for bootloader pin and enable pullup */
-	/* for ATmega128, two pins need to be initialized */
-#ifdef __AVR_ATmega128__
-	BL_DDR &= ~_BV(BL0);
-	BL_DDR &= ~_BV(BL1);
-	BL_PORT |= _BV(BL0);
-	BL_PORT |= _BV(BL1);
-#else
-	/* We run the bootloader regardless of the state of this pin.  Thus, don't
-	put it in a different state than the other pins.  --DAM, 070709
-	This also applies to Arduino Mega -- DC, 080930
-	BL_DDR &= ~_BV(BL);
-	BL_PORT |= _BV(BL);
-	*/
-#endif
-
-
-#ifdef __AVR_ATmega128__
-	/* check which UART should be used for booting */
-	if(bit_is_clear(BL_PIN, BL0)) {
-		bootuart = 1;
-	}
-	else if(bit_is_clear(BL_PIN, BL1)) {
-		bootuart = 2;
-	}
-#endif
-
-#if defined __AVR_ATmega1280__
-	/* the mega1280 chip has four serial ports ... we could eventually use any of them, or not? */
-	/* however, we don't wanna confuse people, to avoid making a mess, we will stick to RXD0, TXD0 */
-	bootuart = 1;
-#endif
-
-	/* check if flash is programmed already, if not start bootloader anyway */
-	if(pgm_read_byte_near(0x0000) != 0xFF) {
-
-#ifdef __AVR_ATmega128__
-	/* no UART was selected, start application */
-	if(!bootuart) {
-		app_start();
-	}
-#else
-	/* check if bootloader pin is set low */
-	/* we don't start this part neither for the m8, nor m168 */
-	//if(bit_is_set(BL_PIN, BL)) {
-	//      app_start();
-	//    }
-#endif
-	}
-
-#ifdef __AVR_ATmega128__    
-	/* no bootuart was selected, default to uart 0 */
-	if(!bootuart) {
-		bootuart = 1;
-	}
-#endif
-
-
-	/* initialize UART(s) depending on CPU defined */
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-	if(bootuart == 1) {
-		UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-		UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-		UCSR0A = 0x00;
-		UCSR0C = 0x06;
-		UCSR0B = _BV(TXEN0)|_BV(RXEN0);
-	}
-	if(bootuart == 2) {
-		UBRR1L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-		UBRR1H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-		UCSR1A = 0x00;
-		UCSR1C = 0x06;
-		UCSR1B = _BV(TXEN1)|_BV(RXEN1);
-	}
-#elif defined __AVR_ATmega163__
-	UBRR = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-	UBRRHI = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-	UCSRA = 0x00;
-	UCSRB = _BV(TXEN)|_BV(RXEN);	
-#elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
-
-#ifdef DOUBLE_SPEED
-	UCSR0A = (1<<U2X0); //Double speed mode USART0
-	UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*8L)-1);
-	UBRR0H = (F_CPU/(BAUD_RATE*8L)-1) >> 8;
-#else
-	UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-	UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-#endif
-
-	UCSR0B = (1<<RXEN0) | (1<<TXEN0);
-	UCSR0C = (1<<UCSZ00) | (1<<UCSZ01);
-
-	/* Enable internal pull-up resistor on pin D0 (RX), in order
-	to supress line noise that prevents the bootloader from
-	timing out (DAM: 20070509) */
-	DDRD &= ~_BV(PIND0);
-	PORTD |= _BV(PIND0);
-#elif defined __AVR_ATmega8__
-	/* m8 */
-	UBRRH = (((F_CPU/BAUD_RATE)/16)-1)>>8; 	// set baud rate
-	UBRRL = (((F_CPU/BAUD_RATE)/16)-1);
-	UCSRB = (1<<RXEN)|(1<<TXEN);  // enable Rx & Tx
-	UCSRC = (1<<URSEL)|(1<<UCSZ1)|(1<<UCSZ0);  // config USART; 8N1
-#else
-	/* m16,m32,m169,m8515,m8535 */
-	UBRRL = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-	UBRRH = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-	UCSRA = 0x00;
-	UCSRC = 0x06;
-	UCSRB = _BV(TXEN)|_BV(RXEN);
-#endif
-
-#if defined __AVR_ATmega1280__
-	/* Enable internal pull-up resistor on pin D0 (RX), in order
-	to supress line noise that prevents the bootloader from
-	timing out (DAM: 20070509) */
-	/* feature added to the Arduino Mega --DC: 080930 */
-	DDRE &= ~_BV(PINE0);
-	PORTE |= _BV(PINE0);
-#endif
+    SetBootloaderPinDirections();
+    bootuart = GetBootUart();
+    InitBootUart();
+    SuppressLineNoise();
 
 
 	/* set LED pin as output */
