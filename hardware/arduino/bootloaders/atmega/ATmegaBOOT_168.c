@@ -108,7 +108,7 @@
 
 /* SW_MAJOR and MINOR needs to be updated from time to time to avoid warning message from AVR Studio */
 /* never allow AVR Studio to do an update !!!! */
-#define HW_VER	 0x02
+#define HW_VER   0x02
 #define SW_MAJOR 0x01
 #define SW_MINOR 0x10
 
@@ -164,82 +164,82 @@
 
 /* define various device id's */
 /* manufacturer byte is always the same */
-#define SIG1	0x1E	// Yep, Atmel is the only manufacturer of AVR micros.  Single source :(
+#define SIG1    0x1E    // Yep, Atmel is the only manufacturer of AVR micros.  Single source :(
 
 #if defined __AVR_ATmega1280__
-#define SIG2	0x97
-#define SIG3	0x03
-#define PAGE_SIZE	0x80U	//128 words
+#define SIG2    0x97
+#define SIG3    0x03
+#define PAGE_SIZE   0x80U   //128 words
 
 #elif defined __AVR_ATmega1281__
-#define SIG2	0x97
-#define SIG3	0x04
-#define PAGE_SIZE	0x80U	//128 words
+#define SIG2    0x97
+#define SIG3    0x04
+#define PAGE_SIZE   0x80U   //128 words
 
 #elif defined __AVR_ATmega128__
-#define SIG2	0x97
-#define SIG3	0x02
-#define PAGE_SIZE	0x80U	//128 words
+#define SIG2    0x97
+#define SIG3    0x02
+#define PAGE_SIZE   0x80U   //128 words
 
 #elif defined __AVR_ATmega64__
-#define SIG2	0x96
-#define SIG3	0x02
-#define PAGE_SIZE	0x80U	//128 words
+#define SIG2    0x96
+#define SIG3    0x02
+#define PAGE_SIZE   0x80U   //128 words
 
 #elif defined __AVR_ATmega32__
-#define SIG2	0x95
-#define SIG3	0x02
-#define PAGE_SIZE	0x40U	//64 words
+#define SIG2    0x95
+#define SIG3    0x02
+#define PAGE_SIZE   0x40U   //64 words
 
 #elif defined __AVR_ATmega16__
-#define SIG2	0x94
-#define SIG3	0x03
-#define PAGE_SIZE	0x40U	//64 words
+#define SIG2    0x94
+#define SIG3    0x03
+#define PAGE_SIZE   0x40U   //64 words
 
 #elif defined __AVR_ATmega8__
-#define SIG2	0x93
-#define SIG3	0x07
-#define PAGE_SIZE	0x20U	//32 words
+#define SIG2    0x93
+#define SIG3    0x07
+#define PAGE_SIZE   0x20U   //32 words
 
 #elif defined __AVR_ATmega88__
-#define SIG2	0x93
-#define SIG3	0x0a
-#define PAGE_SIZE	0x20U	//32 words
+#define SIG2    0x93
+#define SIG3    0x0a
+#define PAGE_SIZE   0x20U   //32 words
 
 #elif defined __AVR_ATmega168__
-#define SIG2	0x94
-#define SIG3	0x06
-#define PAGE_SIZE	0x40U	//64 words
+#define SIG2    0x94
+#define SIG3    0x06
+#define PAGE_SIZE   0x40U   //64 words
 
 #elif defined __AVR_ATmega328P__
-#define SIG2	0x95
-#define SIG3	0x0F
-#define PAGE_SIZE	0x40U	//64 words
+#define SIG2    0x95
+#define SIG3    0x0F
+#define PAGE_SIZE   0x40U   //64 words
 
 #elif defined __AVR_ATmega162__
-#define SIG2	0x94
-#define SIG3	0x04
-#define PAGE_SIZE	0x40U	//64 words
+#define SIG2    0x94
+#define SIG3    0x04
+#define PAGE_SIZE   0x40U   //64 words
 
 #elif defined __AVR_ATmega163__
-#define SIG2	0x94
-#define SIG3	0x02
-#define PAGE_SIZE	0x40U	//64 words
+#define SIG2    0x94
+#define SIG3    0x02
+#define PAGE_SIZE   0x40U   //64 words
 
 #elif defined __AVR_ATmega169__
-#define SIG2	0x94
-#define SIG3	0x05
-#define PAGE_SIZE	0x40U	//64 words
+#define SIG2    0x94
+#define SIG3    0x05
+#define PAGE_SIZE   0x40U   //64 words
 
 #elif defined __AVR_ATmega8515__
-#define SIG2	0x93
-#define SIG3	0x06
-#define PAGE_SIZE	0x20U	//32 words
+#define SIG2    0x93
+#define SIG3    0x06
+#define PAGE_SIZE   0x20U   //32 words
 
 #elif defined __AVR_ATmega8535__
-#define SIG2	0x93
-#define SIG3	0x08
-#define PAGE_SIZE	0x20U	//32 words
+#define SIG2    0x93
+#define SIG3    0x08
+#define PAGE_SIZE   0x20U   //32 words
 #endif
 
 
@@ -255,18 +255,18 @@ void flash_led(uint8_t);
 
 /* some variables */
 union address_union {
-	uint16_t word;
-	uint8_t  byte[2];
+    uint16_t word;
+    uint8_t  byte[2];
 } address;
 
 union length_union {
-	uint16_t word;
-	uint8_t  byte[2];
+    uint16_t word;
+    uint8_t  byte[2];
 } length;
 
 struct flags_struct {
-	unsigned eeprom : 1;
-	unsigned rampz  : 1;
+    unsigned eeprom : 1;
+    unsigned rampz  : 1;
 } flags;
 
 uint8_t buff[256];
@@ -283,19 +283,19 @@ void (*app_start)(void) = 0x0000;
 
 #ifdef WATCHDOG_MODS
     inline void CheckWatchDogAtStartup() {
-    	ch = MCUSR;
-    	MCUSR = 0;
+        ch = MCUSR;
+        MCUSR = 0;
 
-    	WDTCSR |= _BV(WDCE) | _BV(WDE);
-    	WDTCSR = 0;
+        WDTCSR |= _BV(WDCE) | _BV(WDE);
+        WDTCSR = 0;
 
-    	// Check if the WDT was used to reset, in which case we dont bootload and skip straight to the code. woot.
-    	if (! (ch &  _BV(EXTRF))) // if its a not an external reset...
-    		app_start();  // skip bootloader
+        // Check if the WDT was used to reset, in which case we dont bootload and skip straight to the code. woot.
+        if (! (ch &  _BV(EXTRF))) // if its a not an external reset...
+            app_start();  // skip bootloader
     }
 #else
     inline void CheckWatchDogAtStartup() {
-	    asm volatile("nop\n\t");
+        asm volatile("nop\n\t");
     }
 #endif
 
@@ -318,13 +318,13 @@ void (*app_start)(void) = 0x0000;
 
 inline void SetBootloaderPinDirections() {
 #if INIT_BL0_DIRECTION
-   	BL_DDR &= ~_BV(BL0);
-   	BL_PORT |= _BV(BL0);
+    BL_DDR &= ~_BV(BL0);
+    BL_PORT |= _BV(BL0);
 #endif
 
 #if INIT_BL1_DIRECTION
-   	BL_DDR &= ~_BV(BL1);
-   	BL_PORT |= _BV(BL1);
+    BL_DDR &= ~_BV(BL1);
+    BL_PORT |= _BV(BL1);
 #endif
 }
 
@@ -338,15 +338,15 @@ inline void SetBootloaderPinDirections() {
 
 inline uint8_t GetBootUart() {
 #if INIT_BL0_DIRECTION
-	/* check which UART should be used for booting */
-   	if(bit_is_clear(BL_PIN, BL0)) {
-   		return 1
-   	}
+    /* check which UART should be used for booting */
+    if(bit_is_clear(BL_PIN, BL0)) {
+        return 1
+    }
 #endif
 #if INIT_BL1_DIRECTION
-   	else if(bit_is_clear(BL_PIN, BL1)) {
-   		return 2;
-   	}
+    else if(bit_is_clear(BL_PIN, BL1)) {
+        return 2;
+    }
 #endif
 
     /* no UART was selected */
@@ -365,67 +365,67 @@ inline uint8_t GetBootUart() {
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
     #define HAVE_INIT_BOOT_UART 1
     inline void InitBootUart() {
-    	if(bootuart == 1) {
-    		UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-    		UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-    		UCSR0A = 0x00;
-    		UCSR0C = 0x06;
-    		UCSR0B = _BV(TXEN0)|_BV(RXEN0);
-    	}
-    	if(bootuart == 2) {
-    		UBRR1L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-    		UBRR1H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-    		UCSR1A = 0x00;
-    		UCSR1C = 0x06;
-    		UCSR1B = _BV(TXEN1)|_BV(RXEN1);
-    	}
+        if(bootuart == 1) {
+            UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+            UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+            UCSR0A = 0x00;
+            UCSR0C = 0x06;
+            UCSR0B = _BV(TXEN0)|_BV(RXEN0);
+        }
+        if(bootuart == 2) {
+            UBRR1L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+            UBRR1H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+            UCSR1A = 0x00;
+            UCSR1C = 0x06;
+            UCSR1B = _BV(TXEN1)|_BV(RXEN1);
+        }
         // bootuart should be set, if not, start app.
         app_start();
     }
 #elif defined __AVR_ATmega163__
     #define HAVE_INIT_BOOT_UART 1
     inline void InitBootUart() {
-    	UBRR = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-    	UBRRHI = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-    	UCSRA = 0x00;
-    	UCSRB = _BV(TXEN)|_BV(RXEN);	
+        UBRR = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+        UBRRHI = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+        UCSRA = 0x00;
+        UCSRB = _BV(TXEN)|_BV(RXEN);    
     }
 #elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
     #define HAVE_INIT_BOOT_UART 1
     inline void InitBootUart() {
 
 #ifdef DOUBLE_SPEED
-    	UCSR0A = (1<<U2X0); //Double speed mode USART0
-    	UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*8L)-1);
-    	UBRR0H = (F_CPU/(BAUD_RATE*8L)-1) >> 8;
+        UCSR0A = (1<<U2X0); //Double speed mode USART0
+        UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*8L)-1);
+        UBRR0H = (F_CPU/(BAUD_RATE*8L)-1) >> 8;
 #else
-    	UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-    	UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+        UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+        UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
 #endif
 
-    	UCSR0B = (1<<RXEN0) | (1<<TXEN0);
-    	UCSR0C = (1<<UCSZ00) | (1<<UCSZ01);
+        UCSR0B = (1<<RXEN0) | (1<<TXEN0);
+        UCSR0C = (1<<UCSZ00) | (1<<UCSZ01);
 
     }
 #elif defined __AVR_ATmega8__
     #define HAVE_INIT_BOOT_UART 1
     inline void InitBootUart() {
-    	/* m8 */
-    	UBRRH = (((F_CPU/BAUD_RATE)/16)-1)>>8; 	// set baud rate
-    	UBRRL = (((F_CPU/BAUD_RATE)/16)-1);
-    	UCSRB = (1<<RXEN)|(1<<TXEN);  // enable Rx & Tx
-    	UCSRC = (1<<URSEL)|(1<<UCSZ1)|(1<<UCSZ0);  // config USART; 8N1
+        /* m8 */
+        UBRRH = (((F_CPU/BAUD_RATE)/16)-1)>>8;  // set baud rate
+        UBRRL = (((F_CPU/BAUD_RATE)/16)-1);
+        UCSRB = (1<<RXEN)|(1<<TXEN);  // enable Rx & Tx
+        UCSRC = (1<<URSEL)|(1<<UCSZ1)|(1<<UCSZ0);  // config USART; 8N1
     }
 #endif
 
 #if !defined(HAVE_INIT_BOOT_UART)
     inline void InitBootUart() {
-    	/* m16,m32,m169,m8515,m8535 */
-    	UBRRL = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-    	UBRRH = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-    	UCSRA = 0x00;
-    	UCSRC = 0x06;
-    	UCSRB = _BV(TXEN)|_BV(RXEN);
+        /* m16,m32,m169,m8515,m8535 */
+        UBRRL = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+        UBRRH = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+        UCSRA = 0x00;
+        UCSRC = 0x06;
+        UCSRB = _BV(TXEN)|_BV(RXEN);
     }
 #endif
 
@@ -441,11 +441,11 @@ inline uint8_t GetBootUart() {
 
 #if defined(LINE_NOISE_PIN)
     inline void SuppressLineNoise() {
-    	/* Enable internal pull-up resistor on pin D0 (RX), in order
-    	to supress line noise that prevents the bootloader from
-    	timing out (DAM: 20070509) */
-    	DDR_LINE_NOISE  &= ~_BV(LINE_NOISE_PIN);
-    	PORT_LINE_NOISE |= _BV(LINE_NOISE_PIN);
+        /* Enable internal pull-up resistor on pin D0 (RX), in order
+        to supress line noise that prevents the bootloader from
+        timing out (DAM: 20070509) */
+        DDR_LINE_NOISE  &= ~_BV(LINE_NOISE_PIN);
+        PORT_LINE_NOISE |= _BV(LINE_NOISE_PIN);
     }
 #else
     inline void SuppressLineNoise() {
@@ -458,7 +458,7 @@ void LoadProgram();
 /* main program starts here */
 int main(void)
 {
-	uint8_t ch;
+    uint8_t ch;
 
     CheckWatchDogAtStartup();
 
@@ -468,259 +468,259 @@ int main(void)
     SuppressLineNoise();
 
 
-	/* set LED pin as output */
-	LED_DDR |= _BV(LED);
+    /* set LED pin as output */
+    LED_DDR |= _BV(LED);
 
 
-	/* flash onboard LED to signal entering of bootloader */
+    /* flash onboard LED to signal entering of bootloader */
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-	// 4x for UART0, 5x for UART1
-	flash_led(NUM_LED_FLASHES + bootuart);
+    // 4x for UART0, 5x for UART1
+    flash_led(NUM_LED_FLASHES + bootuart);
 #else
-	flash_led(NUM_LED_FLASHES);
+    flash_led(NUM_LED_FLASHES);
 #endif
 
-	/* 20050803: by DojoCorp, this is one of the parts provoking the
-		 system to stop listening, cancelled from the original */
-	//putch('\0');
+    /* 20050803: by DojoCorp, this is one of the parts provoking the
+         system to stop listening, cancelled from the original */
+    //putch('\0');
 
-	/* forever loop */
-	for (;;) {
-	    /* get character from UART */
-    	ch = getch();
+    /* forever loop */
+    for (;;) {
+        /* get character from UART */
+        ch = getch();
 
         HandleChar(ch);
-	} /* end of forever loop */
+    } /* end of forever loop */
 
 }
 
 void HandleChar(int ch) {
     uint8_t  ch2;
-	uint16_t w;
+    uint16_t w;
 
-	/* A bunch of if...else if... gives smaller code than switch...case ! */
+    /* A bunch of if...else if... gives smaller code than switch...case ! */
 
-	/* Hello is anyone home ? */ 
-	if(ch=='0') {
-		nothing_response();
-	}
-
-
-	/* Request programmer ID */
-	/* Not using PROGMEM string due to boot block in m128 being beyond 64kB boundry  */
-	/* Would need to selectively manipulate RAMPZ, and it's only 9 characters anyway so who cares.  */
-	else if(ch=='1') {
-		if (getch() == ' ') {
-			putch(0x14);
-			putch('A');
-			putch('V');
-			putch('R');
-			putch(' ');
-			putch('I');
-			putch('S');
-			putch('P');
-			putch(0x10);
-		} else {
-			if (++error_count == MAX_ERROR_COUNT)
-				app_start();
-		}
-	}
+    /* Hello is anyone home ? */ 
+    if(ch=='0') {
+        nothing_response();
+    }
 
 
-	/* AVR ISP/STK500 board commands  DON'T CARE so default nothing_response */
-	else if(ch=='@') {
-		ch2 = getch();
-		if (ch2>0x85) getch();
-		nothing_response();
-	}
+    /* Request programmer ID */
+    /* Not using PROGMEM string due to boot block in m128 being beyond 64kB boundry  */
+    /* Would need to selectively manipulate RAMPZ, and it's only 9 characters anyway so who cares.  */
+    else if(ch=='1') {
+        if (getch() == ' ') {
+            putch(0x14);
+            putch('A');
+            putch('V');
+            putch('R');
+            putch(' ');
+            putch('I');
+            putch('S');
+            putch('P');
+            putch(0x10);
+        } else {
+            if (++error_count == MAX_ERROR_COUNT)
+                app_start();
+        }
+    }
 
 
-	/* AVR ISP/STK500 board requests */
-	else if(ch=='A') {
-		ch2 = getch();
-		if(ch2==0x80) byte_response(HW_VER);		// Hardware version
-		else if(ch2==0x81) byte_response(SW_MAJOR);	// Software major version
-		else if(ch2==0x82) byte_response(SW_MINOR);	// Software minor version
-		else if(ch2==0x98) byte_response(0x03);		// Unknown but seems to be required by avr studio 3.56
-		else byte_response(0x00);				// Covers various unnecessary responses we don't care about
-	}
+    /* AVR ISP/STK500 board commands  DON'T CARE so default nothing_response */
+    else if(ch=='@') {
+        ch2 = getch();
+        if (ch2>0x85) getch();
+        nothing_response();
+    }
 
 
-	/* Device Parameters  DON'T CARE, DEVICE IS FIXED  */
-	else if(ch=='B') {
-		getNch(20);
-		nothing_response();
-	}
+    /* AVR ISP/STK500 board requests */
+    else if(ch=='A') {
+        ch2 = getch();
+        if(ch2==0x80) byte_response(HW_VER);        // Hardware version
+        else if(ch2==0x81) byte_response(SW_MAJOR); // Software major version
+        else if(ch2==0x82) byte_response(SW_MINOR); // Software minor version
+        else if(ch2==0x98) byte_response(0x03);     // Unknown but seems to be required by avr studio 3.56
+        else byte_response(0x00);               // Covers various unnecessary responses we don't care about
+    }
 
 
-	/* Parallel programming stuff  DON'T CARE  */
-	else if(ch=='E') {
-		getNch(5);
-		nothing_response();
-	}
+    /* Device Parameters  DON'T CARE, DEVICE IS FIXED  */
+    else if(ch=='B') {
+        getNch(20);
+        nothing_response();
+    }
 
 
-	/* P: Enter programming mode  */
-	/* R: Erase device, don't care as we will erase one page at a time anyway.  */
-	else if(ch=='P' || ch=='R') {
-		nothing_response();
-	}
+    /* Parallel programming stuff  DON'T CARE  */
+    else if(ch=='E') {
+        getNch(5);
+        nothing_response();
+    }
 
 
-	/* Leave programming mode  */
-	else if(ch=='Q') {
-		nothing_response();
+    /* P: Enter programming mode  */
+    /* R: Erase device, don't care as we will erase one page at a time anyway.  */
+    else if(ch=='P' || ch=='R') {
+        nothing_response();
+    }
+
+
+    /* Leave programming mode  */
+    else if(ch=='Q') {
+        nothing_response();
 #ifdef WATCHDOG_MODS
-		// autoreset via watchdog (sneaky!)
-		WDTCSR = _BV(WDE);
-		while (1); // 16 ms
+        // autoreset via watchdog (sneaky!)
+        WDTCSR = _BV(WDE);
+        while (1); // 16 ms
 #endif
-	}
+    }
 
 
-	/* Set address, little endian. EEPROM in bytes, FLASH in words  */
-	/* Perhaps extra address bytes may be added in future to support > 128kB FLASH.  */
-	/* This might explain why little endian was used here, big endian used everywhere else.  */
-	else if(ch=='U') {
-		address.byte[0] = getch();
-		address.byte[1] = getch();
-		nothing_response();
-	}
+    /* Set address, little endian. EEPROM in bytes, FLASH in words  */
+    /* Perhaps extra address bytes may be added in future to support > 128kB FLASH.  */
+    /* This might explain why little endian was used here, big endian used everywhere else.  */
+    else if(ch=='U') {
+        address.byte[0] = getch();
+        address.byte[1] = getch();
+        nothing_response();
+    }
 
 
-	/* Universal SPI programming command, disabled.  Would be used for fuses and lock bits.  */
-	else if(ch=='V') {
-		if (getch() == 0x30) {
-			getch();
-			ch = getch();
-			getch();
-			if (ch == 0) {
-				byte_response(SIG1);
-			} else if (ch == 1) {
-				byte_response(SIG2); 
-			} else {
-				byte_response(SIG3);
-			} 
-		} else {
-			getNch(3);
-			byte_response(0x00);
-		}
-	}
+    /* Universal SPI programming command, disabled.  Would be used for fuses and lock bits.  */
+    else if(ch=='V') {
+        if (getch() == 0x30) {
+            getch();
+            ch = getch();
+            getch();
+            if (ch == 0) {
+                byte_response(SIG1);
+            } else if (ch == 1) {
+                byte_response(SIG2); 
+            } else {
+                byte_response(SIG3);
+            } 
+        } else {
+            getNch(3);
+            byte_response(0x00);
+        }
+    }
 
 
-	/* Write memory, length is big endian and is in bytes  */
-	else if(ch=='d') {
-		length.byte[1] = getch();
-		length.byte[0] = getch();
-		flags.eeprom = 0;
-		if (getch() == 'E') flags.eeprom = 1;
-		for (w=0;w<length.word;w++) {
-			buff[w] = getch();	                        // Store data in buffer, can't keep up with serial data stream whilst programming pages
-		}
-		if (getch() == ' ') {
-			if (flags.eeprom) {		                //Write to EEPROM one byte at a time
-				address.word <<= 1;
-				for(w=0;w<length.word;w++) {
+    /* Write memory, length is big endian and is in bytes  */
+    else if(ch=='d') {
+        length.byte[1] = getch();
+        length.byte[0] = getch();
+        flags.eeprom = 0;
+        if (getch() == 'E') flags.eeprom = 1;
+        for (w=0;w<length.word;w++) {
+            buff[w] = getch();                          // Store data in buffer, can't keep up with serial data stream whilst programming pages
+        }
+        if (getch() == ' ') {
+            if (flags.eeprom) {                     //Write to EEPROM one byte at a time
+                address.word <<= 1;
+                for(w=0;w<length.word;w++) {
 #if defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
-					while(EECR & (1<<EEPE));
-					EEAR = (uint16_t)(void *)address.word;
-					EEDR = buff[w];
-					EECR |= (1<<EEMPE);
-					EECR |= (1<<EEPE);
+                    while(EECR & (1<<EEPE));
+                    EEAR = (uint16_t)(void *)address.word;
+                    EEDR = buff[w];
+                    EECR |= (1<<EEMPE);
+                    EECR |= (1<<EEPE);
 #else
-					eeprom_write_byte((void *)address.word,buff[w]);
+                    eeprom_write_byte((void *)address.word,buff[w]);
 #endif
-					address.word++;
-				}			
-			}
-			else {
+                    address.word++;
+                }           
+            }
+            else {
                             LoadProgram();
-			}
-			putch(0x14);
-			putch(0x10);
-		} else {
-			if (++error_count == MAX_ERROR_COUNT)
-				app_start();
-		}		
-	}
+            }
+            putch(0x14);
+            putch(0x10);
+        } else {
+            if (++error_count == MAX_ERROR_COUNT)
+                app_start();
+        }       
+    }
 
 
-	/* Read memory block mode, length is big endian.  */
-	else if(ch=='t') {
-		length.byte[1] = getch();
-		length.byte[0] = getch();
+    /* Read memory block mode, length is big endian.  */
+    else if(ch=='t') {
+        length.byte[1] = getch();
+        length.byte[0] = getch();
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-		if (address.word>0x7FFF) flags.rampz = 1;		// No go with m256, FIXME
-		else flags.rampz = 0;
+        if (address.word>0x7FFF) flags.rampz = 1;       // No go with m256, FIXME
+        else flags.rampz = 0;
 #endif
-		address.word = address.word << 1;	        // address * 2 -> byte location
-		if (getch() == 'E') flags.eeprom = 1;
-		else flags.eeprom = 0;
-		if (getch() == ' ') {		                // Command terminator
-			putch(0x14);
-			for (w=0;w < length.word;w++) {		        // Can handle odd and even lengths okay
-				if (flags.eeprom) {	                        // Byte access EEPROM read
+        address.word = address.word << 1;           // address * 2 -> byte location
+        if (getch() == 'E') flags.eeprom = 1;
+        else flags.eeprom = 0;
+        if (getch() == ' ') {                       // Command terminator
+            putch(0x14);
+            for (w=0;w < length.word;w++) {             // Can handle odd and even lengths okay
+                if (flags.eeprom) {                         // Byte access EEPROM read
 #if defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
-					while(EECR & (1<<EEPE));
-					EEAR = (uint16_t)(void *)address.word;
-					EECR |= (1<<EERE);
-					putch(EEDR);
+                    while(EECR & (1<<EEPE));
+                    EEAR = (uint16_t)(void *)address.word;
+                    EECR |= (1<<EERE);
+                    putch(EEDR);
 #else
-					putch(eeprom_read_byte((void *)address.word));
+                    putch(eeprom_read_byte((void *)address.word));
 #endif
-					address.word++;
-				}
-				else {
+                    address.word++;
+                }
+                else {
 
-					if (!flags.rampz) putch(pgm_read_byte_near(address.word));
+                    if (!flags.rampz) putch(pgm_read_byte_near(address.word));
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-					else putch(pgm_read_byte_far(address.word + 0x10000));
-					// Hmmmm, yuck  FIXME when m256 arrvies
+                    else putch(pgm_read_byte_far(address.word + 0x10000));
+                    // Hmmmm, yuck  FIXME when m256 arrvies
 #endif
-					address.word++;
-				}
-			}
-			putch(0x10);
-		}
-	}
+                    address.word++;
+                }
+            }
+            putch(0x10);
+        }
+    }
 
 
-	/* Get device signature bytes  */
-	else if(ch=='u') {
-		if (getch() == ' ') {
-			putch(0x14);
-			putch(SIG1);
-			putch(SIG2);
-			putch(SIG3);
-			putch(0x10);
-		} else {
-			if (++error_count == MAX_ERROR_COUNT)
-				app_start();
-		}
-	}
+    /* Get device signature bytes  */
+    else if(ch=='u') {
+        if (getch() == ' ') {
+            putch(0x14);
+            putch(SIG1);
+            putch(SIG2);
+            putch(SIG3);
+            putch(0x10);
+        } else {
+            if (++error_count == MAX_ERROR_COUNT)
+                app_start();
+        }
+    }
 
 
-	/* Read oscillator calibration byte */
-	else if(ch=='v') {
-		byte_response(0x00);
-	}
+    /* Read oscillator calibration byte */
+    else if(ch=='v') {
+        byte_response(0x00);
+    }
 
 
 #if defined MONITOR 
 
-	/* here come the extended monitor commands by Erik Lins */
+    /* here come the extended monitor commands by Erik Lins */
 
-	/* check for three times exclamation mark pressed */
-	else if(ch=='!') {
-		ch = getch();
-		if(ch=='!') {
-		ch = getch();
-		if(ch=='!') {
-			PGM_P welcome = "";
+    /* check for three times exclamation mark pressed */
+    else if(ch=='!') {
+        ch = getch();
+        if(ch=='!') {
+        ch = getch();
+        if(ch=='!') {
+            PGM_P welcome = "";
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-			uint16_t extaddr;
+            uint16_t extaddr;
 #endif
-			uint8_t addrl, addrh;
+            uint8_t addrl, addrh;
 
 #if defined __AVR_ATmega1280__ 
     #define MONITOR_WELCOME "ATmegaBOOT / Arduino Mega - (C) Arduino LLC - 090930\n\r";
@@ -734,276 +734,290 @@ void HandleChar(int ch) {
 #elif defined SAVVY128
     #define MONITOR_WELCOME "ATmegaBOOT / Savvy128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
 #endif
-			const char* welcome = "ATmegaBOOT / Unknown\n\r";
+            const char* welcome = "ATmegaBOOT / Unknown\n\r";
 
-			/* turn on LED */
-			LED_DDR |= _BV(LED);
-			LED_PORT &= ~_BV(LED);
+            /* turn on LED */
+            LED_DDR |= _BV(LED);
+            LED_PORT &= ~_BV(LED);
 
-			/* print a welcome message and command overview */
-			for(i=0; welcome[i] != '\0'; ++i) {
-				putch(welcome[i]);
-			}
+            /* print a welcome message and command overview */
+            for(i=0; welcome[i] != '\0'; ++i) {
+                putch(welcome[i]);
+            }
 
-			/* test for valid commands */
-			for(;;) {
-				putch('\n');
-				putch('\r');
-				putch(':');
-				putch(' ');
+            /* test for valid commands */
+            for(;;) {
+                putch('\n');
+                putch('\r');
+                putch(':');
+                putch(' ');
 
-				ch = getch();
-				putch(ch);
+                ch = getch();
+                putch(ch);
 
-				/* toggle LED */
-				if(ch == 't') {
-					if(bit_is_set(LED_PIN,LED)) {
-						LED_PORT &= ~_BV(LED);
-						putch('1');
-					} else {
-						LED_PORT |= _BV(LED);
-						putch('0');
-					}
-				} 
+                /* toggle LED */
+                if(ch == 't') {
+                    if(bit_is_set(LED_PIN,LED)) {
+                        LED_PORT &= ~_BV(LED);
+                        putch('1');
+                    } else {
+                        LED_PORT |= _BV(LED);
+                        putch('0');
+                    }
+                } 
 
-				/* read byte from address */
-				else if(ch == 'r') {
-					ch = getch(); putch(ch);
-					addrh = gethex();
-					addrl = gethex();
-					putch('=');
-					ch = *(uint8_t *)((addrh << 8) + addrl);
-					puthex(ch);
-				}
+                /* read byte from address */
+                else if(ch == 'r') {
+                    ch = getch(); putch(ch);
+                    addrh = gethex();
+                    addrl = gethex();
+                    putch('=');
+                    ch = *(uint8_t *)((addrh << 8) + addrl);
+                    puthex(ch);
+                }
 
-				/* write a byte to address  */
-				else if(ch == 'w') {
-					ch = getch(); putch(ch);
-					addrh = gethex();
-					addrl = gethex();
-					ch = getch(); putch(ch);
-					ch = gethex();
-					*(uint8_t *)((addrh << 8) + addrl) = ch;
-				}
+                /* write a byte to address  */
+                else if(ch == 'w') {
+                    ch = getch(); putch(ch);
+                    addrh = gethex();
+                    addrl = gethex();
+                    ch = getch(); putch(ch);
+                    ch = gethex();
+                    *(uint8_t *)((addrh << 8) + addrl) = ch;
+                }
 
-				/* read from uart and echo back */
-				else if(ch == 'u') {
-					for(;;) {
-						putch(getch());
-					}
-				}
+                /* read from uart and echo back */
+                else if(ch == 'u') {
+                    for(;;) {
+                        putch(getch());
+                    }
+                }
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-				/* external bus loop  */
-				else if(ch == 'b') {
-					putch('b');
-					putch('u');
-					putch('s');
-					MCUCR = 0x80;
-					XMCRA = 0;
-					XMCRB = 0;
-					extaddr = 0x1100;
-					for(;;) {
-						ch = *(volatile uint8_t *)extaddr;
-						if(++extaddr == 0) {
-							extaddr = 0x1100;
-						}
-					}
-				}
+                /* external bus loop  */
+                else if(ch == 'b') {
+                    putch('b');
+                    putch('u');
+                    putch('s');
+                    MCUCR = 0x80;
+                    XMCRA = 0;
+                    XMCRB = 0;
+                    extaddr = 0x1100;
+                    for(;;) {
+                        ch = *(volatile uint8_t *)extaddr;
+                        if(++extaddr == 0) {
+                            extaddr = 0x1100;
+                        }
+                    }
+                }
 #endif
 
-				else if(ch == 'j') {
-					app_start();
-				}
+                else if(ch == 'j') {
+                    app_start();
+                }
 
-			} /* end of monitor functions */
+            } /* end of monitor functions */
 
-		}
-		}
-	}
-	/* end of monitor */
+        }
+        }
+    }
+    /* end of monitor */
 #endif
-	else if (++error_count == MAX_ERROR_COUNT) {
-		app_start();
-	}
+    else if (++error_count == MAX_ERROR_COUNT) {
+        app_start();
+    }
 }
 
 void LoadProgram() {
-                            	//Write to FLASH one page at a time
-				if (address.byte[1]>127) address_high = 0x01;	//Only possible with m128, m256 will need 3rd address byte. FIXME
-				else address_high = 0x00;
+    //Write to FLASH one page at a time
+     if (address.byte[1]>127) address_high = 0x01;     //Only possible with m128, m256 will need 3rd address byte. FIXME
+     else address_high = 0x00;
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__)
-				RAMPZ = address_high;
+     RAMPZ = address_high;
 #endif
-				address.word = address.word << 1;	        //address * 2 -> byte location
-				/* if ((length.byte[0] & 0x01) == 0x01) length.word++;	//Even up an odd number of bytes */
-				if ((length.byte[0] & 0x01)) length.word++;	//Even up an odd number of bytes
-				cli();					//Disable interrupts, just to be sure
+     address.word = address.word << 1;          //address * 2 -> byte location
+     cli();                           //Disable interrupts, just to be sure
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__)
-				while(bit_is_set(EECR,EEPE));			//Wait for previous EEPROM writes to complete
+     while(bit_is_set(EECR,EEPE));    //Wait for previous EEPROM writes to complete
 #else
-				while(bit_is_set(EECR,EEWE));			//Wait for previous EEPROM writes to complete
+     while(bit_is_set(EECR,EEWE));    //Wait for previous EEPROM writes to complete
 #endif
-				asm volatile(
-					 "clr	r17		\n\t"	//page_word_count
-					 "lds	r30,address	\n\t"	//Address of FLASH location (in bytes)
-					 "lds	r31,address+1	\n\t"
-					 "ldi	r28,lo8(buff)	\n\t"	//Start of buffer array in RAM
-					 "ldi	r29,hi8(buff)	\n\t"
-					 "lds	r24,length	\n\t"	//Length of data to be written (in bytes)
-					 "lds	r25,length+1	\n\t"
-					 "length_loop:		\n\t"	//Main loop, repeat for number of words in block							 							 
-					 "cpi	r17,0x00	\n\t"	//If page_word_count=0 then erase page
-					 "brne	no_page_erase	\n\t"						 
-					 "wait_spm1:		\n\t"
-					 "lds	r16,%0		\n\t"	//Wait for previous spm to complete
-					 "andi	r16,1           \n\t"
-					 "cpi	r16,1           \n\t"
-					 "breq	wait_spm1       \n\t"
-					 "ldi	r16,0x03	\n\t"	//Erase page pointed to by Z
-					 "sts	%0,r16		\n\t"
-					 "spm			\n\t"							 
-#ifdef __AVR_ATmega163__
-					 ".word 0xFFFF		\n\t"
-					 "nop			\n\t"
-#endif
-					 "wait_spm2:		\n\t"
-					 "lds	r16,%0		\n\t"	//Wait for previous spm to complete
-					 "andi	r16,1           \n\t"
-					 "cpi	r16,1           \n\t"
-					 "breq	wait_spm2       \n\t"									 
 
-					 "ldi	r16,0x11	\n\t"	//Re-enable RWW section
-					 "sts	%0,r16		\n\t"						 			 
-					 "spm			\n\t"
-#ifdef __AVR_ATmega163__
-					 ".word 0xFFFF		\n\t"
-					 "nop			\n\t"
-#endif
-					 "no_page_erase:		\n\t"							 
-					 "ld	r0,Y+		\n\t"	//Write 2 bytes into page buffer
-					 "ld	r1,Y+		\n\t"							 
-								 
-					 "wait_spm3:		\n\t"
-					 "lds	r16,%0		\n\t"	//Wait for previous spm to complete
-					 "andi	r16,1           \n\t"
-					 "cpi	r16,1           \n\t"
-					 "breq	wait_spm3       \n\t"
-					 "ldi	r16,0x01	\n\t"	//Load r0,r1 into FLASH page buffer
-					 "sts	%0,r16		\n\t"
-					 "spm			\n\t"
-								 
-					 "inc	r17		\n\t"	//page_word_count++
-					 "cpi r17,%1	        \n\t"
-					 "brlo	same_page	\n\t"	//Still same page in FLASH
-					 "write_page:		\n\t"
-					 "clr	r17		\n\t"	//New page, write current one first
-					 "wait_spm4:		\n\t"
-					 "lds	r16,%0		\n\t"	//Wait for previous spm to complete
-					 "andi	r16,1           \n\t"
-					 "cpi	r16,1           \n\t"
-					 "breq	wait_spm4       \n\t"
-#ifdef __AVR_ATmega163__
-					 "andi	r30,0x80	\n\t"	// m163 requires Z6:Z1 to be zero during page write
-#endif							 							 
-					 "ldi	r16,0x05	\n\t"	//Write page pointed to by Z
-					 "sts	%0,r16		\n\t"
-					 "spm			\n\t"
-#ifdef __AVR_ATmega163__
-					 ".word 0xFFFF		\n\t"
-					 "nop			\n\t"
-					 "ori	r30,0x7E	\n\t"	// recover Z6:Z1 state after page write (had to be zero during write)
-#endif
-					 "wait_spm5:		\n\t"
-					 "lds	r16,%0		\n\t"	//Wait for previous spm to complete
-					 "andi	r16,1           \n\t"
-					 "cpi	r16,1           \n\t"
-					 "breq	wait_spm5       \n\t"									 
-					 "ldi	r16,0x11	\n\t"	//Re-enable RWW section
-					 "sts	%0,r16		\n\t"						 			 
-					 "spm			\n\t"					 		 
-#ifdef __AVR_ATmega163__
-					 ".word 0xFFFF		\n\t"
-					 "nop			\n\t"
-#endif
-					 "same_page:		\n\t"							 
-					 "adiw	r30,2		\n\t"	//Next word in FLASH
-					 "sbiw	r24,2		\n\t"	//length-2
-					 "breq	final_write	\n\t"	//Finished
-					 "rjmp	length_loop	\n\t"
-					 "final_write:		\n\t"
-					 "cpi	r17,0		\n\t"
-					 "breq	block_done	\n\t"
-					 "adiw	r24,2		\n\t"	//length+2, fool above check on length after short page write
-					 "rjmp	write_page	\n\t"
-					 "block_done:		\n\t"
-					 "clr	__zero_reg__	\n\t"	//restore zero register
+     int bytes = length.word;
+    //Even up an odd number of bytes
+    if (bytes & 0x01) {
+        bytes++;  
+    }
+
+    static uint8_t* bufnext = buff; 
+    asm volatile(
+        "ldi   r28, lo8(buff)   \n\t" //Write 2 bytes into page buffer
+        "ldi   r29, hi8(buff)    \n\t"                                    
+    );
+
 #if defined __AVR_ATmega168__  || __AVR_ATmega328P__ || __AVR_ATmega128__ || __AVR_ATmega1280__ || __AVR_ATmega1281__ 
-					 : "=m" (SPMCSR) : "M" (PAGE_SIZE) : "r0","r16","r17","r24","r25","r28","r29","r30","r31"
+    #define SPM_STATUS_REG SPMCSR
 #else
-					 : "=m" (SPMCR) : "M" (PAGE_SIZE) : "r0","r16","r17","r24","r25","r28","r29","r30","r31"
+    #define SPM_STATUS_REG SPMCR
 #endif
-					 );
-				/* Should really add a wait for RWW section to be enabled, don't actually need it since we never */
-				/* exit the bootloader without a power cycle anyhow */
+    return;
+    while (bytes) {
+        // Erase page pointed to by Z
+        asm volatile(
+            "lds   r30,address      \n\t" //Address of FLASH location (in bytes)
+            "lds   r31,address+1    \n\t"
+            "wait_spm1:             \n\t"
+            "lds   r16,%0           \n\t" //Wait for previous spm to complete
+            "andi  r16,1            \n\t"
+            "cpi   r16,1            \n\t"
+            "breq  wait_spm1        \n\t"
+            "ldi   r16,0x03         \n\t" //Erase page pointed to by Z
+            "sts   %0,r16           \n\t"
+            "spm                    \n\t"                                 
+#ifdef __AVR_ATmega163__
+            ".word 0xFFFF           \n\t"
+            "nop                    \n\t"
+#endif
+            "wait_spm2:             \n\t"
+            "lds   r16,%0           \n\t" //Wait for previous spm to complete
+            "andi  r16,1            \n\t"
+            "cpi   r16,1            \n\t"
+            "breq  wait_spm2        \n\t"                                             
+
+            "ldi   r16,0x11         \n\t" //Re-enable RWW section
+            "sts   %0,r16           \n\t"                                          
+            "spm                    \n\t"
+#ifdef __AVR_ATmega163__
+            ".word 0xFFFF           \n\t"
+            "nop                    \n\t"
+#endif
+        : "=m" (SPM_STATUS_REG)
+        : // No inputs
+        : "r0","r16","r17","r28","r29","r30","r31"
+        );
+
+        // Load words into FLASH page buffer
+        int index;
+        for ( index = 0; bytes && index < PAGE_SIZE; index += 2 ) {
+            asm volatile(
+                "lds   r28, bufnext     \n\t"
+                "lds   r29, bufnext+1   \n\t"
+                "ld    r0,Y+            \n\t" //Write 2 bytes into page buffer
+                "ld    r1,Y+            \n\t"                                    
+
+                "wait_spm3:             \n\t"
+                "lds   r16,%0           \n\t" //Wait for previous spm to complete
+                "andi  r16,1            \n\t"
+                "cpi   r16,1            \n\t"
+                "breq  wait_spm3        \n\t"
+                "ldi   r16,0x01         \n\t" //Load r0,r1 into FLASH page buffer
+                "sts   %0,r16           \n\t"
+                "spm                    \n\t"
+                : "=m" (SPM_STATUS_REG)
+                : // No inputs
+                : "r0","r16","r17","r28","r29"
+            );
+            bytes   -= 2;
+            bufnext += 2;
+        }
+
+        asm volatile(
+            // Write page pointed to by Z
+            "lds   r30,address      \n\t" //Address of FLASH location (in bytes)
+            "lds   r31,address+1    \n\t"
+            "wait_spm4:             \n\t"
+            "lds   r16,%0           \n\t" //Wait for previous spm to complete
+            "andi  r16,1            \n\t"
+            "cpi   r16,1            \n\t"
+            "breq  wait_spm4        \n\t"
+            "ldi   r16,0x05         \n\t" //Write page pointed to by Z
+            "sts   %0,r16           \n\t"
+            "spm                    \n\t"
+#ifdef     __AVR_ATmega163__
+            ".word 0xFFFF           \n\t"
+            "nop                    \n\t"
+#endif
+            "wait_spm5:             \n\t"
+            "lds   r16,%0           \n\t" //Wait for previous spm to complete
+            "andi  r16,1            \n\t"
+            "cpi   r16,1            \n\t"
+            "breq  wait_spm5        \n\t"                                             
+            "ldi   r16,0x11         \n\t" //Re-enable RWW section
+            "sts   %0,r16           \n\t"                                          
+            "spm                    \n\t"                                 
+#ifdef     __AVR_ATmega163__
+            ".word 0xFFFF           \n\t"
+            "nop                    \n\t"
+#endif
+
+            "clr   __zero_reg__     \n\t" //restore zero register
+            : "=m" (SPM_STATUS_REG)
+            : // No inputs
+            : "r0","r16","r17","r28","r29","r30","r31"
+        );
+
+        address.word += PAGE_SIZE;
+    }
+    /* Should really add a wait for RWW section to be enabled, don't actually need it since we never */
+    /* exit the bootloader without a power cycle anyhow */
 }
 
 char gethexnib(void) {
-	char a;
-	a = getch(); putch(a);
-	if(a >= 'a') {
-		return (a - 'a' + 0x0a);
-	} else if(a >= '0') {
-		return(a - '0');
-	}
-	return a;
+    char a;
+    a = getch(); putch(a);
+    if(a >= 'a') {
+        return (a - 'a' + 0x0a);
+    } else if(a >= '0') {
+        return(a - '0');
+    }
+    return a;
 }
 
 
 char gethex(void) {
-	return (gethexnib() << 4) + gethexnib();
+    return (gethexnib() << 4) + gethexnib();
 }
 
 
 void puthex(char ch) {
-	char ah;
+    char ah;
 
-	ah = ch >> 4;
-	if(ah >= 0x0a) {
-		ah = ah - 0x0a + 'a';
-	} else {
-		ah += '0';
-	}
-	
-	ch &= 0x0f;
-	if(ch >= 0x0a) {
-		ch = ch - 0x0a + 'a';
-	} else {
-		ch += '0';
-	}
-	
-	putch(ah);
-	putch(ch);
+    ah = ch >> 4;
+    if(ah >= 0x0a) {
+        ah = ah - 0x0a + 'a';
+    } else {
+        ah += '0';
+    }
+    
+    ch &= 0x0f;
+    if(ch >= 0x0a) {
+        ch = ch - 0x0a + 'a';
+    } else {
+        ch += '0';
+    }
+    
+    putch(ah);
+    putch(ch);
 }
 
 
 void putch(char ch)
 {
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-	if(bootuart == 1) {
-		while (!(UCSR0A & _BV(UDRE0)));
-		UDR0 = ch;
-	}
-	else if (bootuart == 2) {
-		while (!(UCSR1A & _BV(UDRE1)));
-		UDR1 = ch;
-	}
+    if(bootuart == 1) {
+        while (!(UCSR0A & _BV(UDRE0)));
+        UDR0 = ch;
+    }
+    else if (bootuart == 2) {
+        while (!(UCSR1A & _BV(UDRE1)));
+        UDR1 = ch;
+    }
 #elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
-	while (!(UCSR0A & _BV(UDRE0)));
-	UDR0 = ch;
+    while (!(UCSR0A & _BV(UDRE0)));
+    UDR0 = ch;
 #else
-	/* m8,16,32,169,8515,8535,163 */
-	while (!(UCSRA & _BV(UDRE)));
-	UDR = ch;
+    /* m8,16,32,169,8515,8535,163 */
+    while (!(UCSRA & _BV(UDRE)));
+    UDR = ch;
 #endif
 }
 
@@ -1011,112 +1025,112 @@ void putch(char ch)
 char getch(void)
 {
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-	uint32_t count = 0;
-	if(bootuart == 1) {
-		while(!(UCSR0A & _BV(RXC0))) {
-			/* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
-			/* HACKME:: here is a good place to count times*/
-			count++;
-			if (count > MAX_TIME_COUNT)
-				app_start();
-			}
+    uint32_t count = 0;
+    if(bootuart == 1) {
+        while(!(UCSR0A & _BV(RXC0))) {
+            /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
+            /* HACKME:: here is a good place to count times*/
+            count++;
+            if (count > MAX_TIME_COUNT)
+                app_start();
+            }
 
-			return UDR0;
-		}
-	else if(bootuart == 2) {
-		while(!(UCSR1A & _BV(RXC1))) {
-			/* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
-			/* HACKME:: here is a good place to count times*/
-			count++;
-			if (count > MAX_TIME_COUNT)
-				app_start();
-		}
+            return UDR0;
+        }
+    else if(bootuart == 2) {
+        while(!(UCSR1A & _BV(RXC1))) {
+            /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
+            /* HACKME:: here is a good place to count times*/
+            count++;
+            if (count > MAX_TIME_COUNT)
+                app_start();
+        }
 
-		return UDR1;
-	}
-	return 0;
+        return UDR1;
+    }
+    return 0;
 #elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
-	uint32_t count = 0;
-	while(!(UCSR0A & _BV(RXC0))){
-		/* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
-		/* HACKME:: here is a good place to count times*/
-		count++;
-		if (count > MAX_TIME_COUNT)
-			app_start();
-	}
-	return UDR0;
+    uint32_t count = 0;
+    while(!(UCSR0A & _BV(RXC0))){
+        /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
+        /* HACKME:: here is a good place to count times*/
+        count++;
+        if (count > MAX_TIME_COUNT)
+            app_start();
+    }
+    return UDR0;
 #else
-	/* m8,16,32,169,8515,8535,163 */
-	uint32_t count = 0;
-	while(!(UCSRA & _BV(RXC))){
-		/* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
-		/* HACKME:: here is a good place to count times*/
-		count++;
-		if (count > MAX_TIME_COUNT)
-			app_start();
-	}
-	return UDR;
+    /* m8,16,32,169,8515,8535,163 */
+    uint32_t count = 0;
+    while(!(UCSRA & _BV(RXC))){
+        /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
+        /* HACKME:: here is a good place to count times*/
+        count++;
+        if (count > MAX_TIME_COUNT)
+            app_start();
+    }
+    return UDR;
 #endif
 }
 
 
 void getNch(uint8_t count)
 {
-	while(count--) {
+    while(count--) {
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-		if(bootuart == 1) {
-			while(!(UCSR0A & _BV(RXC0)));
-			UDR0;
-		} 
-		else if(bootuart == 2) {
-			while(!(UCSR1A & _BV(RXC1)));
-			UDR1;
-		}
+        if(bootuart == 1) {
+            while(!(UCSR0A & _BV(RXC0)));
+            UDR0;
+        } 
+        else if(bootuart == 2) {
+            while(!(UCSR1A & _BV(RXC1)));
+            UDR1;
+        }
 #elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
-		getch();
+        getch();
 #else
-		/* m8,16,32,169,8515,8535,163 */
-		/* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
-		//while(!(UCSRA & _BV(RXC)));
-		//UDR;
-		getch(); // need to handle time out
-#endif		
-	}
+        /* m8,16,32,169,8515,8535,163 */
+        /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
+        //while(!(UCSRA & _BV(RXC)));
+        //UDR;
+        getch(); // need to handle time out
+#endif      
+    }
 }
 
 
 void byte_response(uint8_t val)
 {
-	if (getch() == ' ') {
-		putch(0x14);
-		putch(val);
-		putch(0x10);
-	} else {
-		if (++error_count == MAX_ERROR_COUNT)
-			app_start();
-	}
+    if (getch() == ' ') {
+        putch(0x14);
+        putch(val);
+        putch(0x10);
+    } else {
+        if (++error_count == MAX_ERROR_COUNT)
+            app_start();
+    }
 }
 
 
 void nothing_response(void)
 {
-	if (getch() == ' ') {
-		putch(0x14);
-		putch(0x10);
-	} else {
-		if (++error_count == MAX_ERROR_COUNT)
-			app_start();
-	}
+    if (getch() == ' ') {
+        putch(0x14);
+        putch(0x10);
+    } else {
+        if (++error_count == MAX_ERROR_COUNT)
+            app_start();
+    }
 }
 
 void flash_led(uint8_t count)
 {
-	while (count--) {
-		LED_PORT |= _BV(LED);
-		_delay_ms(100);
-		LED_PORT &= ~_BV(LED);
-		_delay_ms(100);
-	}
+    while (count--) {
+        LED_PORT |= _BV(LED);
+        _delay_ms(100);
+        LED_PORT &= ~_BV(LED);
+        _delay_ms(100);
+    }
 }
 
 
