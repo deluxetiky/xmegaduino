@@ -1,0 +1,6 @@
+syntax: glob
+
+save
+save2
+
+*.hex
