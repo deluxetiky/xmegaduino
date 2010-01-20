@@ -48,7 +48,7 @@ STK500-1 = $(STK500) -e -d$(MCU_TARGET) -pf -vf -if$(PROGRAM)_$(TARGET).hex \
 STK500-2 = $(STK500) -d$(MCU_TARGET) -ms -q -lCF -LCF -cUSB -I200kHz -s -wt
 
 
-OBJ        = $(PROGRAM).o
+OBJ        = $(PROGRAM).o spm.o
 OPTIMIZE   = -O2
 
 DEFS       = 
@@ -153,9 +153,11 @@ ng_isp: isp
 
 atmega328: TARGET = atmega328
 atmega328: MCU_TARGET = atmega328p
-atmega328: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600
+atmega328: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
 atmega328: AVR_FREQ = 16000000L 
 atmega328: LDSECTION  = --section-start=.text=0x7800
+atmega328: spm.s
+atmega328: $(PROGRAM)_atmega328.s
 atmega328: $(PROGRAM)_atmega328.hex
 
 atmega328_isp: atmega328
@@ -221,4 +223,9 @@ clean:
 
 %.bin: %.elf
 	$(OBJCOPY) -j .text -j .data -O binary $< $@
-	
+
+spm.s: spm.c
+	$(CC) $(CFLAGS) -S -o $@ $<
+
+ATmegaBOOT_168_atmega328.s: $(PROGRAM).c
+	$(CC) $(CFLAGS) -S -o $@ $<

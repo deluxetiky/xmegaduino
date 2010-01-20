@@ -2,5 +2,10 @@ syntax: glob
 
 save
 save2
+save3
 
 *.hex
+,*
+.*.swp
+*.flash
+*.s

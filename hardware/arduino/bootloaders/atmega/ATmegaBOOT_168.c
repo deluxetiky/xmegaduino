@@ -73,175 +73,7 @@
 #include <avr/wdt.h>
 #include <util/delay.h>
 
-#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
-    #define USE_BUILT_IN_AVR_EEPROM_H 1
-#endif
-
-#if !defined(USE_BUILT_IN_AVR_EEPROM_H)
-    #define USE_BUILT_IN_AVR_EEPROM_H 1
-#endif
-
-/* the current avr-libc eeprom functions do not support the ATmega168 */
-/* own eeprom write/read functions are used instead */
-#if USE_BUILT_IN_AVR_EEPROM_H 
-#include <avr/eeprom.h>
-#endif
-
-/* Use the F_CPU defined in Makefile */
-
-/* 20060803: hacked by DojoCorp */
-/* 20070626: hacked by David A. Mellis to decrease waiting time for auto-reset */
-/* set the waiting time for the bootloader */
-/* get this from the Makefile instead */
-/* #define MAX_TIME_COUNT (F_CPU>>4) */
-
-/* 20070707: hacked by David A. Mellis - after this many errors give up and launch application */
-#define MAX_ERROR_COUNT 5
-
-/* set the UART baud rate */
-/* 20060803: hacked by DojoCorp */
-//#define BAUD_RATE   115200
-#ifndef BAUD_RATE
-#define BAUD_RATE   19200
-#endif
-
-
-/* SW_MAJOR and MINOR needs to be updated from time to time to avoid warning message from AVR Studio */
-/* never allow AVR Studio to do an update !!!! */
-#define HW_VER   0x02
-#define SW_MAJOR 0x01
-#define SW_MINOR 0x10
-
-
-/* Adjust to suit whatever pin your hardware uses to enter the bootloader */
-/* ATmega128 has two UARTS so two pins are used to enter bootloader and select UART */
-/* ATmega1280 has four UARTS, but for Arduino Mega, we will only use RXD0 to get code */
-/* BL0... means UART0, BL1... means UART1 */
-#ifdef __AVR_ATmega128__
-#define BL_DDR  DDRF
-#define BL_PORT PORTF
-#define BL_PIN  PINF
-#define BL0     PINF7
-#define BL1     PINF6
-#elif defined __AVR_ATmega1280__ 
-/* we just don't do anything for the MEGA and enter bootloader on reset anyway*/
-#endif
-
-#if !defined(BL0)
-/* other ATmegas have only one UART, so only one pin is defined to enter bootloader */
-#define BL_DDR  DDRD
-#define BL_PORT PORTD
-#define BL_PIN  PIND
-#define BL0     PIND6
-#endif
-
-
-/* onboard LED is used to indicate, that the bootloader was entered (3x flashing) */
-/* if monitor functions are included, LED goes on after monitor was entered */
-#if defined __AVR_ATmega128__ || defined __AVR_ATmega1280__
-/* Onboard LED is connected to pin PB7 (e.g. Crumb128, PROBOmega128, Savvy128, Arduino Mega) */
-#define LED_DDR  DDRB
-#define LED_PORT PORTB
-#define LED_PIN  PINB
-#define LED      PINB7
-#endif
-
-#if !defined(LED)
-/* Onboard LED is connected to pin PB5 in Arduino NG, Diecimila, and Duomilanuove */ 
-/* other boards like e.g. Crumb8, Crumb168 are using PB2 */
-#define LED_DDR  DDRB
-#define LED_PORT PORTB
-#define LED_PIN  PINB
-#define LED      PINB5
-#endif
-
-
-/* monitor functions will only be compiled when using ATmega128, due to bootblock size constraints */
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-#define MONITOR 1
-#endif
-
-
-/* define various device id's */
-/* manufacturer byte is always the same */
-#define SIG1    0x1E    // Yep, Atmel is the only manufacturer of AVR micros.  Single source :(
-
-#if defined __AVR_ATmega1280__
-#define SIG2    0x97
-#define SIG3    0x03
-#define PAGE_SIZE   0x80U   //128 words
-
-#elif defined __AVR_ATmega1281__
-#define SIG2    0x97
-#define SIG3    0x04
-#define PAGE_SIZE   0x80U   //128 words
-
-#elif defined __AVR_ATmega128__
-#define SIG2    0x97
-#define SIG3    0x02
-#define PAGE_SIZE   0x80U   //128 words
-
-#elif defined __AVR_ATmega64__
-#define SIG2    0x96
-#define SIG3    0x02
-#define PAGE_SIZE   0x80U   //128 words
-
-#elif defined __AVR_ATmega32__
-#define SIG2    0x95
-#define SIG3    0x02
-#define PAGE_SIZE   0x40U   //64 words
-
-#elif defined __AVR_ATmega16__
-#define SIG2    0x94
-#define SIG3    0x03
-#define PAGE_SIZE   0x40U   //64 words
-
-#elif defined __AVR_ATmega8__
-#define SIG2    0x93
-#define SIG3    0x07
-#define PAGE_SIZE   0x20U   //32 words
-
-#elif defined __AVR_ATmega88__
-#define SIG2    0x93
-#define SIG3    0x0a
-#define PAGE_SIZE   0x20U   //32 words
-
-#elif defined __AVR_ATmega168__
-#define SIG2    0x94
-#define SIG3    0x06
-#define PAGE_SIZE   0x40U   //64 words
-
-#elif defined __AVR_ATmega328P__
-#define SIG2    0x95
-#define SIG3    0x0F
-#define PAGE_SIZE   0x40U   //64 words
-
-#elif defined __AVR_ATmega162__
-#define SIG2    0x94
-#define SIG3    0x04
-#define PAGE_SIZE   0x40U   //64 words
-
-#elif defined __AVR_ATmega163__
-#define SIG2    0x94
-#define SIG3    0x02
-#define PAGE_SIZE   0x40U   //64 words
-
-#elif defined __AVR_ATmega169__
-#define SIG2    0x94
-#define SIG3    0x05
-#define PAGE_SIZE   0x40U   //64 words
-
-#elif defined __AVR_ATmega8515__
-#define SIG2    0x93
-#define SIG3    0x06
-#define PAGE_SIZE   0x20U   //32 words
-
-#elif defined __AVR_ATmega8535__
-#define SIG2    0x93
-#define SIG3    0x08
-#define PAGE_SIZE   0x20U   //32 words
-#endif
-
+#include "config.h"
 
 /* function prototypes */
 void putch(char);
@@ -270,19 +102,19 @@ struct flags_struct {
 } flags;
 
 uint8_t buff[256];
-uint8_t address_high;
 
-uint8_t pagesz=0x80;
+//uint8_t pagesz=0x80;
 
-uint8_t i;
-static uint8_t bootuart = 0;
+//uint8_t i;
+//static uint8_t bootuart = 0;
 
-uint8_t error_count = 0;
+//uint8_t error_count = 0;
 
 void (*app_start)(void) = 0x0000;
 
+#if 0
 #ifdef WATCHDOG_MODS
-    inline void CheckWatchDogAtStartup() {
+    static inline void CheckWatchDogAtStartup() {
         ch = MCUSR;
         MCUSR = 0;
 
@@ -294,9 +126,10 @@ void (*app_start)(void) = 0x0000;
             app_start();  // skip bootloader
     }
 #else
-    inline void CheckWatchDogAtStartup() {
+    static inline void CheckWatchDogAtStartup() {
         asm volatile("nop\n\t");
     }
+#endif
 #endif
 
 /* set pin direction for bootloader pin and enable pullup */
@@ -316,7 +149,8 @@ void (*app_start)(void) = 0x0000;
     #define INIT_BL1_DIRECTION 0
 #endif
 
-inline void SetBootloaderPinDirections() {
+#if 0
+static inline void SetBootloaderPinDirections() {
 #if INIT_BL0_DIRECTION
     BL_DDR &= ~_BV(BL0);
     BL_PORT |= _BV(BL0);
@@ -327,6 +161,7 @@ inline void SetBootloaderPinDirections() {
     BL_PORT |= _BV(BL1);
 #endif
 }
+#endif
 
 #ifdef __AVR_ATmega128__
     #define START_APP_IF_FLASH_PROGRAMED 1
@@ -336,7 +171,8 @@ inline void SetBootloaderPinDirections() {
     #define START_APP_IF_FLASH_PROGRAMED 0
 #endif
 
-inline uint8_t GetBootUart() {
+#if 0
+static inline uint8_t GetBootUart() {
 #if INIT_BL0_DIRECTION
     /* check which UART should be used for booting */
     if(bit_is_clear(BL_PIN, BL0)) {
@@ -360,11 +196,12 @@ inline uint8_t GetBootUart() {
     /* default to uart 0 */
     return 1;
 }
+#endif
 
 
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
     #define HAVE_INIT_BOOT_UART 1
-    inline void InitBootUart() {
+    static inline void InitBootUart() {
         if(bootuart == 1) {
             UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
             UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
@@ -384,7 +221,7 @@ inline uint8_t GetBootUart() {
     }
 #elif defined __AVR_ATmega163__
     #define HAVE_INIT_BOOT_UART 1
-    inline void InitBootUart() {
+    static inline void InitBootUart() {
         UBRR = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
         UBRRHI = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
         UCSRA = 0x00;
@@ -392,7 +229,7 @@ inline uint8_t GetBootUart() {
     }
 #elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
     #define HAVE_INIT_BOOT_UART 1
-    inline void InitBootUart() {
+    static inline void InitBootUart() {
 
 #ifdef DOUBLE_SPEED
         UCSR0A = (1<<U2X0); //Double speed mode USART0
@@ -409,7 +246,7 @@ inline uint8_t GetBootUart() {
     }
 #elif defined __AVR_ATmega8__
     #define HAVE_INIT_BOOT_UART 1
-    inline void InitBootUart() {
+    static inline void InitBootUart() {
         /* m8 */
         UBRRH = (((F_CPU/BAUD_RATE)/16)-1)>>8;  // set baud rate
         UBRRL = (((F_CPU/BAUD_RATE)/16)-1);
@@ -419,7 +256,7 @@ inline uint8_t GetBootUart() {
 #endif
 
 #if !defined(HAVE_INIT_BOOT_UART)
-    inline void InitBootUart() {
+    static inline void InitBootUart() {
         /* m16,m32,m169,m8515,m8535 */
         UBRRL = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
         UBRRH = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
@@ -439,8 +276,9 @@ inline uint8_t GetBootUart() {
     #define PORT_LINE_NOISE PORTE
 #endif
 
+#if 0
 #if defined(LINE_NOISE_PIN)
-    inline void SuppressLineNoise() {
+    static inline void SuppressLineNoise() {
         /* Enable internal pull-up resistor on pin D0 (RX), in order
         to supress line noise that prevents the bootloader from
         timing out (DAM: 20070509) */
@@ -448,24 +286,26 @@ inline uint8_t GetBootUart() {
         PORT_LINE_NOISE |= _BV(LINE_NOISE_PIN);
     }
 #else
-    inline void SuppressLineNoise() {
+    static inline void SuppressLineNoise() {
     }
 #endif
+#endif
 
-void HandleChar(int c);
-void LoadProgram();
+static void HandleChar(int c);
+extern void LoadProgram();
 
 /* main program starts here */
 int main(void)
 {
-    uint8_t ch;
-
+#if 0
     CheckWatchDogAtStartup();
 
     SetBootloaderPinDirections();
     bootuart = GetBootUart();
     InitBootUart();
     SuppressLineNoise();
+#endif
+    InitBootUart();
 
 
     /* set LED pin as output */
@@ -477,7 +317,7 @@ int main(void)
     // 4x for UART0, 5x for UART1
     flash_led(NUM_LED_FLASHES + bootuart);
 #else
-    flash_led(NUM_LED_FLASHES);
+    // flash_led(NUM_LED_FLASHES);
 #endif
 
     /* 20050803: by DojoCorp, this is one of the parts provoking the
@@ -487,14 +327,14 @@ int main(void)
     /* forever loop */
     for (;;) {
         /* get character from UART */
-        ch = getch();
+        register uint8_t ch = getch();
 
         HandleChar(ch);
     } /* end of forever loop */
 
 }
 
-void HandleChar(int ch) {
+void HandleChar(register int ch) {
     uint8_t  ch2;
     uint16_t w;
 
@@ -506,6 +346,7 @@ void HandleChar(int ch) {
     }
 
 
+#if 0
     /* Request programmer ID */
     /* Not using PROGMEM string due to boot block in m128 being beyond 64kB boundry  */
     /* Would need to selectively manipulate RAMPZ, and it's only 9 characters anyway so who cares.  */
@@ -520,11 +361,14 @@ void HandleChar(int ch) {
             putch('S');
             putch('P');
             putch(0x10);
+#if 0
         } else {
             if (++error_count == MAX_ERROR_COUNT)
                 app_start();
+#endif
         }
     }
+#endif
 
 
     /* AVR ISP/STK500 board commands  DON'T CARE so default nothing_response */
@@ -638,9 +482,11 @@ void HandleChar(int ch) {
             }
             putch(0x14);
             putch(0x10);
+#if 0
         } else {
             if (++error_count == MAX_ERROR_COUNT)
                 app_start();
+#endif
         }       
     }
 
@@ -693,9 +539,11 @@ void HandleChar(int ch) {
             putch(SIG2);
             putch(SIG3);
             putch(0x10);
+#if 0
         } else {
             if (++error_count == MAX_ERROR_COUNT)
                 app_start();
+#endif
         }
     }
 
@@ -822,15 +670,20 @@ void HandleChar(int ch) {
     }
     /* end of monitor */
 #endif
+#if 0
     else if (++error_count == MAX_ERROR_COUNT) {
         app_start();
     }
+#endif
 }
 
+extern void Spm(uint8_t code, uint16_t addr, uint16_t value);
+
 void LoadProgram() {
+    uint8_t address_high = 0;
+
     //Write to FLASH one page at a time
-     if (address.byte[1]>127) address_high = 0x01;     //Only possible with m128, m256 will need 3rd address byte. FIXME
-     else address_high = 0x00;
+     address_high = address.byte[1]>127; //Only possible with m128, m256 will need 3rd address byte. FIXME
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__)
      RAMPZ = address_high;
 #endif
@@ -842,123 +695,33 @@ void LoadProgram() {
      while(bit_is_set(EECR,EEWE));    //Wait for previous EEPROM writes to complete
 #endif
 
-     int bytes = length.word;
     //Even up an odd number of bytes
-    if (bytes & 0x01) {
-        bytes++;  
+    if (length.word & 0x01) {
+        length.word++;  
     }
+    int bytes = length.word;
 
-    static uint8_t* bufnext = buff; 
-    asm volatile(
-        "ldi   r28, lo8(buff)   \n\t" //Write 2 bytes into page buffer
-        "ldi   r29, hi8(buff)    \n\t"                                    
-    );
-
-#if defined __AVR_ATmega168__  || __AVR_ATmega328P__ || __AVR_ATmega128__ || __AVR_ATmega1280__ || __AVR_ATmega1281__ 
-    #define SPM_STATUS_REG SPMCSR
-#else
-    #define SPM_STATUS_REG SPMCR
-#endif
-    return;
-    while (bytes) {
+    uint16_t* bufNext = (uint16_t*)buff;
+    uint16_t  addr    = address.word;
+    while (0 < bytes) {
+        uint16_t page = addr;
         // Erase page pointed to by Z
-        asm volatile(
-            "lds   r30,address      \n\t" //Address of FLASH location (in bytes)
-            "lds   r31,address+1    \n\t"
-            "wait_spm1:             \n\t"
-            "lds   r16,%0           \n\t" //Wait for previous spm to complete
-            "andi  r16,1            \n\t"
-            "cpi   r16,1            \n\t"
-            "breq  wait_spm1        \n\t"
-            "ldi   r16,0x03         \n\t" //Erase page pointed to by Z
-            "sts   %0,r16           \n\t"
-            "spm                    \n\t"                                 
-#ifdef __AVR_ATmega163__
-            ".word 0xFFFF           \n\t"
-            "nop                    \n\t"
-#endif
-            "wait_spm2:             \n\t"
-            "lds   r16,%0           \n\t" //Wait for previous spm to complete
-            "andi  r16,1            \n\t"
-            "cpi   r16,1            \n\t"
-            "breq  wait_spm2        \n\t"                                             
-
-            "ldi   r16,0x11         \n\t" //Re-enable RWW section
-            "sts   %0,r16           \n\t"                                          
-            "spm                    \n\t"
-#ifdef __AVR_ATmega163__
-            ".word 0xFFFF           \n\t"
-            "nop                    \n\t"
-#endif
-        : "=m" (SPM_STATUS_REG)
-        : // No inputs
-        : "r0","r16","r17","r28","r29","r30","r31"
-        );
+        Spm( 0x03, page, 0 ); // Erase page
+        Spm( 0x11, 0,    0 ); // Re-enable RWW section
 
         // Load words into FLASH page buffer
         int index;
-        for ( index = 0; bytes && index < PAGE_SIZE; index += 2 ) {
-            asm volatile(
-                "lds   r28, bufnext     \n\t"
-                "lds   r29, bufnext+1   \n\t"
-                "ld    r0,Y+            \n\t" //Write 2 bytes into page buffer
-                "ld    r1,Y+            \n\t"                                    
-
-                "wait_spm3:             \n\t"
-                "lds   r16,%0           \n\t" //Wait for previous spm to complete
-                "andi  r16,1            \n\t"
-                "cpi   r16,1            \n\t"
-                "breq  wait_spm3        \n\t"
-                "ldi   r16,0x01         \n\t" //Load r0,r1 into FLASH page buffer
-                "sts   %0,r16           \n\t"
-                "spm                    \n\t"
-                : "=m" (SPM_STATUS_REG)
-                : // No inputs
-                : "r0","r16","r17","r28","r29"
-            );
-            bytes   -= 2;
-            bufnext += 2;
+        for ( index = PAGE_SIZE; 0 != index; --index ) {
+            Spm( 0x01, addr, *bufNext ); // Load bufNext to address
+            ++bufNext;
+            addr  += 2;
+            bytes -= 2;
         }
 
-        asm volatile(
-            // Write page pointed to by Z
-            "lds   r30,address      \n\t" //Address of FLASH location (in bytes)
-            "lds   r31,address+1    \n\t"
-            "wait_spm4:             \n\t"
-            "lds   r16,%0           \n\t" //Wait for previous spm to complete
-            "andi  r16,1            \n\t"
-            "cpi   r16,1            \n\t"
-            "breq  wait_spm4        \n\t"
-            "ldi   r16,0x05         \n\t" //Write page pointed to by Z
-            "sts   %0,r16           \n\t"
-            "spm                    \n\t"
-#ifdef     __AVR_ATmega163__
-            ".word 0xFFFF           \n\t"
-            "nop                    \n\t"
-#endif
-            "wait_spm5:             \n\t"
-            "lds   r16,%0           \n\t" //Wait for previous spm to complete
-            "andi  r16,1            \n\t"
-            "cpi   r16,1            \n\t"
-            "breq  wait_spm5        \n\t"                                             
-            "ldi   r16,0x11         \n\t" //Re-enable RWW section
-            "sts   %0,r16           \n\t"                                          
-            "spm                    \n\t"                                 
-#ifdef     __AVR_ATmega163__
-            ".word 0xFFFF           \n\t"
-            "nop                    \n\t"
-#endif
-
-            "clr   __zero_reg__     \n\t" //restore zero register
-            : "=m" (SPM_STATUS_REG)
-            : // No inputs
-            : "r0","r16","r17","r28","r29","r30","r31"
-        );
-
-        address.word += PAGE_SIZE;
+        Spm( 0x05, page, 0 ); // Write page
+        Spm( 0x11, 0,    0 ); // Re-enable RWW section
+return;
     }
-    /* Should really add a wait for RWW section to be enabled, don't actually need it since we never */
-    /* exit the bootloader without a power cycle anyhow */
 }
 
 char gethexnib(void) {
@@ -1105,9 +868,11 @@ void byte_response(uint8_t val)
         putch(0x14);
         putch(val);
         putch(0x10);
+#if 0
     } else {
         if (++error_count == MAX_ERROR_COUNT)
             app_start();
+#endif
     }
 }
 
@@ -1117,9 +882,11 @@ void nothing_response(void)
     if (getch() == ' ') {
         putch(0x14);
         putch(0x10);
+#if 0
     } else {
         if (++error_count == MAX_ERROR_COUNT)
             app_start();
+#endif
     }
 }
 
@@ -1127,9 +894,9 @@ void flash_led(uint8_t count)
 {
     while (count--) {
         LED_PORT |= _BV(LED);
-        _delay_ms(100);
+        _delay_ms(200);
         LED_PORT &= ~_BV(LED);
-        _delay_ms(100);
+        _delay_ms(200);
     }
 }
 
