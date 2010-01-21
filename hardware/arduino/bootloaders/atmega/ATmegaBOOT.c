@@ -272,11 +272,9 @@ void HandleChar(register int ch) {
             putch('S');
             putch('P');
             putch(0x10);
-#if 0
         } else {
             if (++error_count == MAX_ERROR_COUNT)
                 app_start();
-#endif
         }
     }
 #endif
@@ -363,14 +361,14 @@ void HandleChar(register int ch) {
             if (flags.eeprom) {                     //Write to EEPROM one byte at a time
                 address.word <<= 1;
                 for(w=0;w<length.word;w++) {
-#if defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
+#if USE_BUILT_IN_AVR_EEPROM_H
+                    eeprom_write_byte((void *)address.word,buff[w]);
+#else
                     while(EECR & (1<<EEPE));
                     EEAR = (uint16_t)(void *)address.word;
                     EEDR = buff[w];
                     EECR |= (1<<EEMPE);
                     EECR |= (1<<EEPE);
-#else
-                    eeprom_write_byte((void *)address.word,buff[w]);
 #endif
                     address.word++;
                 }           
@@ -380,11 +378,9 @@ void HandleChar(register int ch) {
             }
             putch(0x14);
             putch(0x10);
-#if 0
         } else {
             if (++error_count == MAX_ERROR_COUNT)
                 app_start();
-#endif
         }       
     }
 
@@ -404,13 +400,13 @@ void HandleChar(register int ch) {
             putch(0x14);
             for (w=0;w < length.word;w++) {             // Can handle odd and even lengths okay
                 if (flags.eeprom) {                         // Byte access EEPROM read
-#if defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
+#if USE_BUILT_IN_AVR_EEPROM_H
+                    putch(eeprom_read_byte((void *)address.word));
+#else
                     while(EECR & (1<<EEPE));
                     EEAR = (uint16_t)(void *)address.word;
                     EECR |= (1<<EERE);
                     putch(EEDR);
-#else
-                    putch(eeprom_read_byte((void *)address.word));
 #endif
                     address.word++;
                 }
@@ -437,11 +433,9 @@ void HandleChar(register int ch) {
             putch(SIG2);
             putch(SIG3);
             putch(0x10);
-#if 0
         } else {
             if (++error_count == MAX_ERROR_COUNT)
                 app_start();
-#endif
         }
     }
 
@@ -568,11 +562,9 @@ void HandleChar(register int ch) {
     }
     /* end of monitor */
 #endif
-#if 0
     else if (++error_count == MAX_ERROR_COUNT) {
         app_start();
     }
-#endif
 }
 
 extern void Spm(uint8_t code, uint16_t addr, uint16_t value);
@@ -766,11 +758,9 @@ void byte_response(uint8_t val)
         putch(0x14);
         putch(val);
         putch(0x10);
-#if 0
     } else {
         if (++error_count == MAX_ERROR_COUNT)
             app_start();
-#endif
     }
 }
 
@@ -780,11 +770,9 @@ void nothing_response(void)
     if (getch() == ' ') {
         putch(0x14);
         putch(0x10);
-#if 0
     } else {
         if (++error_count == MAX_ERROR_COUNT)
             app_start();
-#endif
     }
 }
 
