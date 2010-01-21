@@ -389,7 +389,7 @@ void HandleChar(register int ch) {
     else if(ch=='t') {
         length.byte[1] = getch();
         length.byte[0] = getch();
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+#if 16 < ADDR_BITS
         if (address.word>0x7FFF) flags.rampz = 1;       // No go with m256, FIXME
         else flags.rampz = 0;
 #endif
@@ -413,7 +413,7 @@ void HandleChar(register int ch) {
                 else {
 
                     if (!flags.rampz) putch(pgm_read_byte_near(address.word));
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+#if 16 < ADDR_BITS
                     else putch(pgm_read_byte_far(address.word + 0x10000));
                     // Hmmmm, yuck  FIXME when m256 arrvies
 #endif
@@ -457,7 +457,7 @@ void HandleChar(register int ch) {
         ch = getch();
         if(ch=='!') {
             PGM_P welcome = "";
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+#if 16 < ADDR_BITS
             uint16_t extaddr;
 #endif
             uint8_t addrl, addrh;
@@ -532,7 +532,7 @@ void HandleChar(register int ch) {
                         putch(getch());
                     }
                 }
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+#if 16 < ADDR_BITS
                 /* external bus loop  */
                 else if(ch == 'b') {
                     putch('b');
@@ -574,7 +574,7 @@ void LoadProgram() {
 
     //Write to FLASH one page at a time
      address_high = address.byte[1]>127; //Only possible with m128, m256 will need 3rd address byte. FIXME
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__)
+#if 16 < ADDR_BITS
      RAMPZ = address_high;
 #endif
      address.word = address.word << 1;          //address * 2 -> byte location
