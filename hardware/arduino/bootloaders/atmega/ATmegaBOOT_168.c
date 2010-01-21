@@ -227,7 +227,7 @@ static inline uint8_t GetBootUart() {
         UCSRA = 0x00;
         UCSRB = _BV(TXEN)|_BV(RXEN);    
     }
-#elif defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
+#elif defined UBRR0L
     #define HAVE_INIT_BOOT_UART 1
     static inline void InitBootUart() {
 
@@ -434,21 +434,8 @@ void HandleChar(register int ch) {
 
     /* Universal SPI programming command, disabled.  Would be used for fuses and lock bits.  */
     else if(ch=='V') {
-        if (getch() == 0x30) {
-            getch();
-            ch = getch();
-            getch();
-            if (ch == 0) {
-                byte_response(SIG1);
-            } else if (ch == 1) {
-                byte_response(SIG2); 
-            } else {
-                byte_response(SIG3);
-            } 
-        } else {
-            getNch(3);
-            byte_response(0x00);
-        }
+        getNch(4);
+        byte_response(0x00);
     }
 
 
@@ -774,7 +761,7 @@ void putch(char ch)
         while (!(UCSR1A & _BV(UDRE1)));
         UDR1 = ch;
     }
-#elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
+#elif defined UCSR0A
     while (!(UCSR0A & _BV(UDRE0)));
     UDR0 = ch;
 #else
@@ -812,7 +799,7 @@ char getch(void)
         return UDR1;
     }
     return 0;
-#elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
+#elif defined UCSR0A
     uint32_t count = 0;
     while(!(UCSR0A & _BV(RXC0))){
         /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
@@ -849,7 +836,7 @@ void getNch(uint8_t count)
             while(!(UCSR1A & _BV(RXC1)));
             UDR1;
         }
-#elif defined(__AVR_ATmega168__)  || defined(__AVR_ATmega328P__)
+#elif defined UCSR0A
         getch();
 #else
         /* m8,16,32,169,8515,8535,163 */

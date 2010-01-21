@@ -67,6 +67,22 @@ OBJDUMP        = avr-objdump
 
 all:
 
+sanguino: TARGET = sanguino
+sanguino: MCU_TARGET = atmega644p
+sanguino: CFLAGS += '-DNUM_LED_FLASHES=3' -DBAUD_RATE=38400
+sanguino: AVR_FREQ = 16000000L
+sanguino: LDSECTION  = --section-start=.text=0xF800
+sanguino: spm.s
+sanguino: $(PROGRAM).s
+sanguino: $(PROGRAM)_sanguino.hex
+
+sanguino_isp: lilypad
+sanguino_isp: TARGET = sanguino
+sanguino_isp: HFUSE = 1C
+sanguino_isp: LFUSE = FF
+sanguino_isp: EFUSE = FD
+sanguino_isp: isp
+
 lilypad: TARGET = lilypad
 lilypad: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
 lilypad: AVR_FREQ = 8000000L
@@ -80,7 +96,7 @@ lilypad_isp: EFUSE = 00
 lilypad_isp: isp
 
 lilypad_resonator: TARGET = lilypad_resonator
-lilypad_resonator: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=3'
+lilypad_resonator: CFLAGS += '-DNUM_LED_FLASHES=3'
 lilypad_resonator: AVR_FREQ = 8000000L
 lilypad_resonator: $(PROGRAM)_lilypad_resonator.hex
 
@@ -92,7 +108,7 @@ lilypad_resonator_isp: EFUSE = 00
 lilypad_resonator_isp: isp
 
 pro8: TARGET = pro_8MHz
-pro8: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
+pro8: CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
 pro8: AVR_FREQ = 8000000L
 pro8: $(PROGRAM)_pro_8MHz.hex
 
@@ -104,7 +120,7 @@ pro8_isp: EFUSE = 00
 pro8_isp: isp
 
 pro16: TARGET = pro_16MHz
-pro16: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
+pro16: CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
 pro16: AVR_FREQ = 16000000L
 pro16: $(PROGRAM)_pro_16MHz.hex
 
@@ -116,7 +132,7 @@ pro16_isp: EFUSE = 00
 pro16_isp: isp
 
 pro20: TARGET = pro_20mhz
-pro20: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
+pro20: CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
 pro20: AVR_FREQ = 20000000L
 pro20: $(PROGRAM)_pro_20mhz.hex
 
@@ -128,7 +144,7 @@ pro20_isp: EFUSE = 00
 pro20_isp: isp
 
 diecimila: TARGET = diecimila
-diecimila: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1'
+diecimila: CFLAGS += '-DNUM_LED_FLASHES=1'
 diecimila: AVR_FREQ = 16000000L 
 diecimila: $(PROGRAM)_diecimila.hex
 
@@ -153,7 +169,7 @@ ng_isp: isp
 
 atmega328: TARGET = atmega328
 atmega328: MCU_TARGET = atmega328p
-atmega328: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
+atmega328: CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
 atmega328: AVR_FREQ = 16000000L 
 atmega328: LDSECTION  = --section-start=.text=0x7800
 atmega328: spm.s
@@ -170,7 +186,7 @@ atmega328_isp: isp
 
 atmega328_pro8: TARGET = atmega328_pro_8MHz
 atmega328_pro8: MCU_TARGET = atmega328p
-atmega328_pro8: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600 -DDOUBLE_SPEED
+atmega328_pro8: CFLAGS += '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600 -DDOUBLE_SPEED
 atmega328_pro8: AVR_FREQ = 8000000L 
 atmega328_pro8: LDSECTION  = --section-start=.text=0x7800
 atmega328_pro8: $(PROGRAM)_atmega328_pro_8MHz.hex
@@ -185,7 +201,7 @@ atmega328_pro8_isp: isp
 
 mega: TARGET = atmega1280
 mega: MCU_TARGET = atmega1280
-mega: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>4' '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
+mega: CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
 mega: AVR_FREQ = 16000000L 
 mega: LDSECTION  = --section-start=.text=0x1F000
 mega: $(PROGRAM)_atmega1280.hex
@@ -224,8 +240,8 @@ clean:
 %.bin: %.elf
 	$(OBJCOPY) -j .text -j .data -O binary $< $@
 
-spm.s: spm.c
+spm.s: spm.c config.h
 	$(CC) $(CFLAGS) -S -o $@ $<
 
-ATmegaBOOT_168_atmega328.s: $(PROGRAM).c
+$(PROGRAM).s: $(PROGRAM).c config.h
 	$(CC) $(CFLAGS) -S -o $@ $<

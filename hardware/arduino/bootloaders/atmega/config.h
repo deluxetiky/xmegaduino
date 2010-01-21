@@ -20,8 +20,10 @@
 /* 20060803: hacked by DojoCorp */
 /* 20070626: hacked by David A. Mellis to decrease waiting time for auto-reset */
 /* set the waiting time for the bootloader */
-/* get this from the Makefile instead */
-/* #define MAX_TIME_COUNT (F_CPU>>4) */
+/* Define if not defined by the Makefile */
+#if ! defined MAX_TIME_COUNT 
+#define MAX_TIME_COUNT (F_CPU>>4)
+#endif
 
 /* 20070707: hacked by David A. Mellis - after this many errors give up and launch application */
 #define MAX_ERROR_COUNT 5
@@ -63,27 +65,35 @@
 #define BL0     PIND6
 #endif
 
-
 /* onboard LED is used to indicate, that the bootloader was entered (3x flashing) */
 /* if monitor functions are included, LED goes on after monitor was entered */
-#if defined __AVR_ATmega128__ || defined __AVR_ATmega1280__
-/* Onboard LED is connected to pin PB7 (e.g. Crumb128, PROBOmega128, Savvy128, Arduino Mega) */
+
+#if !defined LED_PORT
 #define LED_DDR  DDRB
 #define LED_PORT PORTB
 #define LED_PIN  PINB
+#endif
+
+#if defined __AVR_ATmega128__ || defined __AVR_ATmega1280__
+/* Onboard LED is connected to pin PB7 (e.g. Crumb128, PROBOmega128, Savvy128, Arduino Mega) */
 #define LED      PINB7
+#endif
+
+#if defined __AVR_ATmega644__
+#define LED      PINB0
 #endif
 
 #if !defined(LED)
 /* Onboard LED is connected to pin PB5 in Arduino NG, Diecimila, and Duomilanuove */ 
 /* other boards like e.g. Crumb8, Crumb168 are using PB2 */
-#define LED_DDR  DDRB
-#define LED_PORT PORTB
-#define LED_PIN  PINB
 #define LED      PINB5
 #endif
 
-#if defined __AVR_ATmega168__  || __AVR_ATmega328P__ || __AVR_ATmega128__ || __AVR_ATmega1280__ || __AVR_ATmega1281__ 
+#if defined __AVR_ATmega168__  || defined __AVR_ATmega328P__ 
+    #define SPM_STATUS_REG SPMCSR
+#elif defined __AVR_ATmega644__ || defined __AVR_ATmega644P__ || defined __AVR_ATmega324P__ 
+    #define SPM_STATUS_REG SPMCSR
+#elif defined __AVR_ATmega128__ || defined __AVR_ATmega1280__ || defined __AVR_ATmega1281__ 
     #define SPM_STATUS_REG SPMCSR
 #else
     #define SPM_STATUS_REG SPMCR
@@ -112,6 +122,21 @@
 #elif defined __AVR_ATmega128__
 #define SIG2    0x97
 #define SIG3    0x02
+#define PAGE_SIZE   0x80U   //128 words
+
+#elif defined __AVR_ATmega644P__
+#define SIG2    0x96
+#define SIG3    0x0A
+#define PAGE_SIZE   0x80U   //128 words
+
+#elif defined __AVR_ATmega644__
+#define SIG2    0x96
+#define SIG3    0x09
+#define PAGE_SIZE   0x80U   //128 words
+
+#elif defined __AVR_ATmega324P__
+#define SIG2    0x95
+#define SIG3    0x08
 #define PAGE_SIZE   0x80U   //128 words
 
 #elif defined __AVR_ATmega64__
