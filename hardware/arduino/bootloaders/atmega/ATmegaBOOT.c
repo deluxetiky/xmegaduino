@@ -85,7 +85,6 @@ void nothing_response(void);
 char gethex(void);
 void puthex(char);
 void flash_led(uint8_t);
-
 void HandleChar(int c);
 void LoadProgram();
 
@@ -110,18 +109,8 @@ int main(void)
     /* set LED pin as output */
     LED_DDR |= _BV(LED);
 
-
     /* flash onboard LED to signal entering of bootloader */
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-    // 4x for UART0, 5x for UART1
-    flash_led(NUM_LED_FLASHES + bootuart);
-#else
-    // flash_led(NUM_LED_FLASHES);
-#endif
-
-    /* 20050803: by DojoCorp, this is one of the parts provoking the
-         system to stop listening, cancelled from the original */
-    //putch('\0');
+    flash_led(LED_FLASHES_AT_BOOT);
 
     /* forever loop */
     for (;;) {
@@ -210,71 +199,38 @@ static inline uint8_t GetBootUart() {
     return 1;
 }
 
-
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-    #define HAVE_INIT_BOOT_UART 1
-    static inline void InitBootUart() {
-        if(bootuart == 1) {
-            UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-            UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-            UCSR0A = 0x00;
-            UCSR0C = 0x06;
-            UCSR0B = _BV(TXEN0)|_BV(RXEN0);
-        }
-        if(bootuart == 2) {
-            UBRR1L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-            UBRR1H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-            UCSR1A = 0x00;
-            UCSR1C = 0x06;
-            UCSR1B = _BV(TXEN1)|_BV(RXEN1);
-        }
-        // bootuart should be set, if not, start app.
-        app_start();
-    }
-#elif defined __AVR_ATmega163__
-    #define HAVE_INIT_BOOT_UART 1
-    static inline void InitBootUart() {
-        UBRR = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-        UBRRHI = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-        UCSRA = 0x00;
-        UCSRB = _BV(TXEN)|_BV(RXEN);    
-    }
-#elif defined UBRR0L
-    #define HAVE_INIT_BOOT_UART 1
-    static inline void InitBootUart() {
-
+static inline void InitBootUart() {
+    if(bootuart == 1) {
 #ifdef DOUBLE_SPEED
-        UCSR0A = (1<<U2X0); //Double speed mode USART0
         UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*8L)-1);
         UBRR0H = (F_CPU/(BAUD_RATE*8L)-1) >> 8;
+        UCSR0A = (1<<U2X0); //Double speed mode USART0
 #else
         UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
         UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+        UCSR0A = 0x00;
 #endif
-        UCSR0B = (1<<RXEN0) | (1<<TXEN0);
-        UCSR0C = (1<<UCSZ00) | (1<<UCSZ01);
-    }
-#elif defined __AVR_ATmega8__
-    #define HAVE_INIT_BOOT_UART 1
-    static inline void InitBootUart() {
-        /* m8 */
-        UBRRH = (((F_CPU/BAUD_RATE)/16)-1)>>8;  // set baud rate
-        UBRRL = (((F_CPU/BAUD_RATE)/16)-1);
-        UCSRB = (1<<RXEN)|(1<<TXEN);  // enable Rx & Tx
+        UCSR0B = _BV(TXEN0)|_BV(RXEN0);
+#if defined __AVR_ATmega8__
         UCSRC = (1<<URSEL)|(1<<UCSZ1)|(1<<UCSZ0);  // config USART; 8N1
-    }
+#elif defined UCSR0C
+//      UCSR0C = 0x06;
+        UCSR0C = (1<<UCSZ00) | (1<<UCSZ01);
 #endif
-
-#if !defined(HAVE_INIT_BOOT_UART)
-    static inline void InitBootUart() {
-        /* m16,m32,m169,m8515,m8535 */
-        UBRRL = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-        UBRRH = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-        UCSRA = 0x00;
-        UCSRC = 0x06;
-        UCSRB = _BV(TXEN)|_BV(RXEN);
+        return;
     }
+#if defined BL1
+    if(bootuart == 2) {
+        UBRR1L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
+        UBRR1H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
+        UCSR1A = 0x00;
+        UCSR1B = _BV(TXEN1)|_BV(RXEN1);
+        UCSR1C = 0x06;
+    }
+    // bootuart should be set, if not, start app.
+    app_start();
 #endif
+}
 
 #if defined(LINE_NOISE_PIN)
     static inline void SuppressLineNoise() {
