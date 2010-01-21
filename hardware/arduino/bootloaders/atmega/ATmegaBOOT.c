@@ -106,8 +106,6 @@ int main(void)
     bootuart = GetBootUart();
     InitBootUart();
     SuppressLineNoise();
-    InitBootUart();
-
 
     /* set LED pin as output */
     LED_DDR |= _BV(LED);
