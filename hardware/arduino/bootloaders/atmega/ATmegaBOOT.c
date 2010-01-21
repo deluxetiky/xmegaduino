@@ -562,9 +562,11 @@ void HandleChar(register int ch) {
     }
     /* end of monitor */
 #endif
+#if 0
     else if (++error_count == MAX_ERROR_COUNT) {
         app_start();
     }
+#endif
 }
 
 extern void Spm(uint8_t code, uint16_t addr, uint16_t value);
