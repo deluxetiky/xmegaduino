@@ -655,80 +655,63 @@ void puthex(char ch) {
 
 void putch(char ch)
 {
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
     if(bootuart == 1) {
         while (!(UCSR0A & _BV(UDRE0)));
         UDR0 = ch;
     }
+#if defined BL1
     else if (bootuart == 2) {
         while (!(UCSR1A & _BV(UDRE1)));
         UDR1 = ch;
     }
-#elif defined UCSR0A
-    while (!(UCSR0A & _BV(UDRE0)));
-    UDR0 = ch;
-#else
-    /* m8,16,32,169,8515,8535,163 */
-    while (!(UCSRA & _BV(UDRE)));
-    UDR = ch;
 #endif
 }
 
 
 char getch(void)
 {
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
     uint32_t count = 0;
     if(bootuart == 1) {
         while(!(UCSR0A & _BV(RXC0))) {
             /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
             /* HACKME:: here is a good place to count times*/
             count++;
-            if (count > MAX_TIME_COUNT)
+            if (count > MAX_TIME_COUNT) {
                 app_start();
             }
-
-            return UDR0;
         }
+        return UDR0;
+    }
+
+#if defined BL1
     else if(bootuart == 2) {
         while(!(UCSR1A & _BV(RXC1))) {
             /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
             /* HACKME:: here is a good place to count times*/
             count++;
-            if (count > MAX_TIME_COUNT)
+            if (count > MAX_TIME_COUNT) {
                 app_start();
+            }
         }
-
         return UDR1;
     }
-    return 0;
-#elif defined UCSR0A
-    uint32_t count = 0;
-    while(!(UCSR0A & _BV(RXC0))){
-        /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
-        /* HACKME:: here is a good place to count times*/
-        count++;
-        if (count > MAX_TIME_COUNT)
-            app_start();
-    }
-    return UDR0;
-#else
-    /* m8,16,32,169,8515,8535,163 */
-    uint32_t count = 0;
-    while(!(UCSRA & _BV(RXC))){
-        /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
-        /* HACKME:: here is a good place to count times*/
-        count++;
-        if (count > MAX_TIME_COUNT)
-            app_start();
-    }
-    return UDR;
 #endif
+    return 0;
 }
 
 
 void getNch(uint8_t count)
 {
+    while(count--) {
+        getch();
+    }
+
+#if 0
+/* Prior code was twisty. Why didn't mega128 and 1280 just call getch()
+   But 1281 did? For now, just call getch, but keep this visible for a
+   little while until we're sure the above works (gc 2010-01-21).
+*/
+
     while(count--) {
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
         if(bootuart == 1) {
@@ -749,6 +732,7 @@ void getNch(uint8_t count)
         getch(); // need to handle time out
 #endif      
     }
+#endif // 0
 }
 
 
