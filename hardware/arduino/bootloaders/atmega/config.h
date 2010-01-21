@@ -44,7 +44,7 @@
     #define START_APP_IF_FLASH_PROGRAMED 1
 #endif
 
-#if !defined(START_APP_IF_FLASH_PROGRAMED)
+#if !defined START_APP_IF_FLASH_PROGRAMED
     #define START_APP_IF_FLASH_PROGRAMED 0
 #endif
 
@@ -59,6 +59,8 @@
     #define UBRR0H UBRRH  
     #define UCSR0B UCSRB
     #define UCSR0C UCSRC
+    #define TXEN0  TXEN
+    #define RXEN0  RXEN
 #endif
 #if !defined UCSR0A && defined UCSRA
     #define UCSR0A UCSRA
@@ -99,6 +101,14 @@
     #define INIT_BL1_DIRECTION 0
 #endif
 
+#if defined __AVR_ATmega128__ || defined __AVR_ATmega1280__
+    #define LED_FLASHES_AT_BOOT NUM_LED_FLASHES + bootuart
+#endif
+
+#if !defined LED_FLASHES_AT_BOOT
+    #define LED_FLASHES_AT_BOOT NUM_LED_FLASHES
+#endif
+
 /* onboard LED is used to indicate, that the bootloader was entered (3x flashing) */
 /* if monitor functions are included, LED goes on after monitor was entered */
 
@@ -117,6 +127,14 @@
 /* SPM control and status register name. Settle on SPMCSR and remap those using SPMCR. */
 #if !defined SPMCSR
     #define SPMCSR SPMCR
+#endif
+
+#if !defined SPM_PRE
+    #define SPM_PRE
+#endif
+
+#if !defined SPM_POST
+    #define SPM_POST
 #endif
 
 #if !defined EEWE && defined EEPE

@@ -99,6 +99,12 @@
     #define SPM_STATUS_REG SPMCR
 #endif
 
+#if defined __AVR_ATmega163__
+    #define SPM_POST ".word 0xFFFF \n\t" \
+                     "nop          \n\t"
+#endif
+
+
 /* monitor functions will only be compiled when using ATmega128, due to bootblock size constraints */
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
 #define MONITOR 1

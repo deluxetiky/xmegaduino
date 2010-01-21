@@ -86,6 +86,55 @@ char gethex(void);
 void puthex(char);
 void flash_led(uint8_t);
 
+void HandleChar(int c);
+void LoadProgram();
+
+static inline void    CheckWatchDogAtStartup();
+static inline void    SetBootloaderPinDirections();
+static inline uint8_t GetBootUart();
+static inline void    InitBootUart();
+static inline void    SuppressLineNoise();
+
+static uint8_t bootuart = 0;
+
+/* main program starts here */
+int main(void)
+{
+    CheckWatchDogAtStartup();
+
+    SetBootloaderPinDirections();
+    bootuart = GetBootUart();
+    InitBootUart();
+    SuppressLineNoise();
+    InitBootUart();
+
+
+    /* set LED pin as output */
+    LED_DDR |= _BV(LED);
+
+
+    /* flash onboard LED to signal entering of bootloader */
+#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
+    // 4x for UART0, 5x for UART1
+    flash_led(NUM_LED_FLASHES + bootuart);
+#else
+    // flash_led(NUM_LED_FLASHES);
+#endif
+
+    /* 20050803: by DojoCorp, this is one of the parts provoking the
+         system to stop listening, cancelled from the original */
+    //putch('\0');
+
+    /* forever loop */
+    for (;;) {
+        /* get character from UART */
+        register uint8_t ch = getch();
+
+        HandleChar(ch);
+    } /* end of forever loop */
+
+}
+
 /* some variables */
 union address_union {
     uint16_t word;
@@ -104,15 +153,13 @@ struct flags_struct {
 
 uint8_t buff[256];
 
-static uint8_t bootuart = 0;
-
 uint8_t error_count = 0;
 
 void (*app_start)(void) = 0x0000;
 
 #ifdef WATCHDOG_MODS
     static inline void CheckWatchDogAtStartup() {
-        ch = MCUSR;
+        uint8_t ch = MCUSR;
         MCUSR = 0;
 
         WDTCSR |= _BV(WDCE) | _BV(WDE);
@@ -243,47 +290,6 @@ static inline uint8_t GetBootUart() {
     static inline void SuppressLineNoise() {
     }
 #endif
-
-static void HandleChar(int c);
-extern void LoadProgram();
-
-/* main program starts here */
-int main(void)
-{
-    CheckWatchDogAtStartup();
-
-    SetBootloaderPinDirections();
-    bootuart = GetBootUart();
-    InitBootUart();
-    SuppressLineNoise();
-    InitBootUart();
-
-
-    /* set LED pin as output */
-    LED_DDR |= _BV(LED);
-
-
-    /* flash onboard LED to signal entering of bootloader */
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-    // 4x for UART0, 5x for UART1
-    flash_led(NUM_LED_FLASHES + bootuart);
-#else
-    // flash_led(NUM_LED_FLASHES);
-#endif
-
-    /* 20050803: by DojoCorp, this is one of the parts provoking the
-         system to stop listening, cancelled from the original */
-    //putch('\0');
-
-    /* forever loop */
-    for (;;) {
-        /* get character from UART */
-        register uint8_t ch = getch();
-
-        HandleChar(ch);
-    } /* end of forever loop */
-
-}
 
 void HandleChar(register int ch) {
     uint8_t  ch2;
