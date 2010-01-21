@@ -74,6 +74,7 @@
 #include <util/delay.h>
 
 #include "config.h"
+#include "mcu.h"
 
 /* function prototypes */
 void putch(char);
@@ -103,16 +104,12 @@ struct flags_struct {
 
 uint8_t buff[256];
 
-//uint8_t pagesz=0x80;
+static uint8_t bootuart = 0;
 
-//uint8_t i;
-//static uint8_t bootuart = 0;
-
-//uint8_t error_count = 0;
+uint8_t error_count = 0;
 
 void (*app_start)(void) = 0x0000;
 
-#if 0
 #ifdef WATCHDOG_MODS
     static inline void CheckWatchDogAtStartup() {
         ch = MCUSR;
@@ -130,26 +127,7 @@ void (*app_start)(void) = 0x0000;
         asm volatile("nop\n\t");
     }
 #endif
-#endif
 
-/* set pin direction for bootloader pin and enable pullup */
-/* for ATmega128, two pins need to be initialized */
-#ifdef __AVR_ATmega128__
-    #define INIT_BL0_DIRECTION 1
-    #define INIT_BL1_DIRECTION 1
-#endif
-#if !defined(INIT_BL0_DIRECTION )
-    /* We run the bootloader regardless of the state of this pin.  Thus, don't
-    put it in a different state than the other pins.  --DAM, 070709
-    This also applies to Arduino Mega -- DC, 080930
-    */
-    #define INIT_BL0_DIRECTION 0
-#endif
-#if !defined(INIT_BL1_DIRECTION )
-    #define INIT_BL1_DIRECTION 0
-#endif
-
-#if 0
 static inline void SetBootloaderPinDirections() {
 #if INIT_BL0_DIRECTION
     BL_DDR &= ~_BV(BL0);
@@ -161,17 +139,7 @@ static inline void SetBootloaderPinDirections() {
     BL_PORT |= _BV(BL1);
 #endif
 }
-#endif
 
-#ifdef __AVR_ATmega128__
-    #define START_APP_IF_FLASH_PROGRAMED 1
-#endif
-
-#if !defined(START_APP_IF_FLASH_PROGRAMED)
-    #define START_APP_IF_FLASH_PROGRAMED 0
-#endif
-
-#if 0
 static inline uint8_t GetBootUart() {
 #if INIT_BL0_DIRECTION
     /* check which UART should be used for booting */
@@ -196,7 +164,6 @@ static inline uint8_t GetBootUart() {
     /* default to uart 0 */
     return 1;
 }
-#endif
 
 
 #if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
@@ -239,10 +206,8 @@ static inline uint8_t GetBootUart() {
         UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
         UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
 #endif
-
         UCSR0B = (1<<RXEN0) | (1<<TXEN0);
         UCSR0C = (1<<UCSZ00) | (1<<UCSZ01);
-
     }
 #elif defined __AVR_ATmega8__
     #define HAVE_INIT_BOOT_UART 1
@@ -266,17 +231,6 @@ static inline uint8_t GetBootUart() {
     }
 #endif
 
-#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
-    #define LINE_NOISE_PIN  PIND0
-    #define DDR_LINE_NOISE  DDRD
-    #define PORT_LINE_NOISE PORTD
-#elif defined __AVR_ATmega1280__
-    #define LINE_NOISE_PIN  PINE0
-    #define DDR_LINE_NOISE  DDRE
-    #define PORT_LINE_NOISE PORTE
-#endif
-
-#if 0
 #if defined(LINE_NOISE_PIN)
     static inline void SuppressLineNoise() {
         /* Enable internal pull-up resistor on pin D0 (RX), in order
@@ -289,7 +243,6 @@ static inline uint8_t GetBootUart() {
     static inline void SuppressLineNoise() {
     }
 #endif
-#endif
 
 static void HandleChar(int c);
 extern void LoadProgram();
@@ -297,14 +250,12 @@ extern void LoadProgram();
 /* main program starts here */
 int main(void)
 {
-#if 0
     CheckWatchDogAtStartup();
 
     SetBootloaderPinDirections();
     bootuart = GetBootUart();
     InitBootUart();
     SuppressLineNoise();
-#endif
     InitBootUart();
 
 

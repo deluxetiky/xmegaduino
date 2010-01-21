@@ -17,7 +17,7 @@
 # etc...
 
 # program name should not be changed...
-PROGRAM    = ATmegaBOOT_168
+PROGRAM    = ATmegaBOOT
 
 # enter the parameters for the avrdude isp tool
 ISPTOOL	   = stk500v2
@@ -72,11 +72,11 @@ sanguino: MCU_TARGET = atmega644p
 sanguino: CFLAGS += '-DNUM_LED_FLASHES=3' -DBAUD_RATE=38400
 sanguino: AVR_FREQ = 16000000L
 sanguino: LDSECTION  = --section-start=.text=0xF800
-sanguino: spm.s
-sanguino: $(PROGRAM).s
 sanguino: $(PROGRAM)_sanguino.hex
+#sanguino: spm.s
+#sanguino: $(PROGRAM).s
 
-sanguino_isp: lilypad
+sanguino_isp: sanguino
 sanguino_isp: TARGET = sanguino
 sanguino_isp: HFUSE = 1C
 sanguino_isp: LFUSE = FF
@@ -172,8 +172,6 @@ atmega328: MCU_TARGET = atmega328p
 atmega328: CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
 atmega328: AVR_FREQ = 16000000L 
 atmega328: LDSECTION  = --section-start=.text=0x7800
-atmega328: spm.s
-atmega328: $(PROGRAM)_atmega328.s
 atmega328: $(PROGRAM)_atmega328.hex
 
 atmega328_isp: atmega328
