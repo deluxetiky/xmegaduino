@@ -257,6 +257,10 @@ void HandleChar(register int ch) {
     }
 
 
+// TODO: Kill this or restore it.
+// We don't seem to need this, so save the bytes and kill it.
+// If it turns out we do need it, then restore it.
+// (gc 2010-01-21)
 #if 0
     /* Request programmer ID */
     /* Not using PROGMEM string due to boot block in m128 being beyond 64kB boundry  */
@@ -456,7 +460,6 @@ void HandleChar(register int ch) {
         if(ch=='!') {
         ch = getch();
         if(ch=='!') {
-            PGM_P welcome = "";
 #if 16 < ADDR_BITS
             uint16_t extaddr;
 #endif
@@ -473,14 +476,17 @@ void HandleChar(register int ch) {
     #define MONITOR_WELCOME "ATmegaBOOT / PROBOmega128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
 #elif defined SAVVY128
     #define MONITOR_WELCOME "ATmegaBOOT / Savvy128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
+#else
+    #define MONITOR_WELCOME "ATmegaBOOT / Unknown\n\r";
 #endif
-            const char* welcome = "ATmegaBOOT / Unknown\n\r";
+            const char* welcome = MONITOR_WELCOME;
 
             /* turn on LED */
             LED_DDR |= _BV(LED);
             LED_PORT &= ~_BV(LED);
 
             /* print a welcome message and command overview */
+            int i;
             for(i=0; welcome[i] != '\0'; ++i) {
                 putch(welcome[i]);
             }
@@ -562,6 +568,9 @@ void HandleChar(register int ch) {
     }
     /* end of monitor */
 #endif
+// TODO: Restore this branch to app on too many errors
+// It hangs upload to sanguino for some reason.
+// (gc 2010-01-21)
 #if 0
     else if (++error_count == MAX_ERROR_COUNT) {
         app_start();
@@ -598,20 +607,29 @@ void LoadProgram() {
     while (0 < bytes) {
         uint16_t page = addr;
         // Erase page pointed to by Z
-        Spm( 0x03, page, 0 ); // Erase page
-        Spm( 0x11, 0,    0 ); // Re-enable RWW section
+        Spm( SPM_ERASE_PG, page, 0 ); // Erase page
+#if defined SPM_RWW_EN
+        Spm( SPM_RWW_EN, 0,    0 ); // Re-enable RWW section
+#endif
 
         // Load words into FLASH page buffer
         int index;
         for ( index = PAGE_SIZE; 0 != index; --index ) {
-            Spm( 0x01, addr, *bufNext ); // Load bufNext to address
+            Spm( SPM_LOAD_WORD, addr, *bufNext ); // Load bufNext to address
             ++bufNext;
             addr  += 2;
             bytes -= 2;
         }
 
-        Spm( 0x05, page, 0 ); // Write page
-        Spm( 0x11, 0,    0 ); // Re-enable RWW section
+        Spm( SPM_WRITE_PG, page, 0 ); // Write page
+#if defined SPM_RWW_EN
+        Spm( SPM_RWW_EN, 0,    0 ); // Re-enable RWW section
+#endif
+
+// TODO: Get rid of this stupid return, or figure out why it is needed.
+// It seems like we are writing only the first page. Yet all pages
+// are uploaded?!?!? Is caller calling us once per page? I thought I
+// tested and saw caller passing 128 bytes, two pages, on the 328p.
 return;
     }
 }

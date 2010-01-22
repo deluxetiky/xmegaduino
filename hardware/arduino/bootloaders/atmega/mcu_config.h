@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef MCU_CONFIG_H
+#define MCU_CONFIG_H
 
 #if defined __AVR_ATmega168__ || defined __AVR_ATmega328P__
     #define USE_BUILT_IN_AVR_EEPROM_H 1
@@ -89,14 +89,31 @@
 #define LED      PINB5
 #endif
 
-#if defined __AVR_ATmega168__  || defined __AVR_ATmega328P__ 
-    #define SPM_STATUS_REG SPMCSR
-#elif defined __AVR_ATmega644__ || defined __AVR_ATmega644P__ || defined __AVR_ATmega324P__ 
-    #define SPM_STATUS_REG SPMCSR
-#elif defined __AVR_ATmega128__ || defined __AVR_ATmega1280__ || defined __AVR_ATmega1281__ 
-    #define SPM_STATUS_REG SPMCSR
+#if defined SPMCSR
+    #define SPM_STATUS    SPMCSR
+    #define SPM_CMD       SPMCSR
+    #define SPM_BUSY      1
+    #define SPM_LOAD_WORD 0x01
+    #define SPM_ERASE_PG  0x03
+    #define SPM_WRITE_PG  0x05
+    #define SPM_RWW_EN    0x11
+#elif defined SPMCR
+    #define SPM_STATUS    SPMCR
+    #define SPM_CMD       SPMCR
+    #define SPM_BUSY      1
+    #define SPM_LOAD_WORD 0x01
+    #define SPM_ERASE_PG  0x03
+    #define SPM_WRITE_PG  0x05
+    #define SPM_RWW_EN    0x11
+#elif defined NVM_STATUS
+    #define SPM_STATUS    NVM_STATUS
+    #define SPM_CMD       NVM_CMD
+    #define SPM_BUSY      NVM_NVMBUSY_bm
+    #define SPM_LOAD_WORD NVM_CMD_LOAD_FLASH_BUFFER_gc,
+    #define SPM_ERASE_PG  NVM_CMD_ERASE_APP_PAGE_gc,
+    #define SPM_WRITE_PG  NVM_CMD_WRITE_APP_PAGE_gc,
 #else
-    #define SPM_STATUS_REG SPMCR
+    #error MCU does not support serial bootloading
 #endif
 
 #if defined __AVR_ATmega163__
@@ -110,4 +127,4 @@
 #define MONITOR 1
 #endif
 
-#endif // CONFIG_H
+#endif // MCU_CONFIG_H

@@ -16,32 +16,34 @@ extern void Spm(uint8_t code, uint16_t addr, uint16_t value) {
         "movw  r0,%[value]         \n\t" // Load value. Not used by all ops.
 
         "wait_spm:                 \n\t"
-        "lds   r16,%[SPM_CSR]      \n\t" //Wait for previous spm to complete
-        "andi  r16,1               \n\t"
-        "cpi   r16,1               \n\t"
+        "lds    r16,%[spm_status]  \n\t"
+#if 0
+        // TODO: Use better wait_spm loop.
+        // This should work, and is one instruction shorter. But it doesn't work,
+        // so comment out and use slightly slower loop.
+        "sbrc   r16,%[spm_busy]    \n\t"
+        "rjmp   wait_spm           \n\t"
+#else
+        "andi  r16,%[spm_busy]     \n\t"
+        "cpi   r16,%[spm_busy]     \n\t"
         "breq  wait_spm            \n\t"
+#endif
 
-        SPM_PRE
-        "sts   %[SPM_CSR],%[code]  \n\t"
+        "sts   %[spm_cmd],%[code]  \n\t"
+#if defined CCP
+        ldi   r16, CCP_SPM_gc
+        sts   CCP, r16
+#endif
         "spm                       \n\t"
         SPM_POST
-        : [SPM_CSR] "=m" (SPMCSR)
-        : [code] "r" (code), [addr] "r" (addr), [value] "r" (value)
+        // TODO: Load noop into SPM_CMD
+        :
+        : [spm_cmd]    "m"  (SPM_CMD),
+          [spm_status] "m"  (SPM_STATUS),
+          [spm_busy]   "i"  (SPM_BUSY),
+          [code]       "r"  (code),
+          [addr]       "r"  (addr),
+          [value]      "r"  (value)
         : "r0", "r16", "r30", "r31"
     );
 }
-/* For Xmega
-sts NVM_CMD, r20     ; Load prepared command into NVM Command register.
-ldi r18, CCP_SPM_gc  ; Prepare Protect SPM signature in R18
-sts CCP, r18         ; Enable SPM operation (this disables interrupts for 4 cycles).
-spm                      ; Self-program.
-
-SP_WaitForSPM:
-lds r18, NVM_STATUS     ; Load the NVM Status register.
-sbrc    r18, NVM_NVMBUSY_bp ; Check if bit is cleared.
-rjmp    SP_WaitForSPM       ; Repeat check if bit is not cleared.
-clr r18
-sts NVM_CMD, r18        ; Clear up command register to NO_OPERATION.
-ret
-
-*/
