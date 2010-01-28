@@ -1,4 +1,5 @@
-make sanguino \
+make xplain \
+&& make sanguino \
 && make lilypad \
 && make lilypad_resonator \
 && make pro8 \

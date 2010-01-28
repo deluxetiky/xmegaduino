@@ -67,14 +67,49 @@ OBJDUMP        = avr-objdump
 
 all:
 
+test.o: Makefile test.c
+
+test.elf: test.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+test: TARGET = test
+test: MCU_TARGET = atxmega128a1
+test: AVR_FREQ = 32000000L
+test: LDSECTION  = --section-start=.text=0x020000
+test: test.hex test.srec
+	@echo >/dev/null
+   
+#test: test.s
+#test.elf: test.o
+#	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+#test.srec: test.elf
+#	$(OBJCOPY) -j .text -j .data -O srec $< $@
+
+xplain: TARGET = xplain
+xplain: MCU_TARGET = atxmega128a1
+xplain: CFLAGS += '-DNUM_LED_FLASHES=5' -DBAUD_RATE=9600
+xplain: AVR_FREQ = 32000000L
+xplain: LDSECTION  = --section-start=.text=0x20000
+#xplain: $(PROGRAM)_xplain.hex
+xplain: $(PROGRAM)_xplain.srec
+xplain: spm.s
+xplain: $(PROGRAM).s
+
+xplain_isp: xplain
+xplain_isp: TARGET = xplain
+xplain_isp: FUSE0 = 
+xplain_isp: FUSE1 = 
+xplain_isp: FUSE2 = 
+xplain_isp: FUSE4 = 
+xplain_isp: FUSE5 = 
+xplain_isp: isp
+
 sanguino: TARGET = sanguino
 sanguino: MCU_TARGET = atmega644p
 sanguino: CFLAGS += '-DNUM_LED_FLASHES=3' -DBAUD_RATE=38400
 sanguino: AVR_FREQ = 16000000L
 sanguino: LDSECTION  = --section-start=.text=0xF800
 sanguino: $(PROGRAM)_sanguino.hex
-#sanguino: spm.s
-#sanguino: $(PROGRAM).s
 
 sanguino_isp: sanguino
 sanguino_isp: TARGET = sanguino

@@ -74,7 +74,6 @@
 #include <util/delay.h>
 
 #include "config.h"
-#include "mcu.h"
 
 /* function prototypes */
 void putch(char);
@@ -96,6 +95,63 @@ static inline void    SuppressLineNoise();
 
 static uint8_t bootuart = 0;
 
+void InitClock() {
+#if defined __AVR_Xmega128A1__
+    // Enable 32M internal crystal
+    OSC.CTRL |= OSC_RC32MEN_bm;
+    // Wait for 32M internal crystal to stablize
+    while ( !(OSC.STATUS & OSC_RC32MEN_bm) ) ;
+
+#if 0
+    // Does this go before or after internal 32M internal crystal in enabled and stable?
+    // Dunno, try after first.
+
+    // PLL source: internal 32M crystal multiplied by 4 - max PLL factor for 32M crystal.
+    OSC.PLLCTRL = ((uint8_t)OSC_PLLSRC_RC2M_gc) | ( (4&OSC_PLLFAC_gm) << OSC_PLLFAC_gp);
+    // Enable PLL
+    OSC.CTRL |= OSC_PLLEN_bm;
+    // Wait for PLL to stabilize
+    while ( !(OSC.STATUS & OSC_PLLRDY_bm ) ) ;
+#endif
+
+#if 0
+    // Set prescalars to 1, 1, 1
+    RAMPZ = 0;
+    asm volatile(
+        "ldi  r30, lo8(%0)     \n\t"
+        "ldi  r31, hi8(%0)     \n\t"
+        "ldi  r16,  %2         \n\t"
+        "out   %3, r16         \n\t"
+        "st     Z,  %1         \n\t"
+        :
+        : "i" (&CLK.PSCTRL),
+          "i" (CLK_PSADIV_1_gc | CLK_PSBCDIV_1_1_gc),
+          "M" (CCP_IOREG_gc),
+          "i" (&CCP)
+        : "r16", "r30", "r31"
+    );
+#endif
+
+    // Set main system clock to PLL
+    CCPWrite( &CLK.CTRL, ( 
+    asm volatile(
+        "ldi  r30, lo8(%0)     \n\t"
+        "ldi  r31, hi8(%0)     \n\t"
+        "ldi  r16,  %2         \n\t"
+        "out   %3, r16         \n\t"
+        "st     Z,  %1         \n\t"
+        :
+        : "i" (&CLK.CTRL),
+//        "i" ( (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLK_SCLKSEL_PLL_gc   ),
+          "i" ( (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLK_SCLKSEL_RC32M_gc ),
+          "M" (CCP_IOREG_gc),
+          "i" (&CCP)
+        : "r16", "r30", "r31"
+    );
+
+#endif
+}
+
 /* main program starts here */
 int main(void)
 {
@@ -107,10 +163,16 @@ int main(void)
     SuppressLineNoise();
 
     /* set LED pin as output */
+#if defined __AVR_ATxmega128A1__
+    // TODO: Need code
+#else
     LED_DDR |= _BV(LED);
+#endif
 
     /* flash onboard LED to signal entering of bootloader */
     flash_led(LED_FLASHES_AT_BOOT);
+
+    InitClock();
 
     /* forever loop */
     for (;;) {
@@ -138,8 +200,8 @@ struct flags_struct {
     unsigned rampz  : 1;
 } flags;
 
-uint8_t buff[256];
-
+uint8_t buff[LOADER_BUFF_SIZE];
+ 
 uint8_t error_count = 0;
 
 void (*app_start)(void) = 0x0000;
@@ -201,22 +263,12 @@ static inline uint8_t GetBootUart() {
 
 static inline void InitBootUart() {
     if(bootuart == 1) {
-#ifdef DOUBLE_SPEED
-        UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*8L)-1);
-        UBRR0H = (F_CPU/(BAUD_RATE*8L)-1) >> 8;
-        UCSR0A = (1<<U2X0); //Double speed mode USART0
-#else
-        UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-        UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-        UCSR0A = 0x00;
-#endif
-        UCSR0B = _BV(TXEN0)|_BV(RXEN0);
-#if defined __AVR_ATmega8__
-        UCSRC = (1<<URSEL)|(1<<UCSZ1)|(1<<UCSZ0);  // config USART; 8N1
-#elif defined UCSR0C
-//      UCSR0C = 0x06;
-        UCSR0C = (1<<UCSZ00) | (1<<UCSZ01);
-#endif
+        USART0_SET_DIR();
+        USART0_SET_BAUD(BAUD_RATE);
+        USART0_RX_ENABLE();
+        USART0_TX_ENABLE();
+
+        USART0_SET_TO_8N1();
         return;
     }
 #if defined BL1
@@ -232,7 +284,7 @@ static inline void InitBootUart() {
 #endif
 }
 
-#if defined(LINE_NOISE_PIN)
+#if LINE_NOISE_PIN
     static inline void SuppressLineNoise() {
         /* Enable internal pull-up resistor on pin D0 (RX), in order
         to supress line noise that prevents the bootloader from
@@ -590,10 +642,12 @@ void LoadProgram() {
 #endif
      address.word = address.word << 1;          //address * 2 -> byte location
      cli();                           //Disable interrupts, just to be sure
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__)
-     while(bit_is_set(EECR,EEPE));    //Wait for previous EEPROM writes to complete
-#else
+#if defined EEWE
      while(bit_is_set(EECR,EEWE));    //Wait for previous EEPROM writes to complete
+#elif defined EEPE
+     while(bit_is_set(EECR,EEPE));    //Wait for previous EEPROM writes to complete
+//#elif
+    // TODO: Do we need anything for xmegas?
 #endif
 
     //Even up an odd number of bytes
@@ -676,8 +730,8 @@ void puthex(char ch) {
 void putch(char ch)
 {
     if(bootuart == 1) {
-        while (!(UCSR0A & _BV(UDRE0)));
-        UDR0 = ch;
+        while ( !USART0_IS_TX_READY() );
+        USART0_PUT_CHAR(ch);
     }
 #if defined BL1
     else if (bootuart == 2) {
@@ -692,15 +746,13 @@ char getch(void)
 {
     uint32_t count = 0;
     if(bootuart == 1) {
-        while(!(UCSR0A & _BV(RXC0))) {
-            /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
-            /* HACKME:: here is a good place to count times*/
+        while( !USART0_IS_RX_READY() ) {
             count++;
             if (count > MAX_TIME_COUNT) {
                 app_start();
             }
         }
-        return UDR0;
+        return USART0_GET_CHAR();
     }
 
 #if defined BL1
@@ -782,12 +834,16 @@ void nothing_response(void)
 
 void flash_led(uint8_t count)
 {
+#if defined __AVR_ATxmega128A1__
+    // TODO: Need code
+#else
     while (count--) {
         LED_PORT |= _BV(LED);
         _delay_ms(200);
         LED_PORT &= ~_BV(LED);
         _delay_ms(200);
     }
+#endif
 }
 
 

@@ -31,8 +31,8 @@ extern void Spm(uint8_t code, uint16_t addr, uint16_t value) {
 
         "sts   %[spm_cmd],%[code]  \n\t"
 #if defined CCP
-        ldi   r16, CCP_SPM_gc
-        sts   CCP, r16
+        "ldi   r16, %[ccp_spm_gc]  \n\t"
+        "sts   %[ccp], r16         \n\t"
 #endif
         "spm                       \n\t"
         SPM_POST
@@ -41,6 +41,10 @@ extern void Spm(uint8_t code, uint16_t addr, uint16_t value) {
         : [spm_cmd]    "m"  (SPM_CMD),
           [spm_status] "m"  (SPM_STATUS),
           [spm_busy]   "i"  (SPM_BUSY),
+#if defined CCP
+          [ccp]        "m"  (CCP),
+          [ccp_spm_gc] "i"  (CCP_SPM_gc),
+#endif
           [code]       "r"  (code),
           [addr]       "r"  (addr),
           [value]      "r"  (value)
