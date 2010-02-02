@@ -96,7 +96,8 @@ static inline void    SuppressLineNoise();
 static uint8_t bootuart = 0;
 
 void InitClock() {
-#if defined __AVR_Xmega128A1__
+#if 1
+// #if defined __AVR_Xmega128A1__
     // Enable 32M internal crystal
     OSC.CTRL |= OSC_RC32MEN_bm;
     // Wait for 32M internal crystal to stablize
@@ -114,7 +115,7 @@ void InitClock() {
     while ( !(OSC.STATUS & OSC_PLLRDY_bm ) ) ;
 #endif
 
-#if 0
+#if 1
     // Set prescalars to 1, 1, 1
     RAMPZ = 0;
     asm volatile(
@@ -132,8 +133,12 @@ void InitClock() {
     );
 #endif
 
+// #define CLOCK_SOURCE CLK_SCLKSEL_PLL_gc
+#define CLOCK_SOURCE CLK_SCLKSEL_RC32M_gc
+
+    register uint8_t value = (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLOCK_SOURCE;
+
     // Set main system clock to PLL
-    CCPWrite( &CLK.CTRL, ( 
     asm volatile(
         "ldi  r30, lo8(%0)     \n\t"
         "ldi  r31, hi8(%0)     \n\t"
@@ -142,8 +147,7 @@ void InitClock() {
         "st     Z,  %1         \n\t"
         :
         : "i" (&CLK.CTRL),
-//        "i" ( (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLK_SCLKSEL_PLL_gc   ),
-          "i" ( (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLK_SCLKSEL_RC32M_gc ),
+          "r" ( value ),
           "M" (CCP_IOREG_gc),
           "i" (&CCP)
         : "r16", "r30", "r31"
