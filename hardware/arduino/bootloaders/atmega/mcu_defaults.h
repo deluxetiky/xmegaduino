@@ -36,23 +36,25 @@
     #elif defined UCSR0C
         #define USART0_SET_TO_8N1()   \
             UCSR0C = (1<<UCSZ00) | (1<<UCSZ01);
+    #else
+        #error Do not know how to set up UART to 8N1
     #endif
 
     #if defined DOUBLE_SPEED
         #define USART0_SET_BAUD(n) \
-            UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*8L)-1); \
-            UBRR0H = (F_CPU/(BAUD_RATE*8L)-1) >> 8; \
+            UBRR0L = (uint8_t)(F_CPU/(n*8L)-1); \
+            UBRR0H = (F_CPU/(n*8L)-1) >> 8; \
             UCSR0A = (1<<U2X0); //Double speed mode USART0
     #else
         #define USART0_SET_BAUD(n) \
-            UBRR0L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1); \
-            UBRR0H = (F_CPU/(BAUD_RATE*16L)-1) >> 8; \
+            UBRR0L = (uint8_t)(F_CPU/(n*16L)-1); \
+            UBRR0H = (F_CPU/(n*16L)-1) >> 8; \
             UCSR0A = 0x00;
     #endif
 
-    #define USART0_RX_ENABLE() UCSR0B = _BV(RXEN0);
+    #define USART0_RX_ENABLE() UCSR0B |= _BV(RXEN0);
             
-    #define USART0_TX_ENABLE() UCSR0B = _BV(TXEN0);
+    #define USART0_TX_ENABLE() UCSR0B |= _BV(TXEN0);
 
     #define USART0_IS_TX_READY() (UCSR0A & _BV(UDRE0))
 
@@ -85,6 +87,8 @@
     #define USART0_IS_RX_READY() ( (USART0.STATUS & USART_RXCIF_bm) != 0)
 
     #define USART0_GET_CHAR() (USART0.DATA)
+#else
+    #error Do not know how to set up UART
 #endif
 
 #if !defined LINE_NOISE_PIN
