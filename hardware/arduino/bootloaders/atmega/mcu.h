@@ -1,5 +1,5 @@
-#ifndef MCU_CONFIG_H
-#define MCU_CONFIG_H
+#ifndef MCU_H
+#define MCU_H
 
 #if defined __AVR_ATmega168__ || defined __AVR_ATmega328P__
     #define USE_BUILT_IN_AVR_EEPROM_H 1
@@ -23,6 +23,9 @@
     #define USART0       USARTC0
     #define USART_PORT_0 PORTC
 #endif
+
+// QUESTION: Do we even need BL0, BL1, etc? I don't know of any arduinos
+// QUESTION: that use them.
 
 /* Adjust to suit whatever pin your hardware uses to enter the bootloader */
 /* ATmega128 has two UARTS so two pins are used to enter bootloader and select UART */
@@ -62,5 +65,4 @@
                      "nop          \n\t"
 #endif
 
-#endif // MCU_CONFIG_H
-
+#endif // MCU_H

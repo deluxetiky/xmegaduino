@@ -2,9 +2,9 @@
 #define CONFIG_H
 
 #include "mcu.h"
-#include "mcu_config.h"
+#include "mcu_sig_pagesize.h"
 #include "mcu_defaults.h"
-#include "board_config.h"
+#include "board.h"
 
 /** config.h defines defaults for various configuration/policy macros.
   * These should be relatively arbitrary policies not dictated by
@@ -47,6 +47,20 @@
 /* set the UART baud rate */
 #if !defined BAUD_RATE
     #define BAUD_RATE   19200
+#endif
+
+/* onboard LED is used to indicate, that the bootloader was entered (3x flashing) */
+/* if monitor functions are included, LED goes on after monitor was entered */
+#if !defined LED_PORT
+    #define LED_DDR  DDRB
+    #define LED_PORT PORTB
+    #define LED_PIN  PINB
+#endif
+
+/* Onboard LED is connected to pin PB5 in Arduino NG, Diecimila, and Duomilanuove */ 
+/* other boards like e.g. Crumb8, Crumb168 are using PB2 */
+#if !defined LED
+    #define LED      PINB5
 #endif
 
 #if !defined LED_FLASHES_AT_BOOT

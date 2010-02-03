@@ -1,22 +1,7 @@
 #ifndef MCU_DEFAULTS_H
 #define MCU_DEFAULTS_H
 
-#include "mcu_config.h"
-
-/* onboard LED is used to indicate, that the bootloader was entered (3x flashing) */
-/* if monitor functions are included, LED goes on after monitor was entered */
-
-#if !defined LED_PORT
-    #define LED_DDR  DDRB
-    #define LED_PORT PORTB
-    #define LED_PIN  PINB
-#endif
-
-/* Onboard LED is connected to pin PB5 in Arduino NG, Diecimila, and Duomilanuove */ 
-/* other boards like e.g. Crumb8, Crumb168 are using PB2 */
-#if !defined LED
-    #define LED      PINB5
-#endif
+#include "mcu.h"
 
 /* UART names. Settle on UBRRnL convention, remapping those that use UBRRL. */
 #if !defined UBRR0L && defined UBRRL
@@ -107,6 +92,9 @@
     #define DDR_LINE_NOISE 0
     #define PORT_LINE_NOISE 0
 #endif
+
+// QUESTION: Do we even need BL0, BL1, etc? I don't know of any arduinos
+// QUESTION: that use them.
 
 /* Bootloader pins. */
 /* Adjust to suit whatever pin your hardware uses to enter the bootloader */

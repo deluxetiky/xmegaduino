@@ -92,11 +92,66 @@ static inline void    SetBootloaderPinDirections();
 static inline uint8_t GetBootUart();
 static inline void    InitBootUart();
 static inline void    SuppressLineNoise();
+static inline void    InitClock() {
 
 static uint8_t bootuart = 0;
 
+/* main program starts here */
+int main(void)
+{
+    CheckWatchDogAtStartup();
+
+    SetBootloaderPinDirections();
+    bootuart = GetBootUart();
+    InitBootUart();
+    SuppressLineNoise();
+
+    /* set LED pin as output */
+#if defined __AVR_ATxmega128A1__
+    // TODO: Need code
+#else
+    LED_DDR |= _BV(LED);
+#endif
+
+    /* flash onboard LED to signal entering of bootloader */
+    flash_led(LED_FLASHES_AT_BOOT);
+
+    InitClock();
+
+    /* forever loop */
+    for (;;) {
+        /* get character from UART */
+        register uint8_t ch = getch();
+
+        HandleChar(ch);
+    } /* end of forever loop */
+
+}
+
+/* some variables */
+union address_union {
+    uint16_t word;
+    uint8_t  byte[2];
+} address;
+
+union length_union {
+    uint16_t word;
+    uint8_t  byte[2];
+} length;
+
+struct flags_struct {
+    unsigned eeprom : 1;
+    unsigned rampz  : 1;
+} flags;
+
+uint8_t buff[LOADER_BUFF_SIZE];
+ 
+uint8_t error_count = 0;
+
+void (*app_start)(void) = 0x0000;
+
 void InitClock() {
-#if 1
+#if defined OSC_RC32MEN_bm
 // #if defined __AVR_Xmega128A1__
     // Enable 32M internal crystal
     OSC.CTRL |= OSC_RC32MEN_bm;
@@ -156,60 +211,6 @@ void InitClock() {
 #endif
 }
 
-/* main program starts here */
-int main(void)
-{
-    CheckWatchDogAtStartup();
-
-    SetBootloaderPinDirections();
-    bootuart = GetBootUart();
-    InitBootUart();
-    SuppressLineNoise();
-
-    /* set LED pin as output */
-#if defined __AVR_ATxmega128A1__
-    // TODO: Need code
-#else
-    LED_DDR |= _BV(LED);
-#endif
-
-    /* flash onboard LED to signal entering of bootloader */
-    flash_led(LED_FLASHES_AT_BOOT);
-
-    InitClock();
-
-    /* forever loop */
-    for (;;) {
-        /* get character from UART */
-        register uint8_t ch = getch();
-
-        HandleChar(ch);
-    } /* end of forever loop */
-
-}
-
-/* some variables */
-union address_union {
-    uint16_t word;
-    uint8_t  byte[2];
-} address;
-
-union length_union {
-    uint16_t word;
-    uint8_t  byte[2];
-} length;
-
-struct flags_struct {
-    unsigned eeprom : 1;
-    unsigned rampz  : 1;
-} flags;
-
-uint8_t buff[LOADER_BUFF_SIZE];
- 
-uint8_t error_count = 0;
-
-void (*app_start)(void) = 0x0000;
-
 #ifdef WATCHDOG_MODS
     static inline void CheckWatchDogAtStartup() {
         uint8_t ch = MCUSR;
@@ -228,6 +229,9 @@ void (*app_start)(void) = 0x0000;
     }
 #endif
 
+// QUESTION: Do we even need SetBootloaderPinDirections
+// QUESTION: or GetBootUart? I don't know of any arduinos
+// QUESTION: that use BL0 or BL1.
 static inline void SetBootloaderPinDirections() {
 #if INIT_BL0_DIRECTION
     BL_DDR &= ~_BV(BL0);
@@ -434,7 +438,7 @@ void HandleChar(register int ch) {
                 }           
             }
             else {
-                            LoadProgram();
+                LoadProgram();
             }
             putch(0x14);
             putch(0x10);
@@ -839,6 +843,7 @@ void nothing_response(void)
 void flash_led(uint8_t count)
 {
 #if defined __AVR_ATxmega128A1__
+    // TODO: Need to abstract and not use cpu macro.
     // TODO: Need code
 #else
     while (count--) {
@@ -849,6 +854,5 @@ void flash_led(uint8_t count)
     }
 #endif
 }
-
 
 /* end of file ATmegaBOOT.c */
