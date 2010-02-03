@@ -92,7 +92,7 @@ static inline void    SetBootloaderPinDirections();
 static inline uint8_t GetBootUart();
 static inline void    InitBootUart();
 static inline void    SuppressLineNoise();
-static inline void    InitClock() {
+static inline void    InitClock();
 
 static uint8_t bootuart = 0;
 
