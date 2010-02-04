@@ -69,6 +69,8 @@ LOAD_CMD    = $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 COMPILE_CMD = $(CC) -c $(CFLAGS) -o $@ $<
 AS_CMD      = $(CC) -S $(CFLAGS) -o $@ $<
 
+SOURCES = ATmegaBOOT.c spm.c
+
 .PHONY: all
 all: xplain sanguino lilypad lilypad_resonator pro8 pro16 pro20 diecimila ng \
      atmega328 atmega328_pro8 mega
@@ -76,8 +78,6 @@ all: xplain sanguino lilypad lilypad_resonator pro8 pro16 pro20 diecimila ng \
 ######################
 
 TARGET := xplain
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 MCU_TARGET_0 := $(MCU_TARGET)
 MCU_TARGET := atxmega128a1
 include TargetRules.mk
@@ -97,8 +97,6 @@ $(ISP): FUSE5 =
 ######################
 
 TARGET := sanguino
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): MCU_TARGET = atmega644p
@@ -113,8 +111,6 @@ $(ISP): EFUSE = FD
 ######################
 
 TARGET := lilypad
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
@@ -127,8 +123,6 @@ $(ISP): EFUSE = 00
 ######################
 
 TARGET := lilypad_resonator
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=3'
@@ -141,8 +135,6 @@ $(ISP): EFUSE = 00
 ######################
 
 TARGET := pro8
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
@@ -155,8 +147,6 @@ $(ISP): EFUSE = 00
 ######################
 
 TARGET := pro16
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
@@ -169,8 +159,6 @@ $(ISP): EFUSE = 00
 ######################
 
 TARGET := pro20
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
@@ -183,8 +171,6 @@ $(ISP): EFUSE = 00
 ######################
 
 TARGET := diecimila
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1'
@@ -197,8 +183,6 @@ $(ISP): EFUSE = 00
 ######################
 
 TARGET := ng
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
@@ -211,8 +195,6 @@ $(ISP): EFUSE = 00
 ######################
 
 TARGET := atmega328
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): MCU_TARGET = atmega328p
@@ -228,8 +210,6 @@ $(ISP): EFUSE = 05
 ######################
 
 TARGET := atmega328_pro8
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): MCU_TARGET = atmega328p
@@ -245,8 +225,6 @@ $(ISP): EFUSE = 05
 ######################
 
 TARGET := mega
-ELF    := build/$(PROGRAM)_$(TARGET).elf
-ISP    := $(TARGET)_isp
 include TargetRules.mk
 
 $(HEX): MCU_TARGET = atmega1280
