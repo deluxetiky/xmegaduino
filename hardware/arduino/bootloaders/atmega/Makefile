@@ -82,10 +82,10 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): MCU_TARGET = atxmega128a1
-$(ELF): CFLAGS += '-DNUM_LED_FLASHES=5' -DBAUD_RATE=9600
-$(ELF): AVR_FREQ = 32000000L
-$(ELF): LDSECTION  = --section-start=.text=0x20000
+$(HEX): MCU_TARGET = atxmega128a1
+$(HEX): CFLAGS += '-DNUM_LED_FLASHES=5' -DBAUD_RATE=9600
+$(HEX): AVR_FREQ = 32000000L
+$(HEX): LDSECTION  = --section-start=.text=0x20000
 
 $(ISP): FUSE0 = 
 $(ISP): FUSE1 = 
@@ -100,10 +100,10 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): MCU_TARGET = atmega644p
-$(ELF): CFLAGS += '-DNUM_LED_FLASHES=3' -DBAUD_RATE=38400
-$(ELF): AVR_FREQ = 16000000L
-$(ELF): LDSECTION  = --section-start=.text=0xF800
+$(HEX): MCU_TARGET = atmega644p
+$(HEX): CFLAGS += '-DNUM_LED_FLASHES=3' -DBAUD_RATE=38400
+$(HEX): AVR_FREQ = 16000000L
+$(HEX): LDSECTION  = --section-start=.text=0xF800
 
 $(ISP): HFUSE = 1C
 $(ISP): LFUSE = FF
@@ -116,8 +116,8 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
-$(ELF): AVR_FREQ = 8000000L
+$(HEX): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
+$(HEX): AVR_FREQ = 8000000L
 
 $(ISP): HFUSE = DD
 $(ISP): LFUSE = E2
@@ -130,8 +130,8 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): CFLAGS += '-DNUM_LED_FLASHES=3'
-$(ELF): AVR_FREQ = 8000000L
+$(HEX): CFLAGS += '-DNUM_LED_FLASHES=3'
+$(HEX): AVR_FREQ = 8000000L
 
 $(ISP): HFUSE = DD
 $(ISP): LFUSE = C6
@@ -144,8 +144,8 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
-$(ELF): AVR_FREQ = 8000000L
+$(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
+$(HEX): AVR_FREQ = 8000000L
 
 $(ISP): HFUSE = DD
 $(ISP): LFUSE = C6
@@ -158,8 +158,8 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
-$(ELF): AVR_FREQ = 16000000L
+$(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
+$(HEX): AVR_FREQ = 16000000L
 
 $(ISP): HFUSE = DD
 $(ISP): LFUSE = C6
@@ -172,8 +172,8 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
-$(ELF): AVR_FREQ = 20000000L
+$(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
+$(HEX): AVR_FREQ = 20000000L
 
 $(ISP): HFUSE = DD
 $(ISP): LFUSE = C6
@@ -186,8 +186,8 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): CFLAGS += '-DNUM_LED_FLASHES=1'
-$(ELF): AVR_FREQ = 16000000L 
+$(HEX): CFLAGS += '-DNUM_LED_FLASHES=1'
+$(HEX): AVR_FREQ = 16000000L 
 
 $(ISP): HFUSE = DD
 $(ISP): LFUSE = FF
@@ -200,8 +200,8 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
-$(ELF): AVR_FREQ = 16000000L
+$(HEX): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
+$(HEX): AVR_FREQ = 16000000L
 
 $(ISP): HFUSE = DD
 $(ISP): LFUSE = FF
@@ -214,10 +214,10 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): MCU_TARGET = atmega328p
-$(ELF): CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
-$(ELF): AVR_FREQ = 16000000L 
-$(ELF): LDSECTION  = --section-start=.text=0x7800
+$(HEX): MCU_TARGET = atmega328p
+$(HEX): CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
+$(HEX): AVR_FREQ = 16000000L 
+$(HEX): LDSECTION  = --section-start=.text=0x7800
 
 $(ISP): MCU_TARGET = atmega328p
 $(ISP): HFUSE = DA
@@ -231,10 +231,10 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): MCU_TARGET = atmega328p
-$(ELF): CFLAGS += '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600 -DDOUBLE_SPEED
-$(ELF): AVR_FREQ = 8000000L 
-$(ELF): LDSECTION  = --section-start=.text=0x7800
+$(HEX): MCU_TARGET = atmega328p
+$(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600 -DDOUBLE_SPEED
+$(HEX): AVR_FREQ = 8000000L 
+$(HEX): LDSECTION  = --section-start=.text=0x7800
 
 $(ISP): MCU_TARGET = atmega328p
 $(ISP): HFUSE = DA
@@ -248,10 +248,10 @@ ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
 include TargetRules.mk
 
-$(ELF): MCU_TARGET = atmega1280
-$(ELF): CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
-$(ELF): AVR_FREQ = 16000000L 
-$(ELF): LDSECTION  = --section-start=.text=0x1F000
+$(HEX): MCU_TARGET = atmega1280
+$(HEX): CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
+$(HEX): AVR_FREQ = 16000000L 
+$(HEX): LDSECTION  = --section-start=.text=0x1F000
 
 $(ISP): MCU_TARGET = atmega1280
 $(ISP): HFUSE = DA
@@ -269,13 +269,11 @@ isp-stk500: $(PROGRAM)_$(TARGET).hex
 	$(STK500-2)
 
 clean:
-	rm -rf *.o *.elf *.lst *.map *.sym *.lss *.eep *.srec *.bin *.hex
+	rm -rf build/* *.hex *.srec
+	rm -rf *.map *.sym *.lst *.bin
 
 %.elf: $(PROGRAM)_$(TARGET).o spm_$(TARGET).o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-%.lst: %.elf
-	$(OBJDUMP) -h -S $< > $@
 
 %.hex: %.elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
@@ -285,3 +283,6 @@ clean:
 
 %.bin: %.elf
 	$(OBJCOPY) -j .text -j .data -O binary $< $@
+
+%.lst: %.elf
+	$(OBJDUMP) -h -S $< > $@
