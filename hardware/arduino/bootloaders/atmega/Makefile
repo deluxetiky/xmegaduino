@@ -58,194 +58,207 @@ CC         = avr-gcc
 
 # Override is only needed by avr-lib build system.
 
-override CFLAGS        = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) -DF_CPU=$(AVR_FREQ) $(DEFS)
-override LDFLAGS       = -Wl,$(LDSECTION)
-#override LDFLAGS       = -Wl,-Map,$(PROGRAM).map,$(LDSECTION)
+override CFLAGS   = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) -DF_CPU=$(AVR_FREQ) \
+                    -DTARGET=$(TARGET) $(DEFS)
+override LDFLAGS  = -Wl,$(LDSECTION)
+#override LDFLAGS = -Wl,-Map,$(PROGRAM).map,$(LDSECTION)
 
 OBJCOPY        = avr-objcopy
 OBJDUMP        = avr-objdump
 
-all:
+ELF2HEX_CMD = $(OBJCOPY) -j .text -j .data -O ihex $< $@
+LOAD_CMD    = $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+COMPILE_CMD = $(CC) -c $(CFLAGS) -o $@ $<
+AS_CMD      = $(CC) -S $(CFLAGS) -o $@ $<
 
-test.o: Makefile test.c
+.PHONY: all
+all: xplain sanguino lilypad lilypad_resonator pro8 pro16 pro20 diecimila ng \
+     atmega328 atmega328_pro8 mega
 
-test.elf: test.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+######################
 
-test: TARGET = test
-test: MCU_TARGET = atxmega128a1
-test: AVR_FREQ = 32000000L
-test: LDSECTION  = --section-start=.text=0x020000
-test: test.hex test.srec
-	@echo >/dev/null
-   
-#test: test.s
-#test.elf: test.o
-#	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-#test.srec: test.elf
-#	$(OBJCOPY) -j .text -j .data -O srec $< $@
+TARGET := xplain
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
 
-xplain: TARGET = xplain
-xplain: MCU_TARGET = atxmega128a1
-xplain: CFLAGS += '-DNUM_LED_FLASHES=5' -DBAUD_RATE=9600
-xplain: AVR_FREQ = 32000000L
-xplain: LDSECTION  = --section-start=.text=0x20000
-#xplain: $(PROGRAM)_xplain.hex
-xplain: $(PROGRAM)_xplain.srec
-xplain: spm.s
-xplain: $(PROGRAM).s
+$(ELF): MCU_TARGET = atxmega128a1
+$(ELF): CFLAGS += '-DNUM_LED_FLASHES=5' -DBAUD_RATE=9600
+$(ELF): AVR_FREQ = 32000000L
+$(ELF): LDSECTION  = --section-start=.text=0x20000
 
-xplain_isp: xplain
-xplain_isp: TARGET = xplain
-xplain_isp: FUSE0 = 
-xplain_isp: FUSE1 = 
-xplain_isp: FUSE2 = 
-xplain_isp: FUSE4 = 
-xplain_isp: FUSE5 = 
-xplain_isp: isp
+$(ISP): FUSE0 = 
+$(ISP): FUSE1 = 
+$(ISP): FUSE2 = 
+$(ISP): FUSE4 = 
+$(ISP): FUSE5 = 
 
-sanguino: TARGET = sanguino
-sanguino: MCU_TARGET = atmega644p
-sanguino: CFLAGS += '-DNUM_LED_FLASHES=3' -DBAUD_RATE=38400
-sanguino: AVR_FREQ = 16000000L
-sanguino: LDSECTION  = --section-start=.text=0xF800
-sanguino: $(PROGRAM)_sanguino.hex
+######################
 
-sanguino_isp: sanguino
-sanguino_isp: TARGET = sanguino
-sanguino_isp: HFUSE = 1C
-sanguino_isp: LFUSE = FF
-sanguino_isp: EFUSE = FD
-sanguino_isp: isp
+TARGET := sanguino
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
 
-lilypad: TARGET = lilypad
-lilypad: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
-lilypad: AVR_FREQ = 8000000L
-lilypad: $(PROGRAM)_lilypad.hex
+$(ELF): MCU_TARGET = atmega644p
+$(ELF): CFLAGS += '-DNUM_LED_FLASHES=3' -DBAUD_RATE=38400
+$(ELF): AVR_FREQ = 16000000L
+$(ELF): LDSECTION  = --section-start=.text=0xF800
 
-lilypad_isp: lilypad
-lilypad_isp: TARGET = lilypad
-lilypad_isp: HFUSE = DD
-lilypad_isp: LFUSE = E2
-lilypad_isp: EFUSE = 00
-lilypad_isp: isp
+$(ISP): HFUSE = 1C
+$(ISP): LFUSE = FF
+$(ISP): EFUSE = FD
 
-lilypad_resonator: TARGET = lilypad_resonator
-lilypad_resonator: CFLAGS += '-DNUM_LED_FLASHES=3'
-lilypad_resonator: AVR_FREQ = 8000000L
-lilypad_resonator: $(PROGRAM)_lilypad_resonator.hex
+######################
 
-lilypad_resonator_isp: lilypad_resonator
-lilypad_resonator_isp: TARGET = lilypad_resonator
-lilypad_resonator_isp: HFUSE = DD
-lilypad_resonator_isp: LFUSE = C6
-lilypad_resonator_isp: EFUSE = 00
-lilypad_resonator_isp: isp
+TARGET := lilypad
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
 
-pro8: TARGET = pro_8MHz
-pro8: CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
-pro8: AVR_FREQ = 8000000L
-pro8: $(PROGRAM)_pro_8MHz.hex
+$(ELF): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
+$(ELF): AVR_FREQ = 8000000L
 
-pro8_isp: pro8
-pro8_isp: TARGET = pro_8MHz
-pro8_isp: HFUSE = DD
-pro8_isp: LFUSE = C6
-pro8_isp: EFUSE = 00
-pro8_isp: isp
+$(ISP): HFUSE = DD
+$(ISP): LFUSE = E2
+$(ISP): EFUSE = 00
 
-pro16: TARGET = pro_16MHz
-pro16: CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
-pro16: AVR_FREQ = 16000000L
-pro16: $(PROGRAM)_pro_16MHz.hex
+######################
 
-pro16_isp: pro16
-pro16_isp: TARGET = pro_16MHz
-pro16_isp: HFUSE = DD
-pro16_isp: LFUSE = C6
-pro16_isp: EFUSE = 00
-pro16_isp: isp
+TARGET := lilypad_resonator
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
 
-pro20: TARGET = pro_20mhz
-pro20: CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
-pro20: AVR_FREQ = 20000000L
-pro20: $(PROGRAM)_pro_20mhz.hex
+$(ELF): CFLAGS += '-DNUM_LED_FLASHES=3'
+$(ELF): AVR_FREQ = 8000000L
 
-pro20_isp: pro20
-pro20_isp: TARGET = pro_20mhz
-pro20_isp: HFUSE = DD
-pro20_isp: LFUSE = C6
-pro20_isp: EFUSE = 00
-pro20_isp: isp
+$(ISP): HFUSE = DD
+$(ISP): LFUSE = C6
+$(ISP): EFUSE = 00
 
-diecimila: TARGET = diecimila
-diecimila: CFLAGS += '-DNUM_LED_FLASHES=1'
-diecimila: AVR_FREQ = 16000000L 
-diecimila: $(PROGRAM)_diecimila.hex
+######################
 
-diecimila_isp: diecimila
-diecimila_isp: TARGET = diecimila
-diecimila_isp: HFUSE = DD
-diecimila_isp: LFUSE = FF
-diecimila_isp: EFUSE = 00
-diecimila_isp: isp
+TARGET := pro8
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
 
-ng: TARGET = ng
-ng: CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
-ng: AVR_FREQ = 16000000L
-ng: $(PROGRAM)_ng.hex
+$(ELF): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
+$(ELF): AVR_FREQ = 8000000L
 
-ng_isp: ng
-ng_isp: TARGET = ng
-ng_isp: HFUSE = DD
-ng_isp: LFUSE = FF
-ng_isp: EFUSE = 00
-ng_isp: isp
+$(ISP): HFUSE = DD
+$(ISP): LFUSE = C6
+$(ISP): EFUSE = 00
 
-atmega328: TARGET = atmega328
-atmega328: MCU_TARGET = atmega328p
-atmega328: CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
-atmega328: AVR_FREQ = 16000000L 
-atmega328: LDSECTION  = --section-start=.text=0x7800
-atmega328: $(PROGRAM)_atmega328.hex
+######################
 
-atmega328_isp: atmega328
-atmega328_isp: TARGET = atmega328
-atmega328_isp: MCU_TARGET = atmega328p
-atmega328_isp: HFUSE = DA
-atmega328_isp: LFUSE = FF
-atmega328_isp: EFUSE = 05
-atmega328_isp: isp
+TARGET := pro16
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
 
-atmega328_pro8: TARGET = atmega328_pro_8MHz
-atmega328_pro8: MCU_TARGET = atmega328p
-atmega328_pro8: CFLAGS += '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600 -DDOUBLE_SPEED
-atmega328_pro8: AVR_FREQ = 8000000L 
-atmega328_pro8: LDSECTION  = --section-start=.text=0x7800
-atmega328_pro8: $(PROGRAM)_atmega328_pro_8MHz.hex
+$(ELF): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
+$(ELF): AVR_FREQ = 16000000L
 
-atmega328_pro8_isp: atmega328_pro8
-atmega328_pro8_isp: TARGET = atmega328_pro_8MHz
-atmega328_pro8_isp: MCU_TARGET = atmega328p
-atmega328_pro8_isp: HFUSE = DA
-atmega328_pro8_isp: LFUSE = FF
-atmega328_pro8_isp: EFUSE = 05
-atmega328_pro8_isp: isp
+$(ISP): HFUSE = DD
+$(ISP): LFUSE = C6
+$(ISP): EFUSE = 00
 
-mega: TARGET = atmega1280
-mega: MCU_TARGET = atmega1280
-mega: CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
-mega: AVR_FREQ = 16000000L 
-mega: LDSECTION  = --section-start=.text=0x1F000
-mega: $(PROGRAM)_atmega1280.hex
+######################
 
-mega_isp: mega
-mega_isp: TARGET = atmega1280
-mega_isp: MCU_TARGET = atmega1280
-mega_isp: HFUSE = DA
-mega_isp: LFUSE = FF
-mega_isp: EFUSE = F5
-mega_isp: isp
+TARGET := pro20
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
+
+$(ELF): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
+$(ELF): AVR_FREQ = 20000000L
+
+$(ISP): HFUSE = DD
+$(ISP): LFUSE = C6
+$(ISP): EFUSE = 00
+
+######################
+
+TARGET := diecimila
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
+
+$(ELF): CFLAGS += '-DNUM_LED_FLASHES=1'
+$(ELF): AVR_FREQ = 16000000L 
+
+$(ISP): HFUSE = DD
+$(ISP): LFUSE = FF
+$(ISP): EFUSE = 00
+
+######################
+
+TARGET := ng
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
+
+$(ELF): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
+$(ELF): AVR_FREQ = 16000000L
+
+$(ISP): HFUSE = DD
+$(ISP): LFUSE = FF
+$(ISP): EFUSE = 00
+
+######################
+
+TARGET := atmega328
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
+
+$(ELF): MCU_TARGET = atmega328p
+$(ELF): CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
+$(ELF): AVR_FREQ = 16000000L 
+$(ELF): LDSECTION  = --section-start=.text=0x7800
+
+$(ISP): MCU_TARGET = atmega328p
+$(ISP): HFUSE = DA
+$(ISP): LFUSE = FF
+$(ISP): EFUSE = 05
+
+######################
+
+TARGET := atmega328_pro8
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
+
+$(ELF): MCU_TARGET = atmega328p
+$(ELF): CFLAGS += '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600 -DDOUBLE_SPEED
+$(ELF): AVR_FREQ = 8000000L 
+$(ELF): LDSECTION  = --section-start=.text=0x7800
+
+$(ISP): MCU_TARGET = atmega328p
+$(ISP): HFUSE = DA
+$(ISP): LFUSE = FF
+$(ISP): EFUSE = 05
+
+######################
+
+TARGET := mega
+ELF    := build/$(PROGRAM)_$(TARGET).elf
+ISP    := $(TARGET)_isp
+include TargetRules.mk
+
+$(ELF): MCU_TARGET = atmega1280
+$(ELF): CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
+$(ELF): AVR_FREQ = 16000000L 
+$(ELF): LDSECTION  = --section-start=.text=0x1F000
+
+$(ISP): MCU_TARGET = atmega1280
+$(ISP): HFUSE = DA
+$(ISP): LFUSE = FF
+$(ISP): EFUSE = F5
+
+######################
 
 isp: $(TARGET)
 	$(ISPFUSES)
@@ -255,11 +268,11 @@ isp-stk500: $(PROGRAM)_$(TARGET).hex
 	$(STK500-1)
 	$(STK500-2)
 
-%.elf: $(OBJ)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-
 clean:
 	rm -rf *.o *.elf *.lst *.map *.sym *.lss *.eep *.srec *.bin *.hex
+
+%.elf: $(PROGRAM)_$(TARGET).o spm_$(TARGET).o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 %.lst: %.elf
 	$(OBJDUMP) -h -S $< > $@
@@ -272,9 +285,3 @@ clean:
 
 %.bin: %.elf
 	$(OBJCOPY) -j .text -j .data -O binary $< $@
-
-spm.s: spm.c config.h
-	$(CC) $(CFLAGS) -S -o $@ $<
-
-$(PROGRAM).s: $(PROGRAM).c config.h
-	$(CC) $(CFLAGS) -S -o $@ $<
