@@ -17,15 +17,15 @@
 # etc...
 
 # program name should not be changed...
-PROGRAM    = ATmegaBOOT
+PROGRAM    := ATmegaBOOT
 
 # enter the parameters for the avrdude isp tool
-ISPTOOL	   = stk500v2
-ISPPORT	   = usb
-ISPSPEED   = -b 115200
+ISPTOOL	   := stk500v2
+ISPPORT	   := usb
+ISPSPEED   := -b 115200
 
-MCU_TARGET = atmega168
-LDSECTION  = --section-start=.text=0x3800
+MCU_TARGET := atmega168
+LDSECTION  := --section-start=.text=0x3800
 
 # the efuse should really be 0xf8; since, however, only the lower
 # three bits of that byte are used on the atmega168, avrdude gets
@@ -37,24 +37,22 @@ LDSECTION  = --section-start=.text=0x3800
 # lock it), but since the high two bits of the lock byte are
 # unused, avrdude would get confused.
 
-ISPFUSES    = avrdude -c $(ISPTOOL) -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
+ISPFUSES    := avrdude -c $(ISPTOOL) -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
 -e -u -U lock:w:0x3f:m -U efuse:w:0x$(EFUSE):m -U hfuse:w:0x$(HFUSE):m -U lfuse:w:0x$(LFUSE):m
-ISPFLASH    = avrdude -c $(ISPTOOL) -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
+ISPFLASH    := avrdude -c $(ISPTOOL) -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
 -U flash:w:$(PROGRAM)_$(TARGET).hex -U lock:w:0x0f:m
 
-STK500 = "C:\Program Files\Atmel\AVR Tools\STK500\Stk500.exe"
-STK500-1 = $(STK500) -e -d$(MCU_TARGET) -pf -vf -if$(PROGRAM)_$(TARGET).hex \
+STK500 := "C:\Program Files\Atmel\AVR Tools\STK500\Stk500.exe"
+STK500-1 := $(STK500) -e -d$(MCU_TARGET) -pf -vf -if$(PROGRAM)_$(TARGET).hex \
 -lFF -LFF -f$(HFUSE)$(LFUSE) -EF8 -ms -q -cUSB -I200kHz -s -wt
-STK500-2 = $(STK500) -d$(MCU_TARGET) -ms -q -lCF -LCF -cUSB -I200kHz -s -wt
+STK500-2 := $(STK500) -d$(MCU_TARGET) -ms -q -lCF -LCF -cUSB -I200kHz -s -wt
 
-
-OBJ        = $(PROGRAM).o spm.o
-OPTIMIZE   = -Os
+OPTIMIZE   := -Os
 
 DEFS       = 
 LIBS       =
 
-CC         = avr-gcc
+CC         := avr-gcc
 
 # Override is only needed by avr-lib build system.
 
@@ -63,8 +61,8 @@ override CFLAGS   = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) -DF_CPU=$(AVR_FREQ)
 override LDFLAGS  = -Wl,$(LDSECTION)
 #override LDFLAGS = -Wl,-Map,$(PROGRAM).map,$(LDSECTION)
 
-OBJCOPY        = avr-objcopy
-OBJDUMP        = avr-objdump
+OBJCOPY        := avr-objcopy
+OBJDUMP        := avr-objdump
 
 ELF2HEX_CMD = $(OBJCOPY) -j .text -j .data -O ihex $< $@
 LOAD_CMD    = $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
@@ -80,7 +78,10 @@ all: xplain sanguino lilypad lilypad_resonator pro8 pro16 pro20 diecimila ng \
 TARGET := xplain
 ELF    := build/$(PROGRAM)_$(TARGET).elf
 ISP    := $(TARGET)_isp
+MCU_TARGET_0 := $(MCU_TARGET)
+MCU_TARGET := atxmega128a1
 include TargetRules.mk
+MCU_TARGET := $(MCU_TARGET_0)
 
 $(HEX): MCU_TARGET = atxmega128a1
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=5' -DBAUD_RATE=9600

@@ -2,6 +2,9 @@ HEX      := $(PROGRAM)_$(TARGET).hex
 
 PROG_OBJ := build/$(PROGRAM)_$(TARGET).o
 SPM_OBJ  := build/spm_$(TARGET).o
+OBJS     := $(PROG_OBJ) $(SPM_OBJ)
+
+OBJ_DEPS := $(OBJS:.o=.d)
 
 PROG_S   := build/$(PROGRAM)_$(TARGET).s
 SPM_S    := build/spm_$(TARGET).s
@@ -35,3 +38,19 @@ $(TARGET): $(HEX)
 $(ISP): $(TARGET)
 $(ISP): TARGET := $(TARGET)
 $(ISP): isp
+
+PROG_DEP = $(PROG_OBJ:.o=.d)
+$(PROG_DEP): $(PROGRAM).c $(MAKEFILE_LIST)
+	@set -e; rm -f $@; \
+	$(CC) -MM $(CFLAGS) $< > $@.$$$$; \
+	sed 's,.*\.o[ :]*,$(PROG_OBJ) $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+SPM_DEP = $(SPM_OBJ:.o=.d)
+$(SPM_DEP): spm.c $(MAKEFILE_LIST)
+	@set -e; rm -f $@; \
+	$(CC) -MM $(CFLAGS) $< > $@.$$$$; \
+	sed 's,.*\.o[ :]*,$(SPM_OBJ) $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+include $(OBJ_DEPS)

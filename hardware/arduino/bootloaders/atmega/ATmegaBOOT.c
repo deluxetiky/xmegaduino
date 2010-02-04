@@ -527,20 +527,6 @@ void HandleChar(register int ch) {
 #endif
             uint8_t addrl, addrh;
 
-#if defined __AVR_ATmega1280__ 
-    #define MONITOR_WELCOME "ATmegaBOOT / Arduino Mega - (C) Arduino LLC - 090930\n\r";
-#endif
-
-#if defined MONITOR_WELCOME
-#elif defined CRUMB128
-    #define MONITOR_WELCOME "ATmegaBOOT / Crumb128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
-#elif defined PROBOMEGA128
-    #define MONITOR_WELCOME "ATmegaBOOT / PROBOmega128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
-#elif defined SAVVY128
-    #define MONITOR_WELCOME "ATmegaBOOT / Savvy128 - (C) J.P.Kyle, E.Lins - 050815\n\r";
-#else
-    #define MONITOR_WELCOME "ATmegaBOOT / Unknown\n\r";
-#endif
             const char* welcome = MONITOR_WELCOME;
 
             /* turn on LED */

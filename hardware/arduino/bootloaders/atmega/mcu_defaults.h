@@ -1,6 +1,8 @@
 #ifndef MCU_DEFAULTS_H
 #define MCU_DEFAULTS_H
 
+#include <avr/io.h>
+
 #include "mcu.h"
 
 /* UART names. Settle on UBRRnL convention, remapping those that use UBRRL. */

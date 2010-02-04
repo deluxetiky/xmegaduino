@@ -44,19 +44,6 @@
 #endif
 
 #if defined __AVR_ATmega128__ || defined __AVR_ATmega1280__
-    /* Onboard LED is connected to pin PB7 (e.g. Crumb128, PROBOmega128, Savvy128, Arduino Mega) */
-    #define LED      PINB7
-#elif defined __AVR_ATmega644__
-    #define LED      PINB0
-#elif defined __AVR_Xmega128A1__
-    // PORTE
-    #define LED      PINB0
-    #define LED_DDR  DDRB
-    #define LED_PORT PORTB
-    #define LED_PIN  PINB
-#endif
-
-#if defined __AVR_ATmega128__ || defined __AVR_ATmega1280__
     #define LED_FLASHES_AT_BOOT NUM_LED_FLASHES + bootuart
 #endif
 
