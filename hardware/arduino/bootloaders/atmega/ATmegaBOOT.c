@@ -152,7 +152,6 @@ void (*app_start)(void) = 0x0000;
 
 void InitClock() {
 #if defined OSC_RC32MEN_bm
-// #if defined __AVR_Xmega128A1__
     // Enable 32M internal crystal
     OSC.CTRL |= OSC_RC32MEN_bm;
     // Wait for 32M internal crystal to stablize
@@ -219,8 +218,9 @@ void InitClock() {
         WDTCSR |= _BV(WDCE) | _BV(WDE);
         WDTCSR = 0;
 
-        // Check if the WDT was used to reset, in which case we dont bootload and skip straight to the code. woot.
-        if (! (ch &  _BV(EXTRF))) // if its a not an external reset...
+        // Check if the WDT was used to reset, in which case we dont bootload and skip straight
+        // to the code. woot.
+        if (! (ch &  _BV(EXTRF))) // if its not an external reset...
             app_start();  // skip bootloader
     }
 #else
@@ -427,12 +427,14 @@ void HandleChar(register int ch) {
                 for(w=0;w<length.word;w++) {
 #if USE_BUILT_IN_AVR_EEPROM_H
                     eeprom_write_byte((void *)address.word,buff[w]);
-#else
+#elif defined EEPE && defined EEMPE && defined EEAR && defined EECR && defined EEDR
                     while(EECR & (1<<EEPE));
                     EEAR = (uint16_t)(void *)address.word;
                     EEDR = buff[w];
                     EECR |= (1<<EEMPE);
                     EECR |= (1<<EEPE);
+#else
+                    #error Do not know how to write to EEPROM
 #endif
                     address.word++;
                 }           
@@ -787,6 +789,7 @@ void getNch(uint8_t count)
     }
 
 #if 0
+// QUESTION: Should this code be removed???
 /* Prior code was twisty. Why didn't mega128 and 1280 just call getch()
    But 1281 did? For now, just call getch, but keep this visible for a
    little while until we're sure the above works (gc 2010-01-21).
