@@ -66,7 +66,7 @@ override LDFLAGS  = -Wl,$(LDSECTION)
 OBJCOPY        := avr-objcopy
 OBJDUMP        := avr-objdump
 
-SOURCES = ATmegaBOOT.c spm.c
+SOURCES = $(PROGRAM).c spm.c
 
 .PHONY: all
 all: xplain sanguino lilypad lilypad_resonator pro8 pro16 pro20 diecimila ng \
@@ -80,7 +80,7 @@ include TargetRules.mk
 
 $(HEX): CFLAGS    += '-DNUM_LED_FLASHES=5' -DBAUD_RATE=9600
 $(HEX): AVR_FREQ   = 32000000L
-$(HEX): LDSECTION  = --section-start=.text=0x20000
+$(HEX): BOOT_ADDR  = 0x20000
 
 $(ISP): FUSE0 = 
 $(ISP): FUSE1 = 
@@ -94,9 +94,8 @@ TARGET     := sanguino
 MCU_TARGET := atmega644p
 include TargetRules.mk
 
-$(HEX): CFLAGS += '-DNUM_LED_FLASHES=3' -DBAUD_RATE=38400
-$(HEX): AVR_FREQ = 16000000L
-$(HEX): LDSECTION  = --section-start=.text=0xF800
+$(HEX): CFLAGS   += '-DNUM_LED_FLASHES=3' -DBAUD_RATE=38400
+$(HEX): BOOT_ADDR = 0xF800
 
 $(ISP): HFUSE = 1C
 $(ISP): LFUSE = FF
@@ -148,7 +147,6 @@ MCU_TARGET := atmega168
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
-$(HEX): AVR_FREQ = 16000000L
 
 $(ISP): HFUSE = DD
 $(ISP): LFUSE = C6
@@ -174,7 +172,6 @@ MCU_TARGET := atmega168
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1'
-$(HEX): AVR_FREQ = 16000000L 
 
 $(ISP): HFUSE = DD
 $(ISP): LFUSE = FF
@@ -187,7 +184,6 @@ MCU_TARGET := atmega168
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
-$(HEX): AVR_FREQ = 16000000L
 
 $(ISP): HFUSE = DD
 $(ISP): LFUSE = FF
@@ -199,11 +195,9 @@ TARGET     := atmega328
 MCU_TARGET := atmega328p
 include TargetRules.mk
 
-$(HEX): CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
-$(HEX): AVR_FREQ = 16000000L 
-$(HEX): LDSECTION  = --section-start=.text=0x7800
+$(HEX): CFLAGS    += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
+$(HEX): BOOT_ADDR  = 0x7800
 
-$(ISP): MCU_TARGET = atmega328p
 $(ISP): HFUSE = DA
 $(ISP): LFUSE = FF
 $(ISP): EFUSE = 05
@@ -214,9 +208,9 @@ TARGET     := atmega328_pro8
 MCU_TARGET := atmega328p
 include TargetRules.mk
 
-$(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600 -DDOUBLE_SPEED
-$(HEX): AVR_FREQ = 8000000L 
-$(HEX): LDSECTION  = --section-start=.text=0x7800
+$(HEX): CFLAGS    += '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600 -DDOUBLE_SPEED
+$(HEX): AVR_FREQ   = 8000000L 
+$(HEX): BOOT_ADDR  = 0x7800
 
 $(ISP): HFUSE = DA
 $(ISP): LFUSE = FF
@@ -229,8 +223,7 @@ MCU_TARGET := atmega1280
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
-$(HEX): AVR_FREQ = 16000000L 
-$(HEX): LDSECTION  = --section-start=.text=0x1F000
+$(HEX): BOOT_ADDR  = 0x1F000
 
 $(ISP): HFUSE = DA
 $(ISP): LFUSE = FF
@@ -238,6 +231,7 @@ $(ISP): EFUSE = F5
 
 ######################
 
+# TARGET is set in TargetRules.mk per target definitions
 isp: $(TARGET)
 	$(ISPFUSES)
 	$(ISPFLASH)
