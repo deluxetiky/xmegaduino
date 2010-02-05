@@ -1,39 +1,36 @@
 HEX      := $(PROGRAM)_$(TARGET).hex
 ELF      := build/$(PROGRAM)_$(TARGET).elf
+LST      := build/$(PROGRAM)_$(TARGET).lst
 ISP      := $(TARGET)_isp
 
 OBJS     := $(SOURCES:%.c=build/%_$(TARGET).o)
 OBJ_DEPS := $(OBJS:.o=.d)
 
-PROG_OBJ := build/$(PROGRAM)_$(TARGET).o
-SPM_OBJ  := build/spm_$(TARGET).o
-PROG_S   := build/$(PROGRAM)_$(TARGET).s
-SPM_S    := build/spm_$(TARGET).s
-
-$(HEX): $(ELF)
-	$(ELF2HEX_CMD)
-	echo
+$(HEX): MCU_TARGET := $(MCU_TARGET)
+$(HEX): $(ELF) $(OBJS:.o=.s)
+$(HEX): $(LST)
 
 $(ELF): $(OBJS)
-	$(LOAD_CMD)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 $(TARGET): TARGET := $(TARGET)
 $(TARGET): $(HEX)
 
 $(ISP): $(TARGET)
-$(ISP): TARGET := $(TARGET)
+$(ISP): MCU_TARGET := $(MCU_TARGET)
+$(ISP): TARGET     := $(TARGET)
 $(ISP): isp
 
-build/%_$(TARGET).o: %.c build/%_$(TARGET).s $(MAKEFILE_LIST)
+build/%_$(TARGET).o: %.c $(MAKEFILE_LIST)
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 build/%_$(TARGET).s: %.c $(MAKEFILE_LIST)
-	$(AS_CMD)
+	$(CC) -S $(CFLAGS) -o $@ $<
 
 build/%_$(TARGET).d: %.c $(MAKEFILE_LIST)
 	@set -e; rm -f $@; \
 	$(CC) -MM $(CFLAGS) $< > $@.$$$$; \
-	sed 's,.*\.o[ :]*,$(@:.d=.o) $@ : ,g' < $@.$$$$ > $@; \
+	sed 's,.*\.o[ :]*,$(@:.d=.o) $(@:.d=.s) $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
 ifneq ($(MAKECMDGOALS),clean)

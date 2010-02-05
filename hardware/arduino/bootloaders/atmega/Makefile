@@ -24,8 +24,10 @@ ISPTOOL	   := stk500v2
 ISPPORT	   := usb
 ISPSPEED   := -b 115200
 
-MCU_TARGET := atmega168
-LDSECTION  := --section-start=.text=0x3800
+LDSECTION   = --section-start=.text=$(BOOT_ADDR)
+BOOT_ADDR   = 0x3800
+
+AVR_FREQ    = 16000000L 
 
 # the efuse should really be 0xf8; since, however, only the lower
 # three bits of that byte are used on the atmega168, avrdude gets
@@ -37,15 +39,15 @@ LDSECTION  := --section-start=.text=0x3800
 # lock it), but since the high two bits of the lock byte are
 # unused, avrdude would get confused.
 
-ISPFUSES    := avrdude -c $(ISPTOOL) -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
+ISPFUSES    = avrdude -c $(ISPTOOL) -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
 -e -u -U lock:w:0x3f:m -U efuse:w:0x$(EFUSE):m -U hfuse:w:0x$(HFUSE):m -U lfuse:w:0x$(LFUSE):m
-ISPFLASH    := avrdude -c $(ISPTOOL) -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
+ISPFLASH    = avrdude -c $(ISPTOOL) -p $(MCU_TARGET) -P $(ISPPORT) $(ISPSPEED) \
 -U flash:w:$(PROGRAM)_$(TARGET).hex -U lock:w:0x0f:m
 
-STK500 := "C:\Program Files\Atmel\AVR Tools\STK500\Stk500.exe"
-STK500-1 := $(STK500) -e -d$(MCU_TARGET) -pf -vf -if$(PROGRAM)_$(TARGET).hex \
+STK500   = "C:\Program Files\Atmel\AVR Tools\STK500\Stk500.exe"
+STK500-1 = $(STK500) -e -d$(MCU_TARGET) -pf -vf -if$(PROGRAM)_$(TARGET).hex \
 -lFF -LFF -f$(HFUSE)$(LFUSE) -EF8 -ms -q -cUSB -I200kHz -s -wt
-STK500-2 := $(STK500) -d$(MCU_TARGET) -ms -q -lCF -LCF -cUSB -I200kHz -s -wt
+STK500-2 = $(STK500) -d$(MCU_TARGET) -ms -q -lCF -LCF -cUSB -I200kHz -s -wt
 
 OPTIMIZE   := -Os
 
@@ -64,11 +66,6 @@ override LDFLAGS  = -Wl,$(LDSECTION)
 OBJCOPY        := avr-objcopy
 OBJDUMP        := avr-objdump
 
-ELF2HEX_CMD = $(OBJCOPY) -j .text -j .data -O ihex $< $@
-LOAD_CMD    = $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-COMPILE_CMD = $(CC) -c $(CFLAGS) -o $@ $<
-AS_CMD      = $(CC) -S $(CFLAGS) -o $@ $<
-
 SOURCES = ATmegaBOOT.c spm.c
 
 .PHONY: all
@@ -77,15 +74,12 @@ all: xplain sanguino lilypad lilypad_resonator pro8 pro16 pro20 diecimila ng \
 
 ######################
 
-TARGET := xplain
-MCU_TARGET_0 := $(MCU_TARGET)
+TARGET     := xplain
 MCU_TARGET := atxmega128a1
 include TargetRules.mk
-MCU_TARGET := $(MCU_TARGET_0)
 
-$(HEX): MCU_TARGET = atxmega128a1
-$(HEX): CFLAGS += '-DNUM_LED_FLASHES=5' -DBAUD_RATE=9600
-$(HEX): AVR_FREQ = 32000000L
+$(HEX): CFLAGS    += '-DNUM_LED_FLASHES=5' -DBAUD_RATE=9600
+$(HEX): AVR_FREQ   = 32000000L
 $(HEX): LDSECTION  = --section-start=.text=0x20000
 
 $(ISP): FUSE0 = 
@@ -96,10 +90,10 @@ $(ISP): FUSE5 =
 
 ######################
 
-TARGET := sanguino
+TARGET     := sanguino
+MCU_TARGET := atmega644p
 include TargetRules.mk
 
-$(HEX): MCU_TARGET = atmega644p
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=3' -DBAUD_RATE=38400
 $(HEX): AVR_FREQ = 16000000L
 $(HEX): LDSECTION  = --section-start=.text=0xF800
@@ -110,7 +104,8 @@ $(ISP): EFUSE = FD
 
 ######################
 
-TARGET := lilypad
+TARGET     := lilypad
+MCU_TARGET := atmega168
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
@@ -122,7 +117,8 @@ $(ISP): EFUSE = 00
 
 ######################
 
-TARGET := lilypad_resonator
+TARGET     := lilypad_resonator
+MCU_TARGET := atmega168
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=3'
@@ -134,7 +130,8 @@ $(ISP): EFUSE = 00
 
 ######################
 
-TARGET := pro8
+TARGET     := pro8
+MCU_TARGET := atmega168
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
@@ -146,7 +143,8 @@ $(ISP): EFUSE = 00
 
 ######################
 
-TARGET := pro16
+TARGET     := pro16
+MCU_TARGET := atmega168
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
@@ -158,7 +156,8 @@ $(ISP): EFUSE = 00
 
 ######################
 
-TARGET := pro20
+TARGET     := pro20
+MCU_TARGET := atmega168
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' '-DWATCHDOG_MODS'
@@ -170,7 +169,8 @@ $(ISP): EFUSE = 00
 
 ######################
 
-TARGET := diecimila
+TARGET     := diecimila
+MCU_TARGET := atmega168
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1'
@@ -182,7 +182,8 @@ $(ISP): EFUSE = 00
 
 ######################
 
-TARGET := ng
+TARGET     := ng
+MCU_TARGET := atmega168
 include TargetRules.mk
 
 $(HEX): CFLAGS += '-DMAX_TIME_COUNT=F_CPU>>1' '-DNUM_LED_FLASHES=3'
@@ -194,10 +195,10 @@ $(ISP): EFUSE = 00
 
 ######################
 
-TARGET := atmega328
+TARGET     := atmega328
+MCU_TARGET := atmega328p
 include TargetRules.mk
 
-$(HEX): MCU_TARGET = atmega328p
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
 $(HEX): AVR_FREQ = 16000000L 
 $(HEX): LDSECTION  = --section-start=.text=0x7800
@@ -209,30 +210,28 @@ $(ISP): EFUSE = 05
 
 ######################
 
-TARGET := atmega328_pro8
+TARGET     := atmega328_pro8
+MCU_TARGET := atmega328p
 include TargetRules.mk
 
-$(HEX): MCU_TARGET = atmega328p
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=1' -DBAUD_RATE=57600 -DDOUBLE_SPEED
 $(HEX): AVR_FREQ = 8000000L 
 $(HEX): LDSECTION  = --section-start=.text=0x7800
 
-$(ISP): MCU_TARGET = atmega328p
 $(ISP): HFUSE = DA
 $(ISP): LFUSE = FF
 $(ISP): EFUSE = 05
 
 ######################
 
-TARGET := mega
+TARGET     := mega
+MCU_TARGET := atmega1280
 include TargetRules.mk
 
-$(HEX): MCU_TARGET = atmega1280
 $(HEX): CFLAGS += '-DNUM_LED_FLASHES=0' -DBAUD_RATE=57600
 $(HEX): AVR_FREQ = 16000000L 
 $(HEX): LDSECTION  = --section-start=.text=0x1F000
 
-$(ISP): MCU_TARGET = atmega1280
 $(ISP): HFUSE = DA
 $(ISP): LFUSE = FF
 $(ISP): EFUSE = F5
@@ -251,17 +250,17 @@ clean:
 	rm -rf build/* *.hex *.srec
 	rm -rf *.map *.sym *.lst *.bin
 
-%.elf: $(PROGRAM)_$(TARGET).o spm_$(TARGET).o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
-
-%.hex: %.elf
+%.hex: build/%.elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
+	echo
 
-%.srec: %.elf
+%.srec: build/%.elf
 	$(OBJCOPY) -j .text -j .data -O srec $< $@
+	echo
 
-%.bin: %.elf
+%.bin: build/%.elf
 	$(OBJCOPY) -j .text -j .data -O binary $< $@
+	echo
 
-%.lst: %.elf
+build/%.lst: build/%.elf
 	$(OBJDUMP) -h -S $< > $@
