@@ -1,9 +1,9 @@
 HEX      := $(PROGRAM)_$(TARGET).hex
-ELF      := build/$(PROGRAM)_$(TARGET).elf
-LST      := build/$(PROGRAM)_$(TARGET).lst
+ELF      := $(BUILD)/$(PROGRAM)_$(TARGET).elf
+LST      := $(BUILD)/$(PROGRAM)_$(TARGET).lst
 ISP      := $(TARGET)_isp
 
-OBJS     := $(SOURCES:%.c=build/%_$(TARGET).o)
+OBJS     := $(SOURCES:%.c=$(BUILD)/%_$(TARGET).o)
 OBJ_DEPS := $(OBJS:.o=.d)
 
 $(HEX): MCU_TARGET := $(MCU_TARGET)
@@ -21,13 +21,13 @@ $(ISP): MCU_TARGET := $(MCU_TARGET)
 $(ISP): TARGET     := $(TARGET)
 $(ISP): isp
 
-build/%_$(TARGET).o: %.c $(MAKEFILE_LIST)
+$(BUILD)/%_$(TARGET).o: $(SOURCE)/%.c $(MAKEFILE_LIST)
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-build/%_$(TARGET).s: %.c $(MAKEFILE_LIST)
+$(BUILD)/%_$(TARGET).s: $(SOURCE)/%.c $(MAKEFILE_LIST)
 	$(CC) -S $(CFLAGS) -o $@ $<
 
-build/%_$(TARGET).d: %.c $(MAKEFILE_LIST)
+$(BUILD)/%_$(TARGET).d: $(SOURCE)/%.c $(MAKEFILE_LIST)
 	@set -e; rm -f $@; \
 	$(CC) -MM $(CFLAGS) $< > $@.$$$$; \
 	sed 's,.*\.o[ :]*,$(@:.d=.o) $(@:.d=.s) $@ : ,g' < $@.$$$$ > $@; \
