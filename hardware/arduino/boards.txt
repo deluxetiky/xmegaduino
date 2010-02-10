@@ -218,3 +218,21 @@ atmega8.build.mcu=atmega8
 atmega8.build.f_cpu=16000000L
 atmega8.build.core=arduino
 
+##############################################################
+
+xplain.name=XPlain atxmega128a1
+
+xplain.upload.protocol=dragon_jtag
+xplain.upload.maximum_size=30000
+xplain.upload.speed=115000
+
+xplain.bootloader.low_fuses=0xdf
+xplain.bootloader.high_fuses=0xca
+xplain.bootloader.path=atmega8
+xplain.bootloader.file=ATmegaBOOT.hex
+xplain.bootloader.unlock_bits=0x3F
+xplain.bootloader.lock_bits=0x0F
+
+xplain.build.mcu=atxmega128a1
+xplain.build.f_cpu=20000000L
+xplain.build.core=xplain
