@@ -39,6 +39,9 @@ else
   cp -rX ../../libraries "$RESOURCES/"
   cp -rX ../shared/tools "$RESOURCES/"
 
+  mkdir ../../hardware/arduino/bootloaders/atmega/build
+  mkdir ../../hardware/arduino/bootloaders/sanguino/build
+  mkdir ../../hardware/arduino/bootloaders/xplain/build
   cp -rX ../../hardware "$RESOURCES/"
 
   cp -X ../../app/lib/antlr.jar "$RESOURCES/"
@@ -62,7 +65,7 @@ fi
 
 # move to root 'processing' directory
 cd ../..
-
+PATH="$RESOURCES/hardware/tools/avr/bin:$PATH"
 
 ### -- BUILD CORE ----------------------------------------------
 
@@ -124,6 +127,15 @@ cd ../..
 #mkdir -p work/Arduino.app/Contents/Resources/Java/
 #cp work/lib/*.jar work/Arduino.app/Contents/Resources/Java/
 
+### -- BUILD bootloaders ------------------------------------------------
+
+echo Building bootloaders ...
+
+# Need a proper non recursive makefile with make dist
+make -C ../../hardware/arduino/bootloaders/atmega --no-print-directory
+make -C ../../hardware/arduino/bootloaders/sanguino --no-print-directory
+make -C ../../hardware/arduino/bootloaders/xplain --no-print-directory
+cp -rX ../../hardware "$RESOURCES/"
 
 echo
 echo Done.

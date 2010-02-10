@@ -2,3 +2,12 @@ syntax: glob
 
 .svn
 work
+*.class
+,*
+.*.sw?
+
+syntax: regexp
+
+hardware/arduino/bootloaders/.*/.*\.sh
+hardware/arduino/bootloaders/.*/build
+hardware/arduino/bootloaders/.*/*.hex
