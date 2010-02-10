@@ -19,7 +19,7 @@
 include Definitions.mk
 
 .PHONY: all
-all: xplain sanguino lilypad lilypad_resonator pro8 pro16 pro20 diecimila ng \
+all: lilypad lilypad_resonator pro8 pro16 pro20 diecimila ng \
      atmega328 atmega328_pro8 mega
 
 ######################
