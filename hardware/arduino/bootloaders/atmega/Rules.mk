@@ -1,3 +1,6 @@
+# Make rules for ATmegaBOOT
+# E.Lins, 18.7.2005
+# GorillaCoder 2010-02-09
 
 # TARGET is set in TargetRules.mk per target definitions
 isp: $(TARGET)

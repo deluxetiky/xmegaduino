@@ -1,20 +1,6 @@
-# Makefile for ATmegaBOOT
+# Make definitions for ATmegaBOOT
 # E.Lins, 18.7.2005
-# $Id$
-#
-# Instructions
-#
-# To make bootloader .hex file:
-# make diecimila
-# make lilypad
-# make ng
-# etc...
-#
-# To burn bootloader .hex file:
-# make diecimila_isp
-# make lilypad_isp
-# make ng_isp
-# etc...
+# GorillaCoder 2010-02-09
 
 ifndef SOURCE
 SOURCE=.

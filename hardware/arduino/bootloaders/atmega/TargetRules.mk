@@ -1,3 +1,7 @@
+# Make target rules for ATmegaBOOT
+# E.Lins, 18.7.2005
+# GorillaCoder 2010-02-09
+
 HEX      := $(PROGRAM)_$(TARGET).hex
 ELF      := $(BUILD)/$(PROGRAM)_$(TARGET).elf
 LST      := $(BUILD)/$(PROGRAM)_$(TARGET).lst
