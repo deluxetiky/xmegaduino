@@ -24,61 +24,32 @@
 
 #include "wiring_private.h"
 
-// the prescaler is set so that timer0 ticks every 64 clock cycles, and the
-// the overflow handler is called every 256 ticks.
-#define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
+volatile unsigned long rtc_millis = 0;
 
-// the whole number of milliseconds per timer0 overflow
-#define MILLIS_INC (MICROSECONDS_PER_TIMER0_OVERFLOW / 1000)
-
-// the fractional number of milliseconds per timer0 overflow. we shift right
-// by three to fit these numbers into a byte. (for the clock speeds we care
-// about - 8 and 16 MHz - this doesn't lose precision.)
-#define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
-#define FRACT_MAX (1000 >> 3)
-
-volatile unsigned long timer0_overflow_count = 0;
-volatile unsigned long timer0_millis = 0;
-static unsigned char timer0_fract = 0;
-
-/*
-SIGNAL(TIMER0_OVF_vect)
-{
-	// copy these to local variables so they can be stored in registers
-	// (volatile variables must be read from memory on every access)
-	unsigned long m = timer0_millis;
-	unsigned char f = timer0_fract;
-
-	m += MILLIS_INC;
-	f += FRACT_INC;
-	if (f >= FRACT_MAX) {
-		f -= FRACT_MAX;
-		m += 1;
-	}
-
-	timer0_fract = f;
-	timer0_millis = m;
-	timer0_overflow_count++;
-}
+/*! \brief RTC overflow interrupt service routine.
+ *
+ *  This ISR keeps track of the milliseconds 
  */
+ISR(RTC_OVF_vect)
+{
+	rtc_millis = rtc_millis+4;
+}
+
 
 unsigned long millis()
 {
-	/*	
+	
 	unsigned long m;
 	
 	uint8_t oldSREG = SREG;
 
-	// disable interrupts while we read timer0_millis or we might get an
-	// inconsistent value (e.g. in the middle of a write to timer0_millis)
+	// disable interrupts while we read rtc_millis or we might get an
+	// inconsistent value (e.g. in the middle of a write to rtc_millis)
 	cli();
-	m = timer0_millis;
+	m = rtc_millis;
 	SREG = oldSREG;
 
 	return m;
-	 */
-	
-	return 0;
 }
 
 unsigned long micros() {
@@ -108,12 +79,11 @@ unsigned long micros() {
 
 void delay(unsigned long ms)
 {
-	/*
+	
 	unsigned long start = millis();
 	
 	while (millis() - start <= ms)
 		;
-	 */
 }
 
 /* Delay for the given number of microseconds.  Assumes a 8 or 16 MHz clock. */
@@ -219,6 +189,19 @@ void init()
 	// reconnected in Serial.begin()
 	//UCSR0B = 0;
 	
+	
+	/* Turn on internal 32kHz. */
+	OSC.CTRL |= OSC_RC32KEN_bm;
+
+	do {
+		/* Wait for the 32kHz oscillator to stabilize. */
+	} while ( ( OSC.STATUS & OSC_RC32KRDY_bm ) == 0);
+		
+
+	/* Set internal 32kHz oscillator as clock source for RTC. */
+	CLK.RTCCTRL = CLK_RTCSRC_RCOSC_gc | CLK_RTCEN_bm;//1kHz
+	
+	
 	//configure pins of xmega
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTA.PIN0CTRL = 0x38;  //all pins: Wired-AND-PullUp
@@ -234,7 +217,27 @@ void init()
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTF.PIN0CTRL = 0x38;  //all pins: Wired-AND-PullUp
-
 	
+	do {
+		/* Wait until RTC is not busy. */
+	} while (  RTC.STATUS & RTC_SYNCBUSY_bm );
+	
+	/* Configure RTC period to 1 millisecond. */
+	RTC.PER = 0;//1ms
+	RTC.CNT = 0;
+	RTC.COMP = 0;
+	RTC.CTRL = ( RTC.CTRL & ~RTC_PRESCALER_gm ) | RTC_PRESCALER_DIV1_gc;
+
+	/* Enable overflow interrupt. */	
+	RTC.INTCTRL = ( RTC.INTCTRL & ~( RTC_COMPINTLVL_gm | RTC_OVFINTLVL_gm ) ) |
+	              RTC_OVFINTLVL_LO_gc |
+	              RTC_COMPINTLVL_OFF_gc;
+
+	/* Enable interrupts. */
+	PMIC.CTRL |= PMIC_LOLVLEN_bm;
+	sei();
+	
+	
+		
 	
 }
