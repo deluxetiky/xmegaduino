@@ -99,6 +99,8 @@ static uint8_t bootuart = 0;
 /* main program starts here */
 int main(void)
 {
+    InitClock();
+
     CheckWatchDogAtStartup();
 
     SetBootloaderPinDirections();
@@ -115,8 +117,6 @@ int main(void)
 
     /* flash onboard LED to signal entering of bootloader */
     flash_led(LED_FLASHES_AT_BOOT);
-
-    InitClock();
 
     /* forever loop */
     for (;;) {
@@ -744,9 +744,11 @@ char getch(void)
     if(bootuart == 1) {
         while( !USART0_IS_RX_READY() ) {
             count++;
+#if 0
             if (count > MAX_TIME_COUNT) {
                 app_start();
             }
+#endif
         }
         return USART0_GET_CHAR();
     }

@@ -17,6 +17,9 @@ else
   cp dist/*.dll work/
   cp -r dist/drivers work/
 
+  mkdir ../../hardware/arduino/bootloaders/atmega/build
+  mkdir ../../hardware/arduino/bootloaders/sanguino/build
+  mkdir ../../hardware/arduino/bootloaders/xplain/build
   cp -r ../../hardware work/
   cp -r ../../libraries work/
 
@@ -120,6 +123,15 @@ zip -rq ../lib/pde.jar .
 cd ../..
 
 
+### -- BUILD bootloaders ------------------------------------------------
+
+echo Building bootloaders ...
+
+# Need a proper non recursive makefile with make dist
+make -C ../../hardware/arduino/bootloaders/atmega --no-print-directory
+make -C ../../hardware/arduino/bootloaders/sanguino --no-print-directory
+make -C ../../hardware/arduino/bootloaders/xplain --no-print-directory
+cp -r ../../hardware work/
 echo
 echo Done.
 
