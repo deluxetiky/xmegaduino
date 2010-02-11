@@ -248,7 +248,7 @@ static inline uint8_t GetBootUart() {
 #if INIT_BL0_DIRECTION
     /* check which UART should be used for booting */
     if(bit_is_clear(BL_PIN, BL0)) {
-        return 1
+        return 1;
     }
 #endif
 #if INIT_BL1_DIRECTION
