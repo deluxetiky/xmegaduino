@@ -6,6 +6,10 @@ avrispmkii.name=AVRISP mkII
 avrispmkii.communication=usb
 avrispmkii.protocol=stk500v2
 
+dragon.name=dragon jtag
+dragon.communication=usb
+dragon.protocol=dragon_jtag
+
 usbtinyisp.name=USBtinyISP
 usbtinyisp.protocol=usbtiny
 
