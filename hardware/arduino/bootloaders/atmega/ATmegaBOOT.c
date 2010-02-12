@@ -114,7 +114,7 @@ int main(void)
 #else
     LED_DDR |= _BV(LED);
 #endif
-
+	
     /* flash onboard LED to signal entering of bootloader */
     flash_led(LED_FLASHES_AT_BOOT);
 
@@ -273,6 +273,7 @@ static inline void InitBootUart() {
     if(bootuart == 1) {
         USART0_SET_DIR();
         USART0_SET_BAUD(BAUD_RATE);
+		USART0.BAUDCTRLA = 207;
         USART0_RX_ENABLE();
         USART0_TX_ENABLE();
 
@@ -353,7 +354,7 @@ void HandleChar(register int ch) {
 
 
     /* AVR ISP/STK500 board requests */
-    else if(ch=='A') {
+    else if(ch=='A') { // X
         ch2 = getch();
         if(ch2==0x80) byte_response(HW_VER);        // Hardware version
         else if(ch2==0x81) byte_response(SW_MAJOR); // Software major version
@@ -364,7 +365,7 @@ void HandleChar(register int ch) {
 
 
     /* Device Parameters  DON'T CARE, DEVICE IS FIXED  */
-    else if(ch=='B') {
+    else if(ch=='B') { // X
         getNch(20);
         nothing_response();
     }
