@@ -14,7 +14,7 @@ An xmega128a1 with 128K+8K of code, or 136K bytes, requires 18 address bits.
 
 #if defined __AVR_ATxmega128A1__
 #define SIG2    0x97
-#define SIG3    0x03
+#define SIG3    0x4C
 #define PAGE_SIZE   0x100U   //256 words
 #define ADDR_BITS   18
 

@@ -399,7 +399,7 @@ void HandleChar(register int ch) {
     /* Set address, little endian. EEPROM in bytes, FLASH in words  */
     /* Perhaps extra address bytes may be added in future to support > 128kB FLASH.  */
     /* This might explain why little endian was used here, big endian used everywhere else.  */
-    else if(ch=='U') {
+    else if(ch=='U') { // X
         address.byte[0] = getch();
         address.byte[1] = getch();
         nothing_response();
@@ -412,9 +412,8 @@ void HandleChar(register int ch) {
         byte_response(0x00);
     }
 
-
     /* Write memory, length is big endian and is in bytes  */
-    else if(ch=='d') {
+    else if(ch=='d') { // X
         length.byte[1] = getch();
         length.byte[0] = getch();
         flags.eeprom = 0;
@@ -453,7 +452,7 @@ void HandleChar(register int ch) {
 
 
     /* Read memory block mode, length is big endian.  */
-    else if(ch=='t') {
+    else if(ch=='t') { // X
         length.byte[1] = getch();
         length.byte[0] = getch();
 #if 16 < ADDR_BITS
@@ -494,7 +493,7 @@ void HandleChar(register int ch) {
 
     /* Get device signature bytes  */
     else if(ch=='u') {
-        if (getch() == ' ') {
+        if (getch() == ' ') { // X
             putch(0x14);
             putch(SIG1);
             putch(SIG2);
