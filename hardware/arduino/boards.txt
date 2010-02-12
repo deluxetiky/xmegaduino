@@ -220,40 +220,40 @@ atmega8.build.core=arduino
 
 ##############################################################
 
-xplain.name=XPlain atxmega128a1 using jtag
+xplain_jtag.name=XPlain atxmega128a1 using jtag
 
-xplain.upload.using=dragon
-xplain.upload.maximum_size=30000
+xplain_jtag.upload.using=dragon
+xplain_jtag.upload.maximum_size=30000
 
 
-xplain.bootloader.low_fuses=0xdf
-xplain.bootloader.high_fuses=0xca
-xplain.bootloader.path=xplain
-xplain.bootloader.file=ATmegaBOOT.hex
-xplain.bootloader.unlock_bits=0x3F
-xplain.bootloader.lock_bits=0x0F
+xplain_jtag.bootloader.low_fuses=0xdf
+xplain_jtag.bootloader.high_fuses=0xca
+xplain_jtag.bootloader.path=xplain
+xplain_jtag.bootloader.file=ATmegaBOOT.hex
+xplain_jtag.bootloader.unlock_bits=0x3F
+xplain_jtag.bootloader.lock_bits=0x0F
 
-xplain.build.mcu=atxmega128a1
-xplain.build.f_cpu=2000000L
-xplain.build.core=xplain
+xplain_jtag.build.mcu=atxmega128a1
+xplain_jtag.build.f_cpu=2000000L
+xplain_jtag.build.core=xplain
 
 ##############################################################
 
-xplain.name=XPlain atxmega128a1 using serial
+xplain_serial.name=XPlain atxmega128a1 using serial
 
-xplain.upload.protocol=stk500
-xplain.upload.maximum_size=131072
-xplain.upload.speed=9600
+xplain_serial.upload.protocol=stk500
+xplain_serial.upload.maximum_size=131072
+xplain_serial.upload.speed=9600
 
 
-xplain.bootloader.low_fuses=0xdf
-xplain.bootloader.high_fuses=0xca
-xplain.bootloader.path=xplain
-xplain.bootloader.file=ATmegaBOOT.hex
-xplain.bootloader.unlock_bits=0x3F
-xplain.bootloader.lock_bits=0x0F
+xplain_serial.bootloader.low_fuses=0xdf
+xplain_serial.bootloader.high_fuses=0xca
+xplain_serial.bootloader.path=xplain
+xplain_serial.bootloader.file=ATmegaBOOT.hex
+xplain_serial.bootloader.unlock_bits=0x3F
+xplain_serial.bootloader.lock_bits=0x0F
 
-xplain.build.mcu=atxmega128a1
-xplain.build.f_cpu=32000000L
-xplain.build.core=xplain
+xplain_serial.build.mcu=atxmega128a1
+xplain_serial.build.f_cpu=32000000L
+xplain_serial.build.core=xplain
 
