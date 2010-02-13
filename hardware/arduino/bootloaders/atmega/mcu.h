@@ -20,8 +20,8 @@
 #endif
 
 #if defined __AVR_ATxmega128A1__
-    #define USART0       USARTC0
-    #define USART_PORT_0 PORTC
+    #define USART0       USARTD0
+    #define USART_PORT_0 PORTD
 #endif
 
 // QUESTION: Do we even need BL0, BL1, etc? I don't know of any arduinos

@@ -189,6 +189,52 @@ void init()
 	// reconnected in Serial.begin()
 	//UCSR0B = 0;
 	
+        /**************************************/
+        /* Init system clock: run it at 32Mhz */
+
+        // Enable 32M internal crystal
+        OSC.CTRL |= OSC_RC32MEN_bm;
+        // Wait for it to stablize
+        while ( !(OSC.STATUS & OSC_RC32MEN_bm) ) ;
+
+#if 0
+        /*  Probably won't work, but would be neat if we could run 32Mhz
+            clock through 4x PLL and have it run at 128Mhz. Datasheet implies
+            this should work. But everything I read says 32Mhz max.
+        */
+        // Does this go before or after internal 32M internal crystal in enabled and stable?
+        // Dunno, try after first.
+    
+        // PLL source: internal 32M crystal multiplied by 4 - max PLL factor for 32M crystal.
+        OSC.PLLCTRL = ((uint8_t)OSC_PLLSRC_RC2M_gc) | ( (4&OSC_PLLFAC_gm) << OSC_PLLFAC_gp);
+        // Enable PLL
+        OSC.CTRL |= OSC_PLLEN_bm;
+        // Wait for PLL to stabilize
+        while ( !(OSC.STATUS & OSC_PLLRDY_bm ) ) ;
+#endif
+
+        // #define CLOCK_SOURCE CLK_SCLKSEL_PLL_gc
+        #define CLOCK_SOURCE CLK_SCLKSEL_RC32M_gc
+
+        register uint8_t value = (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLOCK_SOURCE;
+
+        // Set main system clock to PLL
+        asm volatile(
+            "ldi  r30, lo8(%0)     \n\t"
+            "ldi  r31, hi8(%0)     \n\t"
+            "ldi  r16,  %2         \n\t"
+            "out   %3, r16         \n\t"
+            "st     Z,  %1         \n\t"
+            :
+            : "i" (&CLK.CTRL),
+              "r" ( value ),
+              "M" (CCP_IOREG_gc),
+              "i" (&CCP)
+            : "r16", "r30", "r31"
+        );
+
+        /*************************************/
+        /* Init real time clock for millis() */
 	
 	/* Turn on internal 32kHz. */
 	OSC.CTRL |= OSC_RC32KEN_bm;
