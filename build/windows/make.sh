@@ -131,7 +131,9 @@ echo Building bootloaders ...
 make -C ../../hardware/arduino/bootloaders/atmega --no-print-directory
 make -C ../../hardware/arduino/bootloaders/sanguino --no-print-directory
 make -C ../../hardware/arduino/bootloaders/xplain --no-print-directory
+
 cp -r ../../hardware work/
+
 echo
 echo Done.
 
