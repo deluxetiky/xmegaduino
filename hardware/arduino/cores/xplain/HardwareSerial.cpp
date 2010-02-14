@@ -39,7 +39,7 @@ struct ring_buffer {
   int tail;
 };
 
-ring_buffer rx_buffer = { { 0 }, 0, 0 };
+ring_buffer rx_buffer_c0 = { { 0 }, 0, 0 };
 
 inline void store_char(unsigned char c, ring_buffer *rx_buffer)
 {
@@ -56,18 +56,31 @@ inline void store_char(unsigned char c, ring_buffer *rx_buffer)
 }
 
 
-/*
+#if 1
+SIGNAL(USARTC0_RxcIsr)
+{
+  unsigned char c = USARTC0.DATA;
+  store_char(c, &rx_buffer_c0);
+}
+#else
 SIGNAL(USART_RX_vect)
 {
   unsigned char c = UDR0;
   store_char(c, &rx_buffer);
 }
- */
-
+#endif
 
 
 // Constructors ////////////////////////////////////////////////////////////////
 
+#if 1
+HardwareSerial::HardwareSerial(ring_buffer *rx_buffer, USART_t* usart, uint8_t u2x)
+{
+  this->_usart     = usart;
+  this->_rx_buffer = rx_buffer;
+  this->_u2x       = u2x;
+}
+#else
 HardwareSerial::HardwareSerial(ring_buffer *rx_buffer,
   volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
   volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
@@ -86,12 +99,12 @@ HardwareSerial::HardwareSerial(ring_buffer *rx_buffer,
   _udre = udre;
   _u2x = u2x;
 }
+#endif
 
 // Public Methods //////////////////////////////////////////////////////////////
 
 void HardwareSerial::begin(long baud)
 {
-	/*
   uint16_t baud_setting;
   bool use_u2x;
 
@@ -110,6 +123,25 @@ void HardwareSerial::begin(long baud)
     use_u2x = (nonu2x_baud_error > u2x_baud_error);
   }
   
+#if 1
+  uint8_t scale;
+  if (use_u2x) {
+    scale = 1 << _u2x;
+    baud_setting = (F_CPU / 4 / baud - 1) / 2;
+  } else {
+    scale = 0;
+    baud_setting = (F_CPU / 8 / baud - 1) / 2;
+  }
+
+  // set the baud_setting
+  _usart->BAUDCTRLA = baud_setting;
+  _usart->BAUDCTRLB = scale | baud_setting >> 8;
+
+  // enable Rx and Tx
+  _usart->CTRLB = USART_RXEN_bm | USART_TXEN_bm;
+  // enable interrupt
+  _usart->CTRLA = (_usart->CTRLA & ~USART_RXCINTLVL_gm) | USART_RXCINTLVL_LO_gc;
+#else
   if (use_u2x) {
     *_ucsra = 1 << _u2x;
     baud_setting = (F_CPU / 4 / baud - 1) / 2;
@@ -122,30 +154,33 @@ void HardwareSerial::begin(long baud)
   *_ubrrh = baud_setting >> 8;
   *_ubrrl = baud_setting;
 
-  sbi(*_ucsrb, _rxen);
-  sbi(*_ucsrb, _txen);
   sbi(*_ucsrb, _rxcie);
-	 */
+  sbi(*_ucsrb, _rxen);
+  cbi(*_ucsrb, _txen);
+#endif
 }
 
 void HardwareSerial::end()
 {
-	/*
+#if 1
+  // disable Rx and Tx
+  _usart->CTRLB &= ~(USART_RXEN_bm | USART_TXEN_bm);
+  // disable interrupt
+  _usart->CTRLA = (_usart->CTRLA & ~USART_RXCINTLVL_gm) | USART_RXCINTLVL_LO_gc;
+#else
   cbi(*_ucsrb, _rxen);
   cbi(*_ucsrb, _txen);
   cbi(*_ucsrb, _rxcie);  
-	 */
+#endif
 }
 
 uint8_t HardwareSerial::available(void)
 {
- // return (RX_BUFFER_SIZE + _rx_buffer->head - _rx_buffer->tail) % RX_BUFFER_SIZE;
-	return 0;
+  return (RX_BUFFER_SIZE + _rx_buffer->head - _rx_buffer->tail) % RX_BUFFER_SIZE;
 }
 
 int HardwareSerial::read(void)
 {
-	/*
   // if the head isn't ahead of the tail, we don't have any characters
   if (_rx_buffer->head == _rx_buffer->tail) {
     return -1;
@@ -154,16 +189,10 @@ int HardwareSerial::read(void)
     _rx_buffer->tail = (_rx_buffer->tail + 1) % RX_BUFFER_SIZE;
     return c;
   }
-	 */
-	return 0;
 }
 
 void HardwareSerial::flush()
 {
-  // don't reverse this or there may be problems if the RX interrupt
-  // occurs after reading the value of rx_buffer_head but before writing
-  // the value to rx_buffer_tail; the previous value of rx_buffer_head
-  // may be written to rx_buffer_tail, making it appear as if the buffer
   // don't reverse this or there may be problems if the RX interrupt
   // occurs after reading the value of rx_buffer_head but before writing
   // the value to rx_buffer_tail; the previous value of rx_buffer_head
@@ -174,14 +203,11 @@ void HardwareSerial::flush()
 
 void HardwareSerial::write(uint8_t c)
 {
-	/*
-  while (!((*_ucsra) & (1 << _udre)))
-    ;
+  while ( !(_usart->STATUS & USART_DREIF_bm) );
 
-  *_udr = c;
-	 */
+  _usart->DATA = c;
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
 //HardwareSerial Serial(&rx_buffer, &UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRE0, U2X0);
-HardwareSerial Serial(&rx_buffer, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);//DUMMY !!!
+HardwareSerial Serial(&rx_buffer_c0, &USARTC0, USART_CLK2X_bp);

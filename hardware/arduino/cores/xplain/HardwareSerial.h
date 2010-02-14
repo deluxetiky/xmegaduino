@@ -30,6 +30,8 @@ class HardwareSerial : public Print
 {
   private:
     ring_buffer *_rx_buffer;
+    USART_t     *_usart;
+#if 1
     volatile uint8_t *_ubrrh;
     volatile uint8_t *_ubrrl;
     volatile uint8_t *_ucsra;
@@ -39,13 +41,16 @@ class HardwareSerial : public Print
     uint8_t _txen;
     uint8_t _rxcie;
     uint8_t _udre;
+#endif
     uint8_t _u2x;
   public:
-    HardwareSerial(ring_buffer *rx_buffer,
+    HardwareSerial(ring_buffer *rx_buffer, USART_t *usart, uint8_t u2x);
+#if 0
       volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
       volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
       volatile uint8_t *udr,
       uint8_t rxen, uint8_t txen, uint8_t rxcie, uint8_t udre, uint8_t u2x);
+#endif
     void begin(long);
     void end();
     uint8_t available(void);
@@ -56,6 +61,7 @@ class HardwareSerial : public Print
 };
 
 extern HardwareSerial Serial;
+extern HardwareSerial Serial1;
 
 #if defined(__AVR_ATmega1280__)
 extern HardwareSerial Serial1;
