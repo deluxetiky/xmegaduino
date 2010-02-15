@@ -28,6 +28,10 @@
 
 // First draft of xplain pin mapping
 // 07.Feb.2010 by R. Bohne
+//
+// Alternate xplain pin mapping
+// 2010-02-14 GorillaCoder
+//
 // (PWM+ indicates the additional PWM pins on the ATmega168.)
 
 
@@ -68,9 +72,9 @@
 
 const uint16_t PROGMEM port_to_mode_PGM[] = {
 	NOT_A_PORT,
-	&DDRA,//pin header
-	&DDRB,//analog in
-	&DDRC,//analog in
+	&DDRA,//pin header, analog in
+	&DDRB,//internal, analog in, pot and speaker
+	&DDRC,//internal, usartc0 to usb on 2&3
 	&DDRD,//pin header
 	&DDRE,//leds
 	&DDRF,//switches
@@ -78,9 +82,9 @@ const uint16_t PROGMEM port_to_mode_PGM[] = {
 
 const uint16_t PROGMEM port_to_output_PGM[] = {
 	NOT_A_PORT,
-	&PORTA,//pin header
-	&PORTB,//analog in
-	&PORTC,//analog in
+	&PORTA,//pin header, analog in
+	&PORTB,//internal, analog in, pot and speaker
+	&PORTC,//internal, usartc0 to usb on 2&3
 	&PORTD,//pin header
 	&PORTE,//leds
 	&PORTF,//switches
@@ -88,14 +92,23 @@ const uint16_t PROGMEM port_to_output_PGM[] = {
 
 const uint16_t PROGMEM port_to_input_PGM[] = {
 	NOT_A_PIN,
-	&PINA,//pin header
-	&PINB,//analog in
-	&PINC,//analog in
+	&PINA,//pin header, analog in
+	&PINB,//internal, analog in, pot and speaker
+	&PINC,//internal, usartc0 to usb on 2&3
 	&PIND,//pin header
 	&PINE,//leds
 	&PINF,//switches
 };
 
+#define PIN_MAP_RENE 1
+#define PIN_MAP_GIULIANO 2
+#define PIN_MAP PIN_MAP_RENE
+
+#ifndef PIN_MAP
+#define PIN_MAP PIN_MAP_DEFAULT
+#endif
+
+#if PIN_MAP_RENE == PIN_MAP
 const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	// PORTLIST
 	PC,
@@ -170,3 +183,185 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	NOT_ON_TIMER	, 
 	NOT_ON_TIMER	, 
 	};
+#elif PIN_MAP_GIULIANO == PIN_MAP
+const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
+	// PORTLIST
+        PC, // USARTC0 connected to USB on 2&3
+        PC,
+        PC,
+        PC,
+        PC,
+        PC,
+        PC,
+        PC,
+
+        PD, // Header
+        PD,
+        PD,
+        PD,
+        PD,
+        PD,
+        PD,
+        PD,
+
+        PE, // Switches
+        PE,
+        PE,
+        PE,
+        PE,
+        PE,
+        PE,
+        PE,
+
+        PF, // LEDs
+        PF,
+        PF,
+        PF,
+        PF,
+        PF,
+        PF,
+        PF,
+
+        PA, // Header
+        PA,
+        PA,
+        PA,
+        PA,
+        PA,
+        PA,
+        PA,
+
+        PB, // Pot and Speaker
+        PB,
+        PB,
+        PB,
+        PB,
+        PB,
+        PB,
+        PB,
+
+};
+
+const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
+	// PIN IN PORT		
+	// -------------------------------------------		
+	_BV( 0 )	, // PORT C USARTC0 to USB on 2&3
+	_BV( 1 )	,
+	_BV( 2 )	,
+	_BV( 3 )	,	
+	_BV( 4 )	,	
+	_BV( 5 )	,	
+	_BV( 6 )	,
+	_BV( 7 )	,	
+
+	_BV( 0 )	, // PORT D Header
+	_BV( 1 )	,
+	_BV( 2 )	,
+	_BV( 3 )	,	
+	_BV( 4 )	,	
+	_BV( 5 )	,	
+	_BV( 6 )	,
+	_BV( 7 )	,	
+
+	_BV( 0 )	, // PORT E Switches
+	_BV( 1 )	,
+	_BV( 2 )	,
+	_BV( 3 )	,	
+	_BV( 4 )	,	
+	_BV( 5 )	,	
+	_BV( 6 )	,
+	_BV( 7 )	,	
+
+	_BV( 0 )	, // PORT F LEDs
+	_BV( 1 )	,
+	_BV( 2 )	,
+	_BV( 3 )	,	
+	_BV( 4 )	,	
+	_BV( 5 )	,	
+	_BV( 6 )	,
+	_BV( 7 )	,	
+
+	_BV( 0 )	, // PORT A Header
+	_BV( 1 )	,
+	_BV( 2 )	,
+	_BV( 3 )	,	
+	_BV( 4 )	,	
+	_BV( 5 )	,	
+	_BV( 6 )	,
+	_BV( 7 )	,	
+
+	_BV( 0 )	, // PORT B Pot and Speaker
+	_BV( 1 )	,
+	_BV( 2 )	,
+	_BV( 3 )	,	
+	_BV( 4 )	,	
+	_BV( 5 )	,	
+	_BV( 6 )	,
+	_BV( 7 )	,	
+
+	};
+
+const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
+	// TIMERS		
+	// -------------------------------------------		
+	NOT_ON_TIMER	,  // PORT C USARTC0 to USB on 2&3
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+
+	NOT_ON_TIMER	,  // PORT D Header
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+
+	NOT_ON_TIMER	,  // PORT E Switches
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+
+	NOT_ON_TIMER	, // PORT F LEDs
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+
+	NOT_ON_TIMER	,  // PORT A Header
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+
+	NOT_ON_TIMER	,  // PORT B Pot and Speaker
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+	NOT_ON_TIMER	, 
+
+	};
+
+#else
+
+#error No pin map defined
+
+#endif
