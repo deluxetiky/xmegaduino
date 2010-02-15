@@ -254,9 +254,9 @@ void init()
 #define TOTEMPOLE      0x00  // Totempole
 #define BUSKEEPER      0x08  // Buskeeper
 #define WIRED_AND_PULL 0x38  // Wired-AND-PullUp
-#define OUT_PULL_CONFIG TOTEMPOLE
+//#define OUT_PULL_CONFIG TOTEMPOLE
 //#define OUT_PULL_CONFIG BUSKEEPER
-//#define OUT_PULL_CONFIG WIRED_AND
+#define OUT_PULL_CONFIG WIRED_AND_PULL
 	
 	//configure pins of xmega
 
