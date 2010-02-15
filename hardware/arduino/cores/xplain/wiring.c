@@ -246,23 +246,27 @@ void init()
 
 	/* Set internal 32kHz oscillator as clock source for RTC. */
 	CLK.RTCCTRL = CLK_RTCSRC_RCOSC_gc | CLK_RTCEN_bm;//1kHz
-	
+
+#define TOTEMPOLE 0x00  // Totempole
+#define BUSKEEPER 0x08  // Buskeeper
+#define WIRED_AND 0x38  // Wired-AND-PullUp
+#define OUT_PULL_CONFIG BUSKEEPER
 	
 	//configure pins of xmega
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTA.PIN0CTRL = 0x38;  //all pins: Wired-AND-PullUp
+	PORTA.PIN0CTRL = OUT_PULL_CONFIG;
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTB.PIN0CTRL = 0x38;  //all pins: Wired-AND-PullUp
+	PORTB.PIN0CTRL = OUT_PULL_CONFIG;
 	
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTD.PIN0CTRL = 0x38;  //all pins: Wired-AND-PullUp
+	PORTD.PIN0CTRL = OUT_PULL_CONFIG;
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTE.PIN0CTRL = 0x38;  //all pins: Wired-AND-PullUp
+	PORTE.PIN0CTRL = OUT_PULL_CONFIG;
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTF.PIN0CTRL = 0x38;  //all pins: Wired-AND-PullUp
+	PORTF.PIN0CTRL = OUT_PULL_CONFIG;
 	
 	do {
 		/* Wait until RTC is not busy. */

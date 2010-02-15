@@ -102,7 +102,7 @@ const uint16_t PROGMEM port_to_input_PGM[] = {
 
 #define PIN_MAP_RENE 1
 #define PIN_MAP_GIULIANO 2
-#define PIN_MAP PIN_MAP_RENE
+#define PIN_MAP PIN_MAP_GIULIANO
 
 #ifndef PIN_MAP
 #define PIN_MAP PIN_MAP_DEFAULT
@@ -186,178 +186,34 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 #elif PIN_MAP_GIULIANO == PIN_MAP
 const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	// PORTLIST
-        PC, // USARTC0 connected to USB on 2&3
-        PC,
-        PC,
-        PC,
-        PC,
-        PC,
-        PC,
-        PC,
-
-        PD, // Header
-        PD,
-        PD,
-        PD,
-        PD,
-        PD,
-        PD,
-        PD,
-
-        PE, // Switches
-        PE,
-        PE,
-        PE,
-        PE,
-        PE,
-        PE,
-        PE,
-
-        PF, // LEDs
-        PF,
-        PF,
-        PF,
-        PF,
-        PF,
-        PF,
-        PF,
-
-        PA, // Header
-        PA,
-        PA,
-        PA,
-        PA,
-        PA,
-        PA,
-        PA,
-
-        PB, // Pot and Speaker
-        PB,
-        PB,
-        PB,
-        PB,
-        PB,
-        PB,
-        PB,
-
+        REPEAT8(PC), // USARTC0 connected to USB on 2&3
+        REPEAT8(PD), // Header
+        REPEAT8(PE), // Switches
+        REPEAT8(PF), // LEDs
+        REPEAT8(PA), // Header
+        REPEAT8(PB), // Pot and Speaker
 };
 
 const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
 	// PIN IN PORT		
 	// -------------------------------------------		
-	_BV( 0 )	, // PORT C USARTC0 to USB on 2&3
-	_BV( 1 )	,
-	_BV( 2 )	,
-	_BV( 3 )	,	
-	_BV( 4 )	,	
-	_BV( 5 )	,	
-	_BV( 6 )	,
-	_BV( 7 )	,	
-
-	_BV( 0 )	, // PORT D Header
-	_BV( 1 )	,
-	_BV( 2 )	,
-	_BV( 3 )	,	
-	_BV( 4 )	,	
-	_BV( 5 )	,	
-	_BV( 6 )	,
-	_BV( 7 )	,	
-
-	_BV( 0 )	, // PORT E Switches
-	_BV( 1 )	,
-	_BV( 2 )	,
-	_BV( 3 )	,	
-	_BV( 4 )	,	
-	_BV( 5 )	,	
-	_BV( 6 )	,
-	_BV( 7 )	,	
-
-	_BV( 0 )	, // PORT F LEDs
-	_BV( 1 )	,
-	_BV( 2 )	,
-	_BV( 3 )	,	
-	_BV( 4 )	,	
-	_BV( 5 )	,	
-	_BV( 6 )	,
-	_BV( 7 )	,	
-
-	_BV( 0 )	, // PORT A Header
-	_BV( 1 )	,
-	_BV( 2 )	,
-	_BV( 3 )	,	
-	_BV( 4 )	,	
-	_BV( 5 )	,	
-	_BV( 6 )	,
-	_BV( 7 )	,	
-
-	_BV( 0 )	, // PORT B Pot and Speaker
-	_BV( 1 )	,
-	_BV( 2 )	,
-	_BV( 3 )	,	
-	_BV( 4 )	,	
-	_BV( 5 )	,	
-	_BV( 6 )	,
-	_BV( 7 )	,	
-
+	BV0TO7, // PORT C USARTC0 to USB on 2&3
+	BV0TO7, // PORT D Header
+	BV0TO7, // PORT E Switches
+	BV0TO7, // PORT F LEDs
+	BV0TO7, // PORT A Header
+	BV0TO7, // PORT B Pot and Speaker
 	};
 
 const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	// TIMERS		
 	// -------------------------------------------		
-	NOT_ON_TIMER	,  // PORT C USARTC0 to USB on 2&3
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-
-	NOT_ON_TIMER	,  // PORT D Header
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-
-	NOT_ON_TIMER	,  // PORT E Switches
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-
-	NOT_ON_TIMER	, // PORT F LEDs
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-
-	NOT_ON_TIMER	,  // PORT A Header
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-
-	NOT_ON_TIMER	,  // PORT B Pot and Speaker
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-
+	REPEAT8(NOT_ON_TIMER), // PORT C USARTC0 to USB on 2&3
+	REPEAT8(NOT_ON_TIMER), // PORT D Header
+	REPEAT8(NOT_ON_TIMER), // PORT E Switches
+	REPEAT8(NOT_ON_TIMER), // PORT F LEDs
+	REPEAT8(NOT_ON_TIMER), // PORT A Header
+	REPEAT8(NOT_ON_TIMER), // PORT B Pot and Speaker
 	};
 
 #else
