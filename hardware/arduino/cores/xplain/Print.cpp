@@ -80,6 +80,13 @@ void Print::print(long n, int base)
   } else {
     printNumber(n, base);
   }
+// TODO: gc: Fix serial
+static int val;
+for ( int index = 0; index < 3; ++index ) {
+val = !val;
+digitalWrite(17,val);
+delay(100);
+}
 }
 
 void Print::print(unsigned long n, int base)
@@ -97,6 +104,13 @@ void Print::println(void)
 {
   print('\r');
   print('\n');  
+// TODO: gc: Fix serial
+static int val;
+for ( int index = 0; index < 3; ++index ) {
+val = !val;
+digitalWrite(18,val);
+delay(100);
+}
 }
 
 void Print::println(const char c[])

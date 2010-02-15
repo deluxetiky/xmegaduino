@@ -188,8 +188,8 @@ const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	// PORTLIST
         REPEAT8(PC), // USARTC0 connected to USB on 2&3
         REPEAT8(PD), // Header
-        REPEAT8(PE), // Switches
-        REPEAT8(PF), // LEDs
+        REPEAT8(PE), // LEDs
+        REPEAT8(PF), // Switches
         REPEAT8(PA), // Header
         REPEAT8(PB), // Pot and Speaker
 };
@@ -199,8 +199,8 @@ const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
 	// -------------------------------------------		
 	BV0TO7, // PORT C USARTC0 to USB on 2&3
 	BV0TO7, // PORT D Header
-	BV0TO7, // PORT E Switches
-	BV0TO7, // PORT F LEDs
+	BV0TO7, // PORT E LEDs
+	BV0TO7, // PORT F Switches
 	BV0TO7, // PORT A Header
 	BV0TO7, // PORT B Pot and Speaker
 	};
@@ -210,8 +210,8 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	// -------------------------------------------		
 	REPEAT8(NOT_ON_TIMER), // PORT C USARTC0 to USB on 2&3
 	REPEAT8(NOT_ON_TIMER), // PORT D Header
-	REPEAT8(NOT_ON_TIMER), // PORT E Switches
-	REPEAT8(NOT_ON_TIMER), // PORT F LEDs
+	REPEAT8(NOT_ON_TIMER), // PORT E LEDs
+	REPEAT8(NOT_ON_TIMER), // PORT F Switches
 	REPEAT8(NOT_ON_TIMER), // PORT A Header
 	REPEAT8(NOT_ON_TIMER), // PORT B Pot and Speaker
 	};

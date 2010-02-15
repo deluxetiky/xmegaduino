@@ -233,6 +233,10 @@ void init()
             : "r16", "r30", "r31"
         );
 
+        // TODO: gc: Check out using the DFLL
+        // TODO: gc: ClkPer2 should really be 2x ClkSys for EBI to work (Xmega A doc, 4.10.1)
+        // TODO: gc: ClkPer4 should really be 4x ClkSys for Hi-Res extensions (16.2)
+
         /*************************************/
         /* Init real time clock for millis() */
 	
@@ -247,18 +251,24 @@ void init()
 	/* Set internal 32kHz oscillator as clock source for RTC. */
 	CLK.RTCCTRL = CLK_RTCSRC_RCOSC_gc | CLK_RTCEN_bm;//1kHz
 
-#define TOTEMPOLE 0x00  // Totempole
-#define BUSKEEPER 0x08  // Buskeeper
-#define WIRED_AND 0x38  // Wired-AND-PullUp
-#define OUT_PULL_CONFIG BUSKEEPER
+#define TOTEMPOLE      0x00  // Totempole
+#define BUSKEEPER      0x08  // Buskeeper
+#define WIRED_AND_PULL 0x38  // Wired-AND-PullUp
+#define OUT_PULL_CONFIG TOTEMPOLE
+//#define OUT_PULL_CONFIG BUSKEEPER
+//#define OUT_PULL_CONFIG WIRED_AND
 	
 	//configure pins of xmega
+
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTA.PIN0CTRL = OUT_PULL_CONFIG;
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTB.PIN0CTRL = OUT_PULL_CONFIG;
 	
+	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
+	PORTC.PIN0CTRL = OUT_PULL_CONFIG;
+
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTD.PIN0CTRL = OUT_PULL_CONFIG;
 
