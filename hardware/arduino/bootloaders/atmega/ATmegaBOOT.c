@@ -273,8 +273,10 @@ static inline void InitBootUart() {
     if(bootuart == 1) {
         USART0_SET_DIR();
         USART0_SET_BAUD(BAUD_RATE);
+// TODO: gc: Fix baud calc
 //		USART0.BAUDCTRLA = 207; //  9600 baud with 32Mhz clock
 		USART0.BAUDCTRLA = 52;  // 38400 baud with 32Mhz clock
+		USART0.BAUDCTRLB = 0;
         USART0_RX_ENABLE();
         USART0_TX_ENABLE();
 

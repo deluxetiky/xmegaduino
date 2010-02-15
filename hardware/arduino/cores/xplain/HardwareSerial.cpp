@@ -61,6 +61,26 @@ SIGNAL(USARTC0_RxcIsr)
 {
   unsigned char c = USARTC0.DATA;
   store_char(c, &rx_buffer_c0);
+// TODO: gc: Fix serial
+static int val;
+for ( int index = 0; index < 3; ++index ) {
+val = !val;
+digitalWrite(19,val);
+delay(100);
+}
+}
+
+SIGNAL(USARTD0_RxcIsr)
+{
+  unsigned char c = USARTD0.DATA;
+  store_char(c, &rx_buffer_c0);
+// TODO: gc: Fix serial
+static int val;
+for ( int index = 0; index < 3; ++index ) {
+val = !val;
+digitalWrite(19,val);
+delay(100);
+}
 }
 #else
 SIGNAL(USART_RX_vect)
@@ -124,23 +144,29 @@ void HardwareSerial::begin(long baud)
   }
   
 #if 1
-  uint8_t scale;
+  // TODO: gc: Fix Serial!
   if (use_u2x) {
-    scale = 1 << _u2x;
-    baud_setting = (F_CPU / 4 / baud - 1) / 2;
+    _usart->CTRLB |= 1 << _u2x;
+    baud_setting = F_CPU / 8 / baud - 1;
   } else {
-    scale = 0;
-    baud_setting = (F_CPU / 8 / baud - 1) / 2;
+    baud_setting = F_CPU / 16 / baud - 1;
   }
 
   // set the baud_setting
   _usart->BAUDCTRLA = baud_setting;
-  _usart->BAUDCTRLB = scale | baud_setting >> 8;
+  _usart->BAUDCTRLB = baud_setting >> 8;
+
+  // TODO: gc: Fix baud calc
+  _usart->BAUDCTRLA = 207; // 9600baud
+  _usart->BAUDCTRLB = 0;
 
   // enable Rx and Tx
-  _usart->CTRLB = USART_RXEN_bm | USART_TXEN_bm;
+  _usart->CTRLB |= USART_RXEN_bm | USART_TXEN_bm;
   // enable interrupt
   _usart->CTRLA = (_usart->CTRLA & ~USART_RXCINTLVL_gm) | USART_RXCINTLVL_LO_gc;
+
+  // Char size, parity and stop bits: 8N1
+  _usart->CTRLC = USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc;
 #else
   if (use_u2x) {
     *_ucsra = 1 << _u2x;
@@ -205,6 +231,13 @@ void HardwareSerial::write(uint8_t c)
 {
   while ( !(_usart->STATUS & USART_DREIF_bm) );
 
+// TODO: gc: Fix serial
+static int val;
+for ( int index = 0; index < 3; ++index ) {
+val = !val;
+digitalWrite(16,val);
+delay(100);
+}
   _usart->DATA = c;
 }
 
