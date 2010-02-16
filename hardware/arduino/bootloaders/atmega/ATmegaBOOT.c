@@ -110,11 +110,22 @@ int main(void)
 
     /* set LED pin as output */
 #if defined __AVR_ATxmega128A1__
+#define TOTEMPOLE      0x00  // Totempole
+#define BUSKEEPER      0x08  // Buskeeper
+#define WIRED_AND_PULL 0x38  // Wired-AND-PullUp
+#define OUT_PULL_CONFIG TOTEMPOLE
+//#define OUT_PULL_CONFIG BUSKEEPER
+//#define OUT_PULL_CONFIG WIRED_AND_PULL
+
+    PORTE.PIN0CTRL = OUT_PULL_CONFIG;
+
     // TODO: Need code
+    PORTE.DIR = 0xFF;
+    PORTE.OUT = 0xFF;
 #else
     LED_DDR |= _BV(LED);
 #endif
-	
+
     /* flash onboard LED to signal entering of bootloader */
     flash_led(LED_FLASHES_AT_BOOT);
 
@@ -274,9 +285,9 @@ static inline void InitBootUart() {
         USART0_SET_DIR();
         USART0_SET_BAUD(BAUD_RATE);
 // TODO: gc: Fix baud calc
-//		USART0.BAUDCTRLA = 207; //  9600 baud with 32Mhz clock
-		USART0.BAUDCTRLA = 52;  // 38400 baud with 32Mhz clock
-		USART0.BAUDCTRLB = 0;
+//      USART0.BAUDCTRLA = 207; //  9600 baud with 32Mhz clock
+        USART0.BAUDCTRLA = 52;  // 38400 baud with 32Mhz clock
+        USART0.BAUDCTRLB = 0;
         USART0_RX_ENABLE();
         USART0_TX_ENABLE();
 
@@ -834,11 +845,25 @@ void nothing_response(void)
     }
 }
 
+void delay_ms(uint32_t count)
+{
+    count *= 75;
+    while (count--) {
+        _delay_ms(1);
+    }
+}
+
 void flash_led(uint8_t count)
 {
 #if defined __AVR_ATxmega128A1__
     // TODO: Need to abstract and not use cpu macro.
     // TODO: Need code
+    while (count--) {
+        PORTE.OUTTGL = 0xFF;
+        delay_ms(200);
+        PORTE.OUTTGL = 0xFF;
+        delay_ms(200);
+    }
 #else
     while (count--) {
         LED_PORT |= _BV(LED);

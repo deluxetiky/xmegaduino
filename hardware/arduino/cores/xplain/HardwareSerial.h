@@ -31,6 +31,9 @@ class HardwareSerial : public Print
   private:
     ring_buffer *_rx_buffer;
     USART_t     *_usart;
+    PORT_t      *_port;
+    uint8_t     _in_bm;
+    uint8_t     _out_bm;
 #if 1
     volatile uint8_t *_ubrrh;
     volatile uint8_t *_ubrrl;
@@ -44,7 +47,13 @@ class HardwareSerial : public Print
 #endif
     uint8_t _u2x;
   public:
-    HardwareSerial(ring_buffer *rx_buffer, USART_t *usart, uint8_t u2x);
+    HardwareSerial(
+        ring_buffer *rx_buffer,
+        USART_t     *usart,
+        PORT_t      *port,
+        uint8_t     in_bm,
+        uint8_t     out_bm,
+        uint8_t     u2x);
 #if 0
       volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
       volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
@@ -53,6 +62,8 @@ class HardwareSerial : public Print
 #endif
     void begin(long);
     void end();
+    // TODO: gc: Kill bsel after Serial works
+    void bsel(unsigned);
     uint8_t available(void);
     int read(void);
     void flush(void);
