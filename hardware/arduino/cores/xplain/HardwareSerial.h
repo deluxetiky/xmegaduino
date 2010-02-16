@@ -73,6 +73,7 @@ class HardwareSerial : public Print
 
 extern HardwareSerial Serial;
 extern HardwareSerial Serial1;
+extern HardwareSerial Serial2;
 
 #if defined(__AVR_ATmega1280__)
 extern HardwareSerial Serial1;

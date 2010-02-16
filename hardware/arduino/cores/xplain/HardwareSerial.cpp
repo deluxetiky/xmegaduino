@@ -40,6 +40,8 @@ struct ring_buffer {
 };
 
 ring_buffer rx_buffer_c0 = { { 0 }, 0, 0 };
+ring_buffer rx_buffer_d0 = { { 0 }, 0, 0 };
+ring_buffer rx_buffer_d1 = { { 0 }, 0, 0 };
 
 inline void store_char(unsigned char c, ring_buffer *rx_buffer)
 {
@@ -62,33 +64,28 @@ ISR(USARTC0_RXC_vect)
 {
   unsigned char c = USARTC0.DATA;
   store_char(c, &rx_buffer_c0);
-// TODO: gc: Fix serial
-static int val;
-for ( int index = 0; index < 3; ++index ) {
-val = !val;
-digitalWrite(36,val);
-delay(100);
-}
 }
 
 ISR(USARTD0_RXC_vect)
 {
   unsigned char c = USARTD0.DATA;
-  store_char(c, &rx_buffer_c0);
-// TODO: gc: Fix serial
-static int val;
-for ( int index = 0; index < 3; ++index ) {
-val = !val;
-digitalWrite(37,val);
-delay(100);
+  store_char(c, &rx_buffer_d0);
 }
+
+ISR(USARTD1_RXC_vect)
+{
+  unsigned char c = USARTD1.DATA;
+  store_char(c, &rx_buffer_d1);
 }
+
 #else
+
 SIGNAL(USART_RX_vect)
 {
   unsigned char c = UDR0;
   store_char(c, &rx_buffer);
 }
+
 #endif
 
 
@@ -145,25 +142,19 @@ void HardwareSerial::begin(long baud)
   bool use_u2x;
 
 #if 1
+  // TODO: Serial. Fix serial double clock.
   use_u2x = false;
 
-  // TODO: Serial. Works only for USARTx0.
   _port->DIRCLR = _in_bm;  // input
   _port->DIRSET = _out_bm; // output
 
-  // TODO: gc: Fix Serial!
+  // set the baud rate
   if (use_u2x) {
     _usart->CTRLB |= 1 << _u2x;
     baud_setting = F_CPU / 8 / baud - 1;
   } else {
     baud_setting = F_CPU / 16 / baud - 1;
   }
-
-  // TODO: gc: Fix baud calc
-  //baud_setting =  13; // 9600baud at 2Mhz
-  baud_setting = 207; // 9600baud at 32Mhz
-
-  // set the baud_setting
   _usart->BAUDCTRLA = (uint8_t)baud_setting;
   _usart->BAUDCTRLB = baud_setting >> 8;
 
@@ -264,5 +255,10 @@ void HardwareSerial::write(uint8_t c)
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
-//HardwareSerial Serial(&rx_buffer, &UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRE0, U2X0);
-HardwareSerial Serial(&rx_buffer_c0, &USARTC0, &PORTC, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
+#if 1
+    extern HardwareSerial Serial (&rx_buffer_c0, &USARTC0, &PORTC, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
+    extern HardwareSerial Serial1(&rx_buffer_d0, &USARTD0, &PORTD, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
+    extern HardwareSerial Serial2(&rx_buffer_d1, &USARTD1, &PORTD, PIN6_bm, PIN7_bm, USART_CLK2X_bp);
+#else
+    extern HardwareSerial Serial(&rx_buffer, &UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRE0, U2X0);
+#endif
