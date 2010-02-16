@@ -100,9 +100,9 @@ const uint16_t PROGMEM port_to_input_PGM[] = {
 	&PINF,//switches
 };
 
-#define PIN_MAP_RENE 1
+#define PIN_MAP_RENE     1
 #define PIN_MAP_GIULIANO 2
-#define PIN_MAP PIN_MAP_GIULIANO
+#define PIN_MAP_DEFAULT  PIN_MAP_GIULIANO
 
 #ifndef PIN_MAP
 #define PIN_MAP PIN_MAP_DEFAULT
@@ -186,34 +186,34 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 #elif PIN_MAP_GIULIANO == PIN_MAP
 const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	// PORTLIST
+        REPEAT8(PA), // Header
+        REPEAT8(PB), // Pot and Speaker
         REPEAT8(PC), // USARTC0 connected to USB on 2&3
         REPEAT8(PD), // Header
         REPEAT8(PE), // LEDs
         REPEAT8(PF), // Switches
-        REPEAT8(PA), // Header
-        REPEAT8(PB), // Pot and Speaker
 };
 
 const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
 	// PIN IN PORT		
 	// -------------------------------------------		
+	BV0TO7, // PORT A Header
+	BV0TO7, // PORT B Pot and Speaker
 	BV0TO7, // PORT C USARTC0 to USB on 2&3
 	BV0TO7, // PORT D Header
 	BV0TO7, // PORT E LEDs
 	BV0TO7, // PORT F Switches
-	BV0TO7, // PORT A Header
-	BV0TO7, // PORT B Pot and Speaker
 	};
 
 const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	// TIMERS		
 	// -------------------------------------------		
+	REPEAT8(NOT_ON_TIMER), // PORT A Header
+	REPEAT8(NOT_ON_TIMER), // PORT B Pot and Speaker
 	REPEAT8(NOT_ON_TIMER), // PORT C USARTC0 to USB on 2&3
 	REPEAT8(NOT_ON_TIMER), // PORT D Header
 	REPEAT8(NOT_ON_TIMER), // PORT E LEDs
 	REPEAT8(NOT_ON_TIMER), // PORT F Switches
-	REPEAT8(NOT_ON_TIMER), // PORT A Header
-	REPEAT8(NOT_ON_TIMER), // PORT B Pot and Speaker
 	};
 
 #else
