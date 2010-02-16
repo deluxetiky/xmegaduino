@@ -223,7 +223,7 @@ atmega8.build.core=arduino
 xplain_jtag.name=XPlain atxmega128a1 using jtag
 
 xplain_jtag.upload.using=dragon
-xplain_jtag.upload.maximum_size=30000
+xplain_jtag.upload.maximum_size=131072
 
 
 xplain_jtag.bootloader.low_fuses=0xdf
@@ -243,7 +243,7 @@ xplain_serial.name=XPlain atxmega128a1 using serial
 
 xplain_serial.upload.protocol=arduino
 xplain_serial.upload.maximum_size=131072
-xplain_serial.upload.speed=38400
+xplain_serial.upload.speed=9600
 
 
 xplain_serial.bootloader.low_fuses=0xdf
