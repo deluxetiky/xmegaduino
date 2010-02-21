@@ -256,9 +256,11 @@ void HardwareSerial::write(uint8_t c)
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
 #if 1
-    extern HardwareSerial Serial (&rx_buffer_c0, &USARTC0, &PORTC, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
-    extern HardwareSerial Serial1(&rx_buffer_d0, &USARTD0, &PORTD, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
-    extern HardwareSerial Serial2(&rx_buffer_d1, &USARTD1, &PORTD, PIN6_bm, PIN7_bm, USART_CLK2X_bp);
+    HardwareSerial Serial (&rx_buffer_c0, &USARTC0, &PORTC, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
+    HardwareSerial Serial1(&rx_buffer_d0, &USARTD0, &PORTD, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
+    HardwareSerial Serial2(&rx_buffer_d1, &USARTD1, &PORTD, PIN6_bm, PIN7_bm, USART_CLK2X_bp);
+
+    extern HardwareSerial* Serial1ptr = &Serial1;
 #else
     extern HardwareSerial Serial(&rx_buffer, &UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRE0, U2X0);
 #endif
