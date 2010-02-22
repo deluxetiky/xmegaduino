@@ -24,8 +24,8 @@
     #define UCSR0A UCSRA
 #endif
 
-#define USART0_BSEL_NEG(n,scale) (F_CPU/(16L*n)*(2^scale)-1)
-#define USART0_BSEL_POS(n,scale) (F_CPU/(16L*n)/(2^scale)-1)
+#define USART0_BSEL_NEG(n,scale) ( (uint16_t)(F_CPU/(16L*n)*(2^scale)-1) )
+#define USART0_BSEL_POS(n,scale) ( (uint16_t)(F_CPU/(16L*n)/(2^scale)-1) )
 #define USART0_BSEL(n,scale) \
         ( 0<=(scale) ? USART0_BSEL_POS(n,scale) : USART0_BSEL_NEG(n,-scale) )
 
@@ -55,7 +55,7 @@
     #endif
 
     #define USART0_RX_ENABLE() UCSR0B |= _BV(RXEN0);
-            
+
     #define USART0_TX_ENABLE() UCSR0B |= _BV(TXEN0);
 
     #define USART0_IS_TX_READY() (UCSR0A & _BV(UDRE0))
@@ -79,14 +79,14 @@
     #define USART0_SET_BAUD(n) USART0_SET_BAUD_WITH_SCALE(n,0) \
 
     #define USART0_RX_ENABLE() USART0.CTRLB |= USART_RXEN_bm;
-            
+
     #define USART0_TX_ENABLE() USART0.CTRLB |= USART_TXEN_bm;
 
     #define USART0_IS_TX_READY() ( (USART0.STATUS & USART_DREIF_bm) != 0)
 
-    #define USART0_PUT_CHAR(c) (USART0.DATA = c)
-
     #define USART0_IS_RX_READY() ( (USART0.STATUS & USART_RXCIF_bm) != 0)
+
+    #define USART0_PUT_CHAR(c) (USART0.DATA = c)
 
     #define USART0_GET_CHAR() (USART0.DATA)
 #else
@@ -135,8 +135,15 @@
     #include <avr/eeprom.h>
 #endif
 
-#if !defined EEWE && defined EEPE
-    #define EEWE EEPE
+#if defined EEWE
+ 	#define WAIT_FOR_EPROM_WRITE while(bit_is_set(EECR,EEWE))
+#elif defined EEPE
+ 	#define WAIT_FOR_EPROM_WRITE while(bit_is_set(EECR,EEPE))
+#elif defined __AVR_ATxmega128A1__
+	// TODO: Figure out what to do with XMEGA
+	#define WAIT_FOR_EPROM_WRITE
+#else
+    #error Do not know how to define WAIT_FOR_EPROM_WRITE
 #endif
 
 #if !defined SPM_POST
@@ -168,6 +175,12 @@
     #define SPM_WRITE_PG  NVM_CMD_WRITE_APP_PAGE_gc
 #else
     #error MCU does not support serial bootloading
+#endif
+
+#if defined SPM_RWW_EN
+    #define ENABLE_RWW Spm( SPM_RWW_EN, 0, 0 ); // Re-enable RWW section
+#else
+	#define ENABLE_RWW
 #endif
 
 #endif // MCU_DEFAULTS_H

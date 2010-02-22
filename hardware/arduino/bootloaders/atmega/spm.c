@@ -12,6 +12,8 @@
 
 extern void Spm(uint8_t code, uint16_t addr, uint16_t value) {
     asm volatile(
+        "push  r0                  \n\t"
+        "push  r1                  \n\t"
         "movw  r30,%[addr]         \n\t" // Load Z
         "movw  r0,%[value]         \n\t" // Load value. Not used by all ops.
 
@@ -30,6 +32,7 @@ extern void Spm(uint8_t code, uint16_t addr, uint16_t value) {
 #endif
 
         "sts   %[spm_cmd],%[code]  \n\t"
+// TODO: Define macro
 #if defined CCP
         "ldi   r16, %[ccp_spm_gc]  \n\t"
         "sts   %[ccp], r16         \n\t"
@@ -37,10 +40,14 @@ extern void Spm(uint8_t code, uint16_t addr, uint16_t value) {
         "spm                       \n\t"
         SPM_POST
         // TODO: Load noop into SPM_CMD
+
+        "pop   r1                  \n\t"
+        "pop   r0                  \n\t"
         :
         : [spm_cmd]    "m"  (SPM_CMD),
           [spm_status] "m"  (SPM_STATUS),
           [spm_busy]   "i"  (SPM_BUSY),
+// TODO: Define macro
 #if defined CCP
           [ccp]        "m"  (CCP),
           [ccp_spm_gc] "i"  (CCP_SPM_gc),
@@ -48,6 +55,6 @@ extern void Spm(uint8_t code, uint16_t addr, uint16_t value) {
           [code]       "r"  (code),
           [addr]       "r"  (addr),
           [value]      "r"  (value)
-        : "r0", "r16", "r30", "r31"
+        : "r0", "r1", "r16", "r17", "r30", "r31"
     );
 }
