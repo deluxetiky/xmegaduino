@@ -78,21 +78,27 @@
 /* function prototypes */
 void putch(char);
 char getch(void);
-void getNch(uint8_t);
-void byte_response(uint8_t);
+void getNch(uint8_t count);
+void byte_response(uint8_t value);
 void nothing_response(void);
 char gethex(void);
-void puthex(char);
-void flash_led(uint8_t);
+void puthex(char value);
+void flash_led(uint8_t count);
 void HandleChar(int c);
-void LoadProgram();
+void LoadProgram(void);
+void delay_ms(uint32_t count);
 
-static inline void    CheckWatchDogAtStartup();
-static inline void    SetBootloaderPinDirections();
-static inline uint8_t GetBootUart();
-static inline void    InitBootUart();
-static inline void    SuppressLineNoise();
-static inline void    InitClock();
+static inline void    CheckWatchDogAtStartup(void);
+static inline void    SetBootloaderPinDirections(void);
+static inline uint8_t GetBootUart(void);
+static inline void    InitBootUart(void);
+static inline void    SuppressLineNoise(void);
+static inline void    InitClock(void);
+
+static void diagEnable(void);
+static void diagChar(char value);
+static void diag(const char *value);
+static void diagNumber(unsigned long value, uint8_t base);
 
 static uint8_t bootuart = 0;
 
@@ -133,7 +139,6 @@ int main(void)
     for (;;) {
         /* get character from UART */
         register uint8_t ch = getch();
-
         HandleChar(ch);
     } /* end of forever loop */
 
@@ -159,7 +164,18 @@ uint8_t buff[LOADER_BUFF_SIZE];
  
 uint8_t error_count = 0;
 
+#if 1
+// TODO: Kill this
+void app_start(void) {
+    asm (
+	    "ldi r30, 0\n\t"
+		"ldi r31, 0\n\t"
+	    "ijmp      \n\t"
+	);
+}
+#else
 void (*app_start)(void) = 0x0000;
+#endif
 
 void InitClock() {
 #if defined OSC_RC32MEN_bm
@@ -180,7 +196,6 @@ void InitClock() {
     while ( !(OSC.STATUS & OSC_PLLRDY_bm ) ) ;
 #endif
 
-#if 1
     // Set prescalars to 1, 1, 1
     RAMPZ = 0;
     asm volatile(
@@ -196,7 +211,6 @@ void InitClock() {
           "i" (&CCP)
         : "r16", "r30", "r31"
     );
-#endif
 
 // #define CLOCK_SOURCE CLK_SCLKSEL_PLL_gc
 #define CLOCK_SOURCE CLK_SCLKSEL_RC32M_gc
@@ -285,9 +299,11 @@ static inline void InitBootUart() {
         USART0_SET_DIR();
         USART0_SET_BAUD(BAUD_RATE);
 // TODO: gc: Fix baud calc
-//      USART0.BAUDCTRLA = 207; //  9600 baud with 32Mhz clock
-        USART0.BAUDCTRLA = 52;  // 38400 baud with 32Mhz clock
-        USART0.BAUDCTRLB = 0;
+//      USART0.BAUDCTRLA = 207; //   9600 baud with 32Mhz clock
+        USART0.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
+//      USART0.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
+//      USART0.BAUDCTRLA =  17; // 115200 baud with 32Mhz clock
+        USART0.BAUDCTRLB =   0; //  57600 baud with 32Mhz clock
         USART0_RX_ENABLE();
         USART0_TX_ENABLE();
 
@@ -367,6 +383,7 @@ void HandleChar(register int ch) {
     }
 
 
+    // TODO: check all branches. Mark those used with // X. Remove unused branches.
     /* AVR ISP/STK500 board requests */
     else if(ch=='A') { // X
         ch2 = getch();
@@ -394,13 +411,13 @@ void HandleChar(register int ch) {
 
     /* P: Enter programming mode  */
     /* R: Erase device, don't care as we will erase one page at a time anyway.  */
-    else if(ch=='P' || ch=='R') {
+    else if(ch=='P' || ch=='R') { // X
         nothing_response();
     }
 
 
     /* Leave programming mode  */
-    else if(ch=='Q') {
+    else if(ch=='Q') { // X
         nothing_response();
 #ifdef WATCHDOG_MODS
         // autoreset via watchdog (sneaky!)
@@ -409,7 +426,7 @@ void HandleChar(register int ch) {
 #endif
     }
 
-
+// TODO: Flash seems to be in bytes!!!!
     /* Set address, little endian. EEPROM in bytes, FLASH in words  */
     /* Perhaps extra address bytes may be added in future to support > 128kB FLASH.  */
     /* This might explain why little endian was used here, big endian used everywhere else.  */
@@ -642,54 +659,107 @@ void HandleChar(register int ch) {
 
 extern void Spm(uint8_t code, uint16_t addr, uint16_t value);
 
+#define PAGE_BYTES (PAGE_SIZE*2)
 void LoadProgram() {
     uint8_t address_high = 0;
 
     //Write to FLASH one page at a time
-     address_high = address.byte[1]>127; //Only possible with m128, m256 will need 3rd address byte. FIXME
+// TODO: seems to be in bytes!!!!
+#if 0
+    address_high = address.byte[1]>127; //Only possible with m128, m256 will need 3rd address byte. FIXME
 #if 16 < ADDR_BITS
-     RAMPZ = address_high;
+    RAMPZ = address_high;
 #endif
-     address.word = address.word << 1;          //address * 2 -> byte location
-     cli();                           //Disable interrupts, just to be sure
-#if defined EEWE
-     while(bit_is_set(EECR,EEWE));    //Wait for previous EEPROM writes to complete
-#elif defined EEPE
-     while(bit_is_set(EECR,EEPE));    //Wait for previous EEPROM writes to complete
-//#elif
-    // TODO: Do we need anything for xmegas?
+    address.word = address.word << 1; // word -> byte
 #endif
+    cli();                            // Disable interrupts, just to be sure
+    WAIT_FOR_EPROM_WRITE;             // Wait for previous EEPROM writes to complete
 
-    //Even up an odd number of bytes
-    if (length.word & 0x01) {
-        length.word++;  
-    }
     int bytes = length.word;
 
     uint16_t* bufNext = (uint16_t*)buff;
     uint16_t  addr    = address.word;
     while (0 < bytes) {
-        uint16_t page = addr;
+        uint16_t page = addr & ~(PAGE_BYTES-1);
         // Erase page pointed to by Z
-        Spm( SPM_ERASE_PG, page, 0 ); // Erase page
-#if defined SPM_RWW_EN
-        Spm( SPM_RWW_EN, 0,    0 ); // Re-enable RWW section
+//TODO: Kill this
+#if 0
+diag("top: ");
+diagNumber(page,16);
+diagChar(' ');
+diagNumber(addr,16);
+diagChar(' ');
+diagNumber(bytes,16);
+diag("\n");
 #endif
+		if ( addr == page ) {
+        	Spm( SPM_ERASE_PG, page, 0 ); // Erase page
+   	    	ENABLE_RWW; // Re-enable RWW section
+		}
+
 
         // Load words into FLASH page buffer
         int index;
-        for ( index = PAGE_SIZE; 0 != index; --index ) {
+		int count = PAGE_BYTES;
+		if ( bytes < PAGE_BYTES ) {
+			count = bytes;
+		}
+//TODO: Kill this
+#if 0
+diag("count: ");
+diagNumber(bytes,16);
+diagChar(' ');
+diagNumber(PAGE_BYTES,16);
+diagChar(' ');
+diagNumber(count,16);
+diag("\n");
+#endif
+        for ( index = count; 0 < index; index -= 2 ) {
+//TODO: Kill this
+#if 0
+diag("    ");
+diagNumber(index,16);
+diag(" ");
+diagNumber(bytes,16);
+diag(" ");
+diagNumber(addr,16);
+diag(": ");
+diagNumber(*bufNext,16);
+diag("\n");
+#endif
             Spm( SPM_LOAD_WORD, addr, *bufNext ); // Load bufNext to address
             ++bufNext;
             addr  += 2;
             bytes -= 2;
         }
 
-        Spm( SPM_WRITE_PG, page, 0 ); // Write page
-#if defined SPM_RWW_EN
-        Spm( SPM_RWW_EN, 0,    0 ); // Re-enable RWW section
+//TODO: Kill this
+#if 0
+diag("check: ");
+diagNumber(page,16);
+diagChar(' ');
+diagNumber(page + PAGE_BYTES,16);
+diagChar(' ');
+diagNumber(addr,16);
+diag("\n");
 #endif
+		if ( page + PAGE_BYTES <= addr ) {
+//TODO: Kill this
+#if 0
+diag("write page:\n");
+#endif
+		    Spm( SPM_WRITE_PG, page, 0 ); // Write page
+    	    ENABLE_RWW;                   // Re-enable RWW section
+		}
 
+//TODO: Kill this
+#if 0
+diag("bottom: ");
+diagNumber(addr,16);
+diagChar(' ');
+diagNumber(bytes,16);
+diag("\n\n");
+#endif
 // TODO: Get rid of this stupid return, or figure out why it is needed.
 // It seems like we are writing only the first page. Yet all pages
 // are uploaded?!?!? Is caller calling us once per page? I thought I
@@ -758,7 +828,9 @@ char getch(void)
     if(bootuart == 1) {
         while( !USART0_IS_RX_READY() ) {
             count++;
-#if 0
+//TODO: Kill this
+PORTE.OUT = ~(uint8_t)(count >> 18);
+#if 1
             if (count > MAX_TIME_COUNT) {
                 app_start();
             }
@@ -872,6 +944,60 @@ void flash_led(uint8_t count)
         _delay_ms(200);
     }
 #endif
+}
+
+// TODO: Move to someplace else
+#define USART_PORT_DIAG PORTD
+#define USART_DIAG USARTD1
+#define USART_DIAG_SET_DIR() \
+        USART_PORT_DIAG.DIRSET = PIN7_bm; \
+        USART_PORT_DIAG.DIRCLR = PIN6_bm;
+#define USART_DIAG_SET_TO_8N1()   \
+        USART_DIAG.CTRLC = USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc
+#define USART_DIAG_TX_ENABLE() USART_DIAG.CTRLB |= USART_TXEN_bm;
+#define USART_DIAG_IS_TX_READY() ( (USART_DIAG.STATUS & USART_DREIF_bm) != 0)
+#define USART_DIAG_PUT_CHAR(c) (USART_DIAG.DATA = c)
+
+void diagEnable()
+{
+  USART_DIAG_SET_DIR();
+  USART_DIAG_SET_TO_8N1();
+//USART_DIAG.BAUDCTRLA = 207; // 9600
+  USART_DIAG.BAUDCTRLA =  33; // 57600
+  USART_DIAG_TX_ENABLE();
+}
+
+void diagChar(char c)
+{
+  while ( !USART_DIAG_IS_TX_READY() );
+  USART_DIAG_PUT_CHAR(c);
+}
+
+void diag(const char *str)
+{
+  while (*str)
+    diagChar(*str++);
+}
+
+void diagNumber(unsigned long n, uint8_t base)
+{
+  unsigned char buf[8 * sizeof(long)]; // Assumes 8-bit chars. 
+  unsigned long i = 0;
+
+  if (n == 0) {
+	diag("0");
+    return;
+  } 
+
+  while (n > 0) {
+    buf[i++] = n % base;
+    n /= base;
+  }
+
+  for (; i > 0; i--)
+    diagChar((char) (buf[i - 1] < 10 ?
+      '0' + buf[i - 1] :
+      'A' + buf[i - 1] - 10));
 }
 
 /* end of file ATmegaBOOT.c */
