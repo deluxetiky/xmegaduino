@@ -220,7 +220,7 @@ atmega8.build.core=arduino
 
 ##############################################################
 
-xplain_jtag.name=XPlain atxmega128a1 using jtag
+xplain_jtag.name=XPlain using jtag
 
 xplain_jtag.upload.using=dragon
 xplain_jtag.upload.maximum_size=131072
@@ -239,7 +239,27 @@ xplain_jtag.build.core=xplain
 
 ##############################################################
 
-xplain_serial.name=XPlain atxmega128a1 using serial
+xplain_lufa.name=XPlain using lufa
+xplain_lufa.upload.using=avrispmkii
+xplain_lufa.upload.protocol=arduino
+xplain_lufa.upload.maximum_size=131072
+xplain_lufa.upload.speed=9600
+
+
+xplain_lufa.bootloader.low_fuses=0xdf
+xplain_lufa.bootloader.high_fuses=0xca
+xplain_lufa.bootloader.path=xplain
+xplain_lufa.bootloader.file=ATmegaBOOT.hex
+xplain_lufa.bootloader.unlock_bits=0x3F
+xplain_lufa.bootloader.lock_bits=0x0F
+
+xplain_lufa.build.mcu=atxmega128a1
+xplain_lufa.build.f_cpu=32000000L
+xplain_lufa.build.core=xplain
+
+##############################################################
+
+xplain_serial.name=XPlain using serial
 
 xplain_serial.upload.protocol=arduino
 xplain_serial.upload.maximum_size=131072
