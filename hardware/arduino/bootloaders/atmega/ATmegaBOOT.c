@@ -74,6 +74,8 @@
 #include <util/delay.h>
 
 #include "config.h"
+#define PAGE_BYTES (PAGE_SIZE*2)
+#define DIAG_ENABLE 3
 
 /* function prototypes */
 void putch(char);
@@ -87,6 +89,8 @@ void flash_led(uint8_t count);
 void HandleChar(int c);
 void LoadProgram(void);
 void delay_ms(uint32_t count);
+
+extern void Spm(uint8_t code, uint16_t addr, uint16_t value);
 
 static inline void    CheckWatchDogAtStartup(void);
 static inline void    SetBootloaderPinDirections(void);
@@ -125,7 +129,6 @@ int main(void)
 
     PORTE.PIN0CTRL = OUT_PULL_CONFIG;
 
-    // TODO: Need code
     PORTE.DIR = 0xFF;
     PORTE.OUT = 0xFF;
 #else
@@ -168,10 +171,10 @@ uint8_t error_count = 0;
 // TODO: Kill this
 void app_start(void) {
     asm (
-	    "ldi r30, 0\n\t"
-		"ldi r31, 0\n\t"
-	    "ijmp      \n\t"
-	);
+        "ldi r30, 0\n\t"
+        "ldi r31, 0\n\t"
+        "ijmp      \n\t"
+    );
 }
 #else
 void (*app_start)(void) = 0x0000;
@@ -336,9 +339,19 @@ static inline void InitBootUart() {
     }
 #endif
 
+int program_load_in_progress = 0;
+
 void HandleChar(register int ch) {
     uint8_t  ch2;
     uint16_t w;
+
+    uint16_t addr = address.word;
+    uint16_t page = addr & ~(PAGE_BYTES-1);
+    if ( program_load_in_progress && addr != page ) {
+        // Write partial page at end of program
+        Spm( SPM_WRITE_PG, page, 0 ); // Write page
+        program_load_in_progress = 0;
+    }
 
     /* A bunch of if...else if... gives smaller code than switch...case ! */
 
@@ -423,6 +436,8 @@ void HandleChar(register int ch) {
         // autoreset via watchdog (sneaky!)
         WDTCSR = _BV(WDE);
         while (1); // 16 ms
+#else
+        app_start();
 #endif
     }
 
@@ -657,15 +672,15 @@ void HandleChar(register int ch) {
 #endif
 }
 
-extern void Spm(uint8_t code, uint16_t addr, uint16_t value);
-
-#define PAGE_BYTES (PAGE_SIZE*2)
 void LoadProgram() {
+
+    program_load_in_progress = 1;
+
+// TODO: seems to be in bytes!!!!
+#if 0
     uint8_t address_high = 0;
 
     //Write to FLASH one page at a time
-// TODO: seems to be in bytes!!!!
-#if 0
     address_high = address.byte[1]>127; //Only possible with m128, m256 will need 3rd address byte. FIXME
 #if 16 < ADDR_BITS
     RAMPZ = address_high;
@@ -683,7 +698,7 @@ void LoadProgram() {
         uint16_t page = addr & ~(PAGE_BYTES-1);
         // Erase page pointed to by Z
 //TODO: Kill this
-#if 0
+#if 1 <= DIAG_ENABLE
 diag("top: ");
 diagNumber(page,16);
 diagChar(' ');
@@ -692,20 +707,20 @@ diagChar(' ');
 diagNumber(bytes,16);
 diag("\n");
 #endif
-		if ( addr == page ) {
-        	Spm( SPM_ERASE_PG, page, 0 ); // Erase page
-   	    	ENABLE_RWW; // Re-enable RWW section
-		}
+        if ( addr == page ) {
+            Spm( SPM_ERASE_PG, page, 0 ); // Erase page
+            ENABLE_RWW; // Re-enable RWW section
+        }
 
 
         // Load words into FLASH page buffer
         int index;
-		int count = PAGE_BYTES;
-		if ( bytes < PAGE_BYTES ) {
-			count = bytes;
-		}
+        int count = PAGE_BYTES;
+        if ( bytes < PAGE_BYTES ) {
+            count = bytes;
+        }
 //TODO: Kill this
-#if 0
+#if 2 <= DIAG_ENABLE
 diag("count: ");
 diagNumber(bytes,16);
 diagChar(' ');
@@ -716,7 +731,7 @@ diag("\n");
 #endif
         for ( index = count; 0 < index; index -= 2 ) {
 //TODO: Kill this
-#if 0
+#if 3 <= DIAG_ENABLE
 diag("    ");
 diagNumber(index,16);
 diag(" ");
@@ -734,7 +749,7 @@ diag("\n");
         }
 
 //TODO: Kill this
-#if 0
+#if 3 <= DIAG_ENABLE
 diag("check: ");
 diagNumber(page,16);
 diagChar(' ');
@@ -743,17 +758,17 @@ diagChar(' ');
 diagNumber(addr,16);
 diag("\n");
 #endif
-		if ( page + PAGE_BYTES <= addr ) {
+        if ( page + PAGE_BYTES <= addr ) {
 //TODO: Kill this
-#if 0
+#if 2 <= DIAG_ENABLE
 diag("write page:\n");
 #endif
-		    Spm( SPM_WRITE_PG, page, 0 ); // Write page
-    	    ENABLE_RWW;                   // Re-enable RWW section
-		}
+            Spm( SPM_WRITE_PG, page, 0 ); // Write page
+            ENABLE_RWW;                   // Re-enable RWW section
+        }
 
 //TODO: Kill this
-#if 0
+#if 2 <= DIAG_ENABLE
 diag("bottom: ");
 diagNumber(addr,16);
 diagChar(' ');
@@ -827,9 +842,9 @@ char getch(void)
     uint32_t count = 0;
     if(bootuart == 1) {
         while( !USART0_IS_RX_READY() ) {
-            count++;
 //TODO: Kill this
-PORTE.OUT = ~(uint8_t)(count >> 18);
+PORTE.OUT = ~(uint8_t)(count >> 17);
+            count++;
 #if 1
             if (count > MAX_TIME_COUNT) {
                 app_start();
@@ -985,7 +1000,7 @@ void diagNumber(unsigned long n, uint8_t base)
   unsigned long i = 0;
 
   if (n == 0) {
-	diag("0");
+    diag("0");
     return;
   } 
 
