@@ -75,7 +75,9 @@
 
 #include "config.h"
 #define PAGE_BYTES (PAGE_SIZE*2)
-#define DIAG_ENABLE 3
+#define DIAG_ENABLE 0
+// Addresses seem to be byte oriented?!?!?!?!
+#define ADDRESS_IN_WORDS 0
 
 /* function prototypes */
 void putch(char);
@@ -99,10 +101,10 @@ static inline void    InitBootUart(void);
 static inline void    SuppressLineNoise(void);
 static inline void    InitClock(void);
 
-static void diagEnable(void);
-static void diagChar(char value);
-static void diag(const char *value);
-static void diagNumber(unsigned long value, uint8_t base);
+static void DiagEnable(void);
+static void DiagChar(char value);
+static void Diag(const char *value);
+static void DiagNumber(unsigned long value, uint8_t base);
 
 static uint8_t bootuart = 0;
 
@@ -117,6 +119,7 @@ int main(void)
     bootuart = GetBootUart();
     InitBootUart();
     SuppressLineNoise();
+    DiagEnable();
 
     /* set LED pin as output */
 #if defined __AVR_ATxmega128A1__
@@ -387,18 +390,21 @@ void HandleChar(register int ch) {
     }
 #endif
 
-
+// TODO: Kill this or restore it.
+// We don't seem to need this, so save the bytes and kill it.
+// If it turns out we do need it, then restore it.
+// (gc 2010-02-22)
+#if 0
     /* AVR ISP/STK500 board commands  DON'T CARE so default nothing_response */
     else if(ch=='@') {
         ch2 = getch();
         if (ch2>0x85) getch();
         nothing_response();
     }
+#endif
 
-
-    // TODO: check all branches. Mark those used with // X. Remove unused branches.
     /* AVR ISP/STK500 board requests */
-    else if(ch=='A') { // X
+    else if(ch=='A') {
         ch2 = getch();
         if(ch2==0x80) byte_response(HW_VER);        // Hardware version
         else if(ch2==0x81) byte_response(SW_MAJOR); // Software major version
@@ -409,28 +415,33 @@ void HandleChar(register int ch) {
 
 
     /* Device Parameters  DON'T CARE, DEVICE IS FIXED  */
-    else if(ch=='B') { // X
+    else if(ch=='B') {
         getNch(20);
         nothing_response();
     }
 
 
+// TODO: Kill this or restore it.
+// We don't seem to need this, so save the bytes and kill it.
+// If it turns out we do need it, then restore it.
+// (gc 2010-02-22)
+#if 0
     /* Parallel programming stuff  DON'T CARE  */
     else if(ch=='E') {
         getNch(5);
         nothing_response();
     }
-
+#endif
 
     /* P: Enter programming mode  */
     /* R: Erase device, don't care as we will erase one page at a time anyway.  */
-    else if(ch=='P' || ch=='R') { // X
+    else if(ch=='P' || ch=='R') {
         nothing_response();
     }
 
 
     /* Leave programming mode  */
-    else if(ch=='Q') { // X
+    else if(ch=='Q') {
         nothing_response();
 #ifdef WATCHDOG_MODS
         // autoreset via watchdog (sneaky!)
@@ -445,21 +456,27 @@ void HandleChar(register int ch) {
     /* Set address, little endian. EEPROM in bytes, FLASH in words  */
     /* Perhaps extra address bytes may be added in future to support > 128kB FLASH.  */
     /* This might explain why little endian was used here, big endian used everywhere else.  */
-    else if(ch=='U') { // X
+    else if(ch=='U') {
         address.byte[0] = getch();
         address.byte[1] = getch();
         nothing_response();
     }
 
 
+// TODO: Kill this or restore it.
+// We don't seem to need this, so save the bytes and kill it.
+// If it turns out we do need it, then restore it.
+// (gc 2010-02-22)
+#if 0
     /* Universal SPI programming command, disabled.  Would be used for fuses and lock bits.  */
     else if(ch=='V') {
         getNch(4);
         byte_response(0x00);
     }
+#endif
 
     /* Write memory, length is big endian and is in bytes  */
-    else if(ch=='d') { // X
+    else if(ch=='d') {
         length.byte[1] = getch();
         length.byte[0] = getch();
         flags.eeprom = 0;
@@ -498,14 +515,16 @@ void HandleChar(register int ch) {
 
 
     /* Read memory block mode, length is big endian.  */
-    else if(ch=='t') { // X
+    else if(ch=='t') {
         length.byte[1] = getch();
         length.byte[0] = getch();
+#if ADDRESS_IN_WORDS
 #if 16 < ADDR_BITS
         if (address.word>0x7FFF) flags.rampz = 1;       // No go with m256, FIXME
         else flags.rampz = 0;
 #endif
         address.word = address.word << 1;           // address * 2 -> byte location
+#endif
         if (getch() == 'E') flags.eeprom = 1;
         else flags.eeprom = 0;
         if (getch() == ' ') {                       // Command terminator
@@ -539,7 +558,7 @@ void HandleChar(register int ch) {
 
     /* Get device signature bytes  */
     else if(ch=='u') {
-        if (getch() == ' ') { // X
+        if (getch() == ' ') {
             putch(0x14);
             putch(SIG1);
             putch(SIG2);
@@ -551,12 +570,16 @@ void HandleChar(register int ch) {
         }
     }
 
-
+// TODO: Kill this or restore it.
+// We don't seem to need this, so save the bytes and kill it.
+// If it turns out we do need it, then restore it.
+// (gc 2010-02-22)
+#if 0
     /* Read oscillator calibration byte */
     else if(ch=='v') {
         byte_response(0x00);
     }
-
+#endif
 
 #if defined MONITOR 
 
@@ -676,8 +699,7 @@ void LoadProgram() {
 
     program_load_in_progress = 1;
 
-// TODO: seems to be in bytes!!!!
-#if 0
+#if ADDRESS_IN_WORDS
     uint8_t address_high = 0;
 
     //Write to FLASH one page at a time
@@ -690,7 +712,11 @@ void LoadProgram() {
     cli();                            // Disable interrupts, just to be sure
     WAIT_FOR_EPROM_WRITE;             // Wait for previous EEPROM writes to complete
 
+#if ADDRESS_IN_WORDS
+    int bytes = length.word << 1;
+#else
     int bytes = length.word;
+#endif
 
     uint16_t* bufNext = (uint16_t*)buff;
     uint16_t  addr    = address.word;
@@ -699,13 +725,13 @@ void LoadProgram() {
         // Erase page pointed to by Z
 //TODO: Kill this
 #if 1 <= DIAG_ENABLE
-diag("top: ");
-diagNumber(page,16);
-diagChar(' ');
-diagNumber(addr,16);
-diagChar(' ');
-diagNumber(bytes,16);
-diag("\n");
+Diag("top: ");
+DiagNumber(page,16);
+DiagChar(' ');
+DiagNumber(addr,16);
+DiagChar(' ');
+DiagNumber(bytes,16);
+Diag("\n");
 #endif
         if ( addr == page ) {
             Spm( SPM_ERASE_PG, page, 0 ); // Erase page
@@ -721,26 +747,26 @@ diag("\n");
         }
 //TODO: Kill this
 #if 2 <= DIAG_ENABLE
-diag("count: ");
-diagNumber(bytes,16);
-diagChar(' ');
-diagNumber(PAGE_BYTES,16);
-diagChar(' ');
-diagNumber(count,16);
-diag("\n");
+Diag("count: ");
+DiagNumber(bytes,16);
+DiagChar(' ');
+DiagNumber(PAGE_BYTES,16);
+DiagChar(' ');
+DiagNumber(count,16);
+Diag("\n");
 #endif
         for ( index = count; 0 < index; index -= 2 ) {
 //TODO: Kill this
 #if 3 <= DIAG_ENABLE
-diag("    ");
-diagNumber(index,16);
-diag(" ");
-diagNumber(bytes,16);
-diag(" ");
-diagNumber(addr,16);
-diag(": ");
-diagNumber(*bufNext,16);
-diag("\n");
+Diag("    ");
+DiagNumber(index,16);
+Diag(" ");
+DiagNumber(bytes,16);
+Diag(" ");
+DiagNumber(addr,16);
+Diag(": ");
+DiagNumber(*bufNext,16);
+Diag("\n");
 #endif
             Spm( SPM_LOAD_WORD, addr, *bufNext ); // Load bufNext to address
             ++bufNext;
@@ -750,18 +776,18 @@ diag("\n");
 
 //TODO: Kill this
 #if 3 <= DIAG_ENABLE
-diag("check: ");
-diagNumber(page,16);
-diagChar(' ');
-diagNumber(page + PAGE_BYTES,16);
-diagChar(' ');
-diagNumber(addr,16);
-diag("\n");
+Diag("check: ");
+DiagNumber(page,16);
+DiagChar(' ');
+DiagNumber(page + PAGE_BYTES,16);
+DiagChar(' ');
+DiagNumber(addr,16);
+Diag("\n");
 #endif
         if ( page + PAGE_BYTES <= addr ) {
 //TODO: Kill this
 #if 2 <= DIAG_ENABLE
-diag("write page:\n");
+Diag("write page:\n");
 #endif
             Spm( SPM_WRITE_PG, page, 0 ); // Write page
             ENABLE_RWW;                   // Re-enable RWW section
@@ -769,11 +795,11 @@ diag("write page:\n");
 
 //TODO: Kill this
 #if 2 <= DIAG_ENABLE
-diag("bottom: ");
-diagNumber(addr,16);
-diagChar(' ');
-diagNumber(bytes,16);
-diag("\n\n");
+Diag("bottom: ");
+DiagNumber(addr,16);
+DiagChar(' ');
+DiagNumber(bytes,16);
+Diag("\n\n");
 #endif
 // TODO: Get rid of this stupid return, or figure out why it is needed.
 // It seems like we are writing only the first page. Yet all pages
@@ -973,7 +999,7 @@ void flash_led(uint8_t count)
 #define USART_DIAG_IS_TX_READY() ( (USART_DIAG.STATUS & USART_DREIF_bm) != 0)
 #define USART_DIAG_PUT_CHAR(c) (USART_DIAG.DATA = c)
 
-void diagEnable()
+void DiagEnable()
 {
   USART_DIAG_SET_DIR();
   USART_DIAG_SET_TO_8N1();
@@ -982,25 +1008,25 @@ void diagEnable()
   USART_DIAG_TX_ENABLE();
 }
 
-void diagChar(char c)
+void DiagChar(char c)
 {
   while ( !USART_DIAG_IS_TX_READY() );
   USART_DIAG_PUT_CHAR(c);
 }
 
-void diag(const char *str)
+void Diag(const char *str)
 {
   while (*str)
-    diagChar(*str++);
+    DiagChar(*str++);
 }
 
-void diagNumber(unsigned long n, uint8_t base)
+void DiagNumber(unsigned long n, uint8_t base)
 {
   unsigned char buf[8 * sizeof(long)]; // Assumes 8-bit chars. 
   unsigned long i = 0;
 
   if (n == 0) {
-    diag("0");
+    Diag("0");
     return;
   } 
 
@@ -1010,7 +1036,7 @@ void diagNumber(unsigned long n, uint8_t base)
   }
 
   for (; i > 0; i--)
-    diagChar((char) (buf[i - 1] < 10 ?
+    DiagChar((char) (buf[i - 1] < 10 ?
       '0' + buf[i - 1] :
       'A' + buf[i - 1] - 10));
 }
