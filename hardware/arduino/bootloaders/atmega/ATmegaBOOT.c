@@ -75,7 +75,7 @@
 
 #include "config.h"
 #define PAGE_BYTES (PAGE_SIZE*2)
-#define DIAG_ENABLE 0
+#define DIAG_ENABLE 1
 // Addresses seem to be byte oriented?!?!?!?!
 #define ADDRESS_IN_WORDS 0
 
@@ -88,6 +88,7 @@ void nothing_response(void);
 char gethex(void);
 void puthex(char value);
 void flash_led(uint8_t count);
+void InitLed(void);
 void HandleChar(int c);
 void LoadProgram(void);
 void delay_ms(uint32_t count);
@@ -101,42 +102,30 @@ static inline void    InitBootUart(void);
 static inline void    SuppressLineNoise(void);
 static inline void    InitClock(void);
 
-static void DiagEnable(void);
-static void DiagChar(char value);
-static void Diag(const char *value);
-static void DiagNumber(unsigned long value, uint8_t base);
+#if 1 <= DIAG_ENABLE
+    static void DiagEnable(void);
+    static void DiagChar(char value);
+    static void Diag(const char *value);
+    static void DiagNumber(unsigned long value, uint8_t base);
+#else
+    #define DiagEnable()
+#endif
 
-static uint8_t bootuart = 0;
+// TODO: kill bootuart. Keep pointer to boot usart.
+static uint8_t bootuart = -1;
 
 /* main program starts here */
 int main(void)
 {
     InitClock();
-
+    InitLed();
+    DiagEnable();
     CheckWatchDogAtStartup();
-
     SetBootloaderPinDirections();
     bootuart = GetBootUart();
+Diag("Boot UART: "); DiagNumber(bootuart,10); Diag("\n");
     InitBootUart();
     SuppressLineNoise();
-    DiagEnable();
-
-    /* set LED pin as output */
-#if defined __AVR_ATxmega128A1__
-#define TOTEMPOLE      0x00  // Totempole
-#define BUSKEEPER      0x08  // Buskeeper
-#define WIRED_AND_PULL 0x38  // Wired-AND-PullUp
-#define OUT_PULL_CONFIG TOTEMPOLE
-//#define OUT_PULL_CONFIG BUSKEEPER
-//#define OUT_PULL_CONFIG WIRED_AND_PULL
-
-    PORTE.PIN0CTRL = OUT_PULL_CONFIG;
-
-    PORTE.DIR = 0xFF;
-    PORTE.OUT = 0xFF;
-#else
-    LED_DDR |= _BV(LED);
-#endif
 
     /* flash onboard LED to signal entering of bootloader */
     flash_led(LED_FLASHES_AT_BOOT);
@@ -145,6 +134,9 @@ int main(void)
     for (;;) {
         /* get character from UART */
         register uint8_t ch = getch();
+Diag("HC: '");
+DiagChar(ch);
+Diag("'\n");
         HandleChar(ch);
     } /* end of forever loop */
 
@@ -170,18 +162,7 @@ uint8_t buff[LOADER_BUFF_SIZE];
  
 uint8_t error_count = 0;
 
-#if 1
-// TODO: Kill this
-void app_start(void) {
-    asm (
-        "ldi r30, 0\n\t"
-        "ldi r31, 0\n\t"
-        "ijmp      \n\t"
-    );
-}
-#else
 void (*app_start)(void) = 0x0000;
-#endif
 
 void InitClock() {
 #if defined OSC_RC32MEN_bm
@@ -190,18 +171,8 @@ void InitClock() {
     // Wait for 32M internal crystal to stablize
     while ( !(OSC.STATUS & OSC_RC32MEN_bm) ) ;
 
-#if 0
-    // Does this go before or after internal 32M internal crystal in enabled and stable?
-    // Dunno, try after first.
-
-    // PLL source: internal 32M crystal multiplied by 4 - max PLL factor for 32M crystal.
-    OSC.PLLCTRL = ((uint8_t)OSC_PLLSRC_RC2M_gc) | ( (4&OSC_PLLFAC_gm) << OSC_PLLFAC_gp);
-    // Enable PLL
-    OSC.CTRL |= OSC_PLLEN_bm;
-    // Wait for PLL to stabilize
-    while ( !(OSC.STATUS & OSC_PLLRDY_bm ) ) ;
-#endif
-
+#define SET_PRESCALARS_TO_1_1_1 0 // Should already be 1,1,1. Default at start.
+#if SET_PRESCALARS_TO_1_1_1
     // Set prescalars to 1, 1, 1
     RAMPZ = 0;
     asm volatile(
@@ -217,13 +188,10 @@ void InitClock() {
           "i" (&CCP)
         : "r16", "r30", "r31"
     );
+#endif
 
-// #define CLOCK_SOURCE CLK_SCLKSEL_PLL_gc
-#define CLOCK_SOURCE CLK_SCLKSEL_RC32M_gc
-
-    register uint8_t value = (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLOCK_SOURCE;
-
-    // Set main system clock to PLL
+    // Set main system clock to 32Mhz clock
+    register uint8_t value = (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLK_SCLKSEL_RC32M_gc;
     asm volatile(
         "ldi  r30, lo8(%0)     \n\t"
         "ldi  r31, hi8(%0)     \n\t"
@@ -260,73 +228,122 @@ void InitClock() {
     }
 #endif
 
-// QUESTION: Do we even need SetBootloaderPinDirections
-// QUESTION: or GetBootUart? I don't know of any arduinos
-// QUESTION: that use BL0 or BL1.
 static inline void SetBootloaderPinDirections() {
-#if INIT_BL0_DIRECTION
-    BL_DDR &= ~_BV(BL0);
-    BL_PORT |= _BV(BL0);
-#endif
+    #if defined BL_PORT
+        PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
+        BL_PORT.PIN0CTRL = WIRED_AND_PULL;
+    #endif
+    
+    #if defined BL_0_PIN 
+        BL_DIR &= ~_BV(BL_0_PIN);
+        BL_OUT |=  _BV(BL_0_PIN);
+    #endif
 
-#if INIT_BL1_DIRECTION
-    BL_DDR &= ~_BV(BL1);
-    BL_PORT |= _BV(BL1);
-#endif
+    #if defined BL_1_PIN
+        BL_DIR &= ~_BV(BL_1_PIN);
+        BL_OUT |=  _BV(BL_1_PIN);
+    #endif
+
+    #if defined BL_2_PIN
+        BL_DIR &= ~_BV(BL_2_PIN);
+        BL_OUT |=  _BV(BL_2_PIN);
+    #endif
+
+    #if defined APP_PIN
+        BL_DIR &= ~_BV(APP_PIN);
+        BL_OUT |=  _BV(APP_PIN);
+    #endif
 }
 
+// TODO: kill bootuart. Keep pointer to boot usart.
 static inline uint8_t GetBootUart() {
-#if INIT_BL0_DIRECTION
-    /* check which UART should be used for booting */
-    if(bit_is_clear(BL_PIN, BL0)) {
-        return 1;
-    }
-#endif
-#if INIT_BL1_DIRECTION
-    else if(bit_is_clear(BL_PIN, BL1)) {
-        return 2;
-    }
-#endif
 
-    /* no UART was selected */
-#if START_APP_IF_FLASH_PROGRAMED
-    /* if flash is programmed already, start app, otherwise, start bootloader */
-    if(pgm_read_byte_near(0x0000) == 0xFF) {
-        app_start();
-    }
-#endif
+    #if defined APP_PIN
+        while (1) {
+    #endif
+
+PORTE.OUT = ~(uint8_t)PORTF.IN;
+    /* check which UART should be used for booting */
+    #if defined BL_0_PIN
+        if(bit_is_clear(BL_IN, BL_0_PIN)) {
+            return 0;
+        }
+    #endif
+    #if defined BL_1_PIN
+        if(bit_is_clear(BL_IN, BL_1_PIN)) {
+            return 1;
+        }
+    #endif
+    #if defined BL_2_PIN
+        if(bit_is_clear(BL_IN, BL_2_PIN)) {
+            return 2;
+        }
+    #endif
+        /* no UART was selected */
+    #if START_APP_IF_FLASH_PROGRAMED
+        /* if flash is programmed already, start app, otherwise, start bootloader */
+        if(pgm_read_byte_near(0x0000) == 0xFF) {
+            app_start();
+        }
+    #endif
+    #if defined APP_PIN
+        if(bit_is_clear(BL_IN, APP_PIN)) {
+            app_start();
+        }
+    #endif
+
+    #if defined APP_PIN
+        }
+    #endif
 
     /* default to uart 0 */
-    return 1;
+    return 0;
 }
 
 static inline void InitBootUart() {
-    if(bootuart == 1) {
+    if(bootuart == 0) {
         USART0_SET_DIR();
-        USART0_SET_BAUD(BAUD_RATE);
-// TODO: gc: Fix baud calc
-//      USART0.BAUDCTRLA = 207; //   9600 baud with 32Mhz clock
-        USART0.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
-//      USART0.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
-//      USART0.BAUDCTRLA =  17; // 115200 baud with 32Mhz clock
-        USART0.BAUDCTRLB =   0; //  57600 baud with 32Mhz clock
+        USART0_SET_BAUD(BAUD_RATE_0);
         USART0_RX_ENABLE();
         USART0_TX_ENABLE();
-
         USART0_SET_TO_8N1();
+// TODO: gc: Fix baud calc
+        USART_0.BAUDCTRLA = 207; //   9600 baud with 32Mhz clock
+//      USART_0.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
+//      USART_0.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
+//      USART_0.BAUDCTRLA =  17; // 115200 baud with 32Mhz clock
+        USART_0.BAUDCTRLB =   0;
         return;
     }
-#if defined BL1
-    if(bootuart == 2) {
-        UBRR1L = (uint8_t)(F_CPU/(BAUD_RATE*16L)-1);
-        UBRR1H = (F_CPU/(BAUD_RATE*16L)-1) >> 8;
-        UCSR1A = 0x00;
-        UCSR1B = _BV(TXEN1)|_BV(RXEN1);
-        UCSR1C = 0x06;
+#if defined BL_1_PIN
+    if(bootuart == 1) {
+Diag("InitBootUart 1\n");
+        USART1_SET_DIR();
+        USART1_SET_BAUD(BAUD_RATE_1);
+        USART1_RX_ENABLE();
+        USART1_TX_ENABLE();
+        USART1_SET_TO_8N1();
+        USART_1.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
+//      USART_1.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
+        USART_1.BAUDCTRLB =   0;
+        return;
     }
+#endif
+#if defined BL_2_PIN
+    if(bootuart == 2) {
+        USART2_SET_DIR();
+        USART2_SET_BAUD(BAUD_RATE_2);
+        USART2_RX_ENABLE();
+        USART2_TX_ENABLE();
+        USART2_SET_TO_8N1();
+        USART_2.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
+//      USART_2.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
+        USART_2.BAUDCTRLB =   0;
+        return;
+    }
+#endif
     // bootuart should be set, if not, start app.
     app_start();
-#endif
 }
 
 #if LINE_NOISE_PIN
@@ -847,52 +864,101 @@ void puthex(char ch) {
     putch(ch);
 }
 
+int is_boot_uart_tx_ready()
+{
+    if (bootuart == 0) {
+        return USART0_IS_TX_READY();
+    }
+    #if defined BL_1_PIN
+        if (bootuart == 1) {
+            return USART1_IS_TX_READY();
+        }
+    #endif
+    #if defined BL_2_PIN
+        if (bootuart == 2) {
+            return USART2_IS_TX_READY();
+        }
+    #endif
+    return 0;
+}
+
+void boot_uart_put_char(char value)
+{
+    if (bootuart == 0) {
+        USART0_PUT_CHAR(value);
+    }
+    #if defined BL_1_PIN
+        if (bootuart == 1) {
+Diag("boot_uart_put 1\n");
+            USART1_PUT_CHAR(value);
+        }
+    #endif
+    #if defined BL_2_PIN
+        if (bootuart == 2) {
+            USART2_PUT_CHAR(value);
+        }
+    #endif
+}
+
 
 void putch(char ch)
 {
-    if(bootuart == 1) {
-        while ( !USART0_IS_TX_READY() );
-        USART0_PUT_CHAR(ch);
-    }
-#if defined BL1
-    else if (bootuart == 2) {
-        while (!(UCSR1A & _BV(UDRE1)));
-        UDR1 = ch;
-    }
-#endif
+    while ( !is_boot_uart_tx_ready() );
+    boot_uart_put_char(ch);
 }
 
+int is_boot_uart_rx_ready()
+{
+    if (bootuart == 0) {
+        return USART0_IS_RX_READY();
+    }
+    #if defined BL_1_PIN
+        if (bootuart == 1) {
+            return USART1_IS_RX_READY();
+        }
+    #endif
+    #if defined BL_2_PIN
+        if (bootuart == 2) {
+            return USART2_IS_RX_READY();
+        }
+    #endif
+    return 0;
+}
+
+char boot_uart_get_char()
+{
+    if (bootuart == 0) {
+        return USART0_GET_CHAR();
+    }
+    #if defined BL_1_PIN
+        if (bootuart == 1) {
+            return USART1_GET_CHAR();
+        }
+    #endif
+    #if defined BL_2_PIN
+        if (bootuart == 2) {
+            return USART2_GET_CHAR();
+        }
+    #endif
+    return 0;
+}
 
 char getch(void)
 {
     uint32_t count = 0;
-    if(bootuart == 1) {
-        while( !USART0_IS_RX_READY() ) {
-//TODO: Kill this
-PORTE.OUT = ~(uint8_t)(count >> 17);
-            count++;
-#if 1
+    while ( !is_boot_uart_rx_ready() ) {
+        #if 1 <= DIAG_ENABLE
+            PORTE.OUT = ~(uint8_t)(count >> 17);
+        #endif
+        count++;
+        #if !defined APP_PIN
             if (count > MAX_TIME_COUNT) {
                 app_start();
             }
-#endif
-        }
-        return USART0_GET_CHAR();
+        #endif
     }
+    return boot_uart_get_char();
 
-#if defined BL1
-    else if(bootuart == 2) {
-        while(!(UCSR1A & _BV(RXC1))) {
-            /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
-            /* HACKME:: here is a good place to count times*/
-            count++;
-            if (count > MAX_TIME_COUNT) {
-                app_start();
-            }
-        }
-        return UDR1;
-    }
-#endif
     return 0;
 }
 
@@ -902,35 +968,6 @@ void getNch(uint8_t count)
     while(count--) {
         getch();
     }
-
-#if 0
-// QUESTION: Should this code be removed???
-/* Prior code was twisty. Why didn't mega128 and 1280 just call getch()
-   But 1281 did? For now, just call getch, but keep this visible for a
-   little while until we're sure the above works (gc 2010-01-21).
-*/
-
-    while(count--) {
-#if defined(__AVR_ATmega128__) || defined(__AVR_ATmega1280__)
-        if(bootuart == 1) {
-            while(!(UCSR0A & _BV(RXC0)));
-            UDR0;
-        } 
-        else if(bootuart == 2) {
-            while(!(UCSR1A & _BV(RXC1)));
-            UDR1;
-        }
-#elif defined UCSR0A
-        getch();
-#else
-        /* m8,16,32,169,8515,8535,163 */
-        /* 20060803 DojoCorp:: Addon coming from the previous Bootloader*/               
-        //while(!(UCSRA & _BV(RXC)));
-        //UDR;
-        getch(); // need to handle time out
-#endif      
-    }
-#endif // 0
 }
 
 
@@ -950,9 +987,11 @@ void byte_response(uint8_t val)
 void nothing_response(void)
 {
     if (getch() == ' ') {
+Diag("nothing\n");
         putch(0x14);
         putch(0x10);
     } else {
+Diag("nothing: error\n");
         if (++error_count == MAX_ERROR_COUNT)
             app_start();
     }
@@ -960,15 +999,29 @@ void nothing_response(void)
 
 void delay_ms(uint32_t count)
 {
-    count *= 75;
+    count *= 1; // 75;
     while (count--) {
         _delay_ms(1);
     }
 }
 
+void InitLed(void)
+{
+    /* set LED pin as output */
+    #if xplain == TARGET
+        PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
+        PORTE.PIN0CTRL = WIRED_AND_PULL;
+
+        PORTE.DIR      = 0xFF;
+        PORTE.OUT      = 0xFF;
+    #else
+        LED_DDR |= _BV(LED);
+    #endif
+}
+
 void flash_led(uint8_t count)
 {
-#if defined __AVR_ATxmega128A1__
+#if xplain == TARGET
     // TODO: Need to abstract and not use cpu macro.
     // TODO: Need code
     while (count--) {
@@ -987,58 +1040,65 @@ void flash_led(uint8_t count)
 #endif
 }
 
-// TODO: Move to someplace else
-#define USART_PORT_DIAG PORTD
-#define USART_DIAG USARTD1
-#define USART_DIAG_SET_DIR() \
-        USART_PORT_DIAG.DIRSET = PIN7_bm; \
-        USART_PORT_DIAG.DIRCLR = PIN6_bm;
-#define USART_DIAG_SET_TO_8N1()   \
-        USART_DIAG.CTRLC = USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc
-#define USART_DIAG_TX_ENABLE() USART_DIAG.CTRLB |= USART_TXEN_bm;
-#define USART_DIAG_IS_TX_READY() ( (USART_DIAG.STATUS & USART_DREIF_bm) != 0)
-#define USART_DIAG_PUT_CHAR(c) (USART_DIAG.DATA = c)
+#if 1 <= DIAG_ENABLE
 
-void DiagEnable()
-{
-  USART_DIAG_SET_DIR();
-  USART_DIAG_SET_TO_8N1();
-//USART_DIAG.BAUDCTRLA = 207; // 9600
-  USART_DIAG.BAUDCTRLA =  33; // 57600
-  USART_DIAG_TX_ENABLE();
-}
+    // TODO: Move to someplace else
+    #define USART_PORT_DIAG PORTD
+    #define USART_DIAG USARTD1
+    #define USART_DIAG_SET_DIR() \
+            USART_PORT_DIAG.PIN6CTRL = WIRED_AND_PULL; \
+            USART_PORT_DIAG.PIN7CTRL = WIRED_AND_PULL; \
+            USART_PORT_DIAG.DIRSET = PIN7_bm; \
+            USART_PORT_DIAG.DIRCLR = PIN6_bm;
+    #define USART_DIAG_SET_TO_8N1()   \
+            USART_DIAG.CTRLC = USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc
+    #define USART_DIAG_TX_ENABLE() USART_DIAG.CTRLB |= USART_TXEN_bm;
+    #define USART_DIAG_IS_TX_READY() ( (USART_DIAG.STATUS & USART_DREIF_bm) != 0)
+    #define USART_DIAG_PUT_CHAR(c) (USART_DIAG.DATA = c)
 
-void DiagChar(char c)
-{
-  while ( !USART_DIAG_IS_TX_READY() );
-  USART_DIAG_PUT_CHAR(c);
-}
+    void DiagEnable()
+    {
+      USART_DIAG_SET_DIR();
+      USART_DIAG_SET_TO_8N1();
+    //USART_DIAG.BAUDCTRLA = 207; // 9600
+    //USART_DIAG.BAUDCTRLA =  33; // 57600
+      USART_DIAG.BAUDCTRLA =  52; // 38400
+      USART_DIAG_TX_ENABLE();
+    }
 
-void Diag(const char *str)
-{
-  while (*str)
-    DiagChar(*str++);
-}
+    void DiagChar(char c)
+    {
+      while ( !USART_DIAG_IS_TX_READY() );
+      USART_DIAG_PUT_CHAR(c);
+    }
 
-void DiagNumber(unsigned long n, uint8_t base)
-{
-  unsigned char buf[8 * sizeof(long)]; // Assumes 8-bit chars. 
-  unsigned long i = 0;
+    void Diag(const char *str)
+    {
+      while (*str)
+        DiagChar(*str++);
+    }
 
-  if (n == 0) {
-    Diag("0");
-    return;
-  } 
+    void DiagNumber(unsigned long n, uint8_t base)
+    {
+      unsigned char buf[8 * sizeof(long)]; // Assumes 8-bit chars. 
+      unsigned long i = 0;
 
-  while (n > 0) {
-    buf[i++] = n % base;
-    n /= base;
-  }
+      if (n == 0) {
+        Diag("0");
+        return;
+      } 
 
-  for (; i > 0; i--)
-    DiagChar((char) (buf[i - 1] < 10 ?
-      '0' + buf[i - 1] :
-      'A' + buf[i - 1] - 10));
-}
+      while (n > 0) {
+        buf[i++] = n % base;
+        n /= base;
+      }
+
+      for (; i > 0; i--)
+        DiagChar((char) (buf[i - 1] < 10 ?
+          '0' + buf[i - 1] :
+          'A' + buf[i - 1] - 10));
+    }
+
+#endif
 
 /* end of file ATmegaBOOT.c */

@@ -259,12 +259,30 @@ xplain_lufa.build.core=xplain
 
 ##############################################################
 
+xplain_usb.name=XPlain using usb
+
+xplain_usb.upload.protocol=arduino
+xplain_usb.upload.maximum_size=131072
+xplain_usb.upload.speed=9600
+
+xplain_usb.bootloader.low_fuses=0xdf
+xplain_usb.bootloader.high_fuses=0xca
+xplain_usb.bootloader.path=xplain
+xplain_usb.bootloader.file=ATmegaBOOT.hex
+xplain_usb.bootloader.unlock_bits=0x3F
+xplain_usb.bootloader.lock_bits=0x0F
+
+xplain_usb.build.mcu=atxmega128a1
+xplain_usb.build.f_cpu=32000000L
+xplain_usb.build.core=xplain
+
+##############################################################
+
 xplain_serial.name=XPlain using serial
 
 xplain_serial.upload.protocol=arduino
 xplain_serial.upload.maximum_size=131072
 xplain_serial.upload.speed=38400
-
 
 xplain_serial.bootloader.low_fuses=0xdf
 xplain_serial.bootloader.high_fuses=0xca
@@ -276,4 +294,3 @@ xplain_serial.bootloader.lock_bits=0x0F
 xplain_serial.build.mcu=atxmega128a1
 xplain_serial.build.f_cpu=32000000L
 xplain_serial.build.core=xplain
-
