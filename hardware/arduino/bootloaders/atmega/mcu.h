@@ -20,12 +20,10 @@
 #endif
 
 #if defined __AVR_ATxmega128A1__
-    #define USART0       USARTD0
-    #define USART_PORT_0 PORTD
+    #define TOTEMPOLE      0x00  // Totempole
+    #define BUSKEEPER      0x08  // Buskeeper
+    #define WIRED_AND_PULL 0x38  // Wired-AND-PullUp
 #endif
-
-// QUESTION: Do we even need BL0, BL1, etc? I don't know of any arduinos
-// QUESTION: that use them.
 
 /* Adjust to suit whatever pin your hardware uses to enter the bootloader */
 /* ATmega128 has two UARTS so two pins are used to enter bootloader and select UART */

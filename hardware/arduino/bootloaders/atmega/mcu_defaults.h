@@ -24,10 +24,10 @@
     #define UCSR0A UCSRA
 #endif
 
-#define USART0_BSEL_NEG(n,scale) ( (uint16_t)(F_CPU/(16L*n)*(2^scale)-1) )
-#define USART0_BSEL_POS(n,scale) ( (uint16_t)(F_CPU/(16L*n)/(2^scale)-1) )
-#define USART0_BSEL(n,scale) \
-        ( 0<=(scale) ? USART0_BSEL_POS(n,scale) : USART0_BSEL_NEG(n,-scale) )
+#define USART_BSEL_NEG(n,scale) ( (uint16_t)(F_CPU/(16L*n)*(2^scale)-1) )
+#define USART_BSEL_POS(n,scale) ( (uint16_t)(F_CPU/(16L*n)/(2^scale)-1) )
+#define USART_BSEL(n,scale) \
+        ( 0<=(scale) ? USART_BSEL_POS(n,scale) : USART_BSEL_NEG(n,-scale) )
 
 #if defined UBRR0L
     #define USART0_SET_DIR()
@@ -66,29 +66,60 @@
 
     #define USART0_GET_CHAR() (UDR0)
 #elif defined USARTC0
-    #define USART0_SET_DIR() \
-            USART_PORT_0.DIRSET = PIN3_bm; \
-            USART_PORT_0.DIRCLR = PIN2_bm;
+    #define USART_SET_DIR(port, read_bm, write_bm) \
+            port.DIRCLR = read_bm; \
+            port.DIRSET = write_bm;
 
-    #define USART0_SET_TO_8N1()   \
-            USART0.CTRLC = USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc
+    #define USART_SET_TO_8N1(usart)   \
+            usart.CTRLC = USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc
 
-    #define USART0_SET_BAUD_WITH_SCALE(n,scale) \
-            USART0.BAUDCTRLA = (uint8_t)(USART0_BSEL(n,scale)); \
-            USART0.BAUDCTRLB = (scale << USART_BSCALE0_bp)|(USART0_BSEL(n,scale)>>8);
-    #define USART0_SET_BAUD(n) USART0_SET_BAUD_WITH_SCALE(n,0) \
+    #define USART_SET_BAUD_WITH_SCALE(usart,baud,scale) \
+            usart.BAUDCTRLA = (uint8_t)(USART_BSEL(baud,scale)); \
+            usart.BAUDCTRLB = (scale << USART_BSCALE0_bp)|(USART_BSEL(baud,scale)>>8);
+    #define USART_SET_BAUD(usart, baud) USART_SET_BAUD_WITH_SCALE(usart,baud,0)
 
-    #define USART0_RX_ENABLE() USART0.CTRLB |= USART_RXEN_bm;
+    #define USART_RX_ENABLE(usart) usart.CTRLB |= USART_RXEN_bm;
 
-    #define USART0_TX_ENABLE() USART0.CTRLB |= USART_TXEN_bm;
+    #define USART_TX_ENABLE(usart) usart.CTRLB |= USART_TXEN_bm;
 
-    #define USART0_IS_TX_READY() ( (USART0.STATUS & USART_DREIF_bm) != 0)
+    #define USART_IS_TX_READY(usart) ( (usart.STATUS & USART_DREIF_bm) != 0)
 
-    #define USART0_IS_RX_READY() ( (USART0.STATUS & USART_RXCIF_bm) != 0)
+    #define USART_IS_RX_READY(usart) ( (usart.STATUS & USART_RXCIF_bm) != 0)
 
-    #define USART0_PUT_CHAR(c) (USART0.DATA = c)
+    #define USART_PUT_CHAR(usart, c) (usart.DATA = c)
 
-    #define USART0_GET_CHAR() (USART0.DATA)
+    #define USART_GET_CHAR(usart) (usart.DATA)
+
+
+    #define USART0_SET_DIR()      USART_SET_DIR(USART_0_PORT,2,3) 
+    #define USART0_SET_TO_8N1()   USART_SET_TO_8N1(USART_0) 
+    #define USART0_SET_BAUD(baud) USART_SET_BAUD(USART_0,baud) 
+    #define USART0_RX_ENABLE()    USART_RX_ENABLE(USART_0) 
+    #define USART0_TX_ENABLE()    USART_TX_ENABLE(USART_0) 
+    #define USART0_IS_TX_READY()  USART_IS_TX_READY(USART_0) 
+    #define USART0_IS_RX_READY()  USART_IS_RX_READY(USART_0) 
+    #define USART0_PUT_CHAR(c)    USART_PUT_CHAR(USART_0,c) 
+    #define USART0_GET_CHAR()     USART_GET_CHAR(USART_0) 
+
+    #define USART1_SET_DIR()      USART_SET_DIR(USART_1_PORT,2,3) 
+    #define USART1_SET_TO_8N1()   USART_SET_TO_8N1(USART_1) 
+    #define USART1_SET_BAUD(baud) USART_SET_BAUD(USART_1,baud) 
+    #define USART1_RX_ENABLE()    USART_RX_ENABLE(USART_1) 
+    #define USART1_TX_ENABLE()    USART_TX_ENABLE(USART_1) 
+    #define USART1_IS_TX_READY()  USART_IS_TX_READY(USART_1) 
+    #define USART1_IS_RX_READY()  USART_IS_RX_READY(USART_1) 
+    #define USART1_PUT_CHAR(c)    USART_PUT_CHAR(USART_1,c) 
+    #define USART1_GET_CHAR()     USART_GET_CHAR(USART_1) 
+
+    #define USART2_SET_DIR()      USART_SET_DIR(USART_2_PORT,6,7) 
+    #define USART2_SET_TO_8N1()   USART_SET_TO_8N1(USART_2) 
+    #define USART2_SET_BAUD(baud) USART_SET_BAUD(USART_2,baud) 
+    #define USART2_RX_ENABLE()    USART_RX_ENABLE(USART_2) 
+    #define USART2_TX_ENABLE()    USART_TX_ENABLE(USART_2) 
+    #define USART2_IS_TX_READY()  USART_IS_TX_READY(USART_2) 
+    #define USART2_IS_RX_READY()  USART_IS_RX_READY(USART_2) 
+    #define USART2_PUT_CHAR(c)    USART_PUT_CHAR(USART_2,c) 
+    #define USART2_GET_CHAR()     USART_GET_CHAR(USART_2) 
 #else
     #error Do not know how to set up UART
 #endif
@@ -97,32 +128,6 @@
     #define LINE_NOISE_PIN 0
     #define DDR_LINE_NOISE 0
     #define PORT_LINE_NOISE 0
-#endif
-
-// QUESTION: Do we even need BL0, BL1, etc? I don't know of any arduinos
-// QUESTION: that use them.
-
-/* Bootloader pins. */
-/* Adjust to suit whatever pin your hardware uses to enter the bootloader */
-/* ATmega128 has two UARTS so two pins are used to enter bootloader and select UART */
-/* ATmega1280 has four UARTS, but for Arduino Mega, we will only use RXD0 to get code */
-/* BL0... means UART0, BL1... means UART1 */
-#if !defined BL0
-    #define BL_DDR  DDRD
-    #define BL_PORT PORTD
-    #define BL_PIN  PIND
-    #define BL0     PIND6
-#endif
-
-#if !defined INIT_BL0_DIRECTION
-    /* We run the bootloader regardless of the state of this pin.  Thus, don't
-    put it in a different state than the other pins.  --DAM, 070709
-    This also applies to Arduino Mega -- DC, 080930
-    */
-    #define INIT_BL0_DIRECTION 0
-#endif
-#if !defined INIT_BL1_DIRECTION
-    #define INIT_BL1_DIRECTION 0
 #endif
 
 #if !defined USE_BUILT_IN_AVR_EEPROM_H 
