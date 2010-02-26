@@ -117,26 +117,22 @@ static uint8_t bootuart = -1;
 /* main program starts here */
 int main(void)
 {
-    InitClock();
-    InitLed();
-    DiagEnable();
     CheckWatchDogAtStartup();
-    SetBootloaderPinDirections();
-    bootuart = GetBootUart();
-Diag("Boot UART: "); DiagNumber(bootuart,10); Diag("\n");
-    InitBootUart();
-    SuppressLineNoise();
-
+    InitClock();
+    DiagEnable();
+    InitLed();
     /* flash onboard LED to signal entering of bootloader */
     flash_led(LED_FLASHES_AT_BOOT);
+    SetBootloaderPinDirections();
+    bootuart = GetBootUart();
+    InitBootUart();
+    SuppressLineNoise();
+Diag("Boot UART: "); DiagNumber(bootuart,10); Diag("\n"); delay_ms(1);
 
     /* forever loop */
     for (;;) {
         /* get character from UART */
         register uint8_t ch = getch();
-Diag("HC: '");
-DiagChar(ch);
-Diag("'\n");
         HandleChar(ch);
     } /* end of forever loop */
 
@@ -317,14 +313,13 @@ static inline void InitBootUart() {
     }
 #if defined BL_1_PIN
     if(bootuart == 1) {
-Diag("InitBootUart 1\n");
         USART1_SET_DIR();
         USART1_SET_BAUD(BAUD_RATE_1);
         USART1_RX_ENABLE();
         USART1_TX_ENABLE();
         USART1_SET_TO_8N1();
-        USART_1.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
-//      USART_1.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
+//      USART_1.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
+        USART_1.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
         USART_1.BAUDCTRLB =   0;
         return;
     }
@@ -336,8 +331,8 @@ Diag("InitBootUart 1\n");
         USART2_RX_ENABLE();
         USART2_TX_ENABLE();
         USART2_SET_TO_8N1();
-        USART_2.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
-//      USART_2.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
+//      USART_2.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
+        USART_2.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
         USART_2.BAUDCTRLB =   0;
         return;
     }
@@ -465,6 +460,7 @@ void HandleChar(register int ch) {
         WDTCSR = _BV(WDE);
         while (1); // 16 ms
 #else
+		delay_ms(3);
         app_start();
 #endif
     }
@@ -740,16 +736,6 @@ void LoadProgram() {
     while (0 < bytes) {
         uint16_t page = addr & ~(PAGE_BYTES-1);
         // Erase page pointed to by Z
-//TODO: Kill this
-#if 1 <= DIAG_ENABLE
-Diag("top: ");
-DiagNumber(page,16);
-DiagChar(' ');
-DiagNumber(addr,16);
-DiagChar(' ');
-DiagNumber(bytes,16);
-Diag("\n");
-#endif
         if ( addr == page ) {
             Spm( SPM_ERASE_PG, page, 0 ); // Erase page
             ENABLE_RWW; // Re-enable RWW section
@@ -762,62 +748,18 @@ Diag("\n");
         if ( bytes < PAGE_BYTES ) {
             count = bytes;
         }
-//TODO: Kill this
-#if 2 <= DIAG_ENABLE
-Diag("count: ");
-DiagNumber(bytes,16);
-DiagChar(' ');
-DiagNumber(PAGE_BYTES,16);
-DiagChar(' ');
-DiagNumber(count,16);
-Diag("\n");
-#endif
         for ( index = count; 0 < index; index -= 2 ) {
-//TODO: Kill this
-#if 3 <= DIAG_ENABLE
-Diag("    ");
-DiagNumber(index,16);
-Diag(" ");
-DiagNumber(bytes,16);
-Diag(" ");
-DiagNumber(addr,16);
-Diag(": ");
-DiagNumber(*bufNext,16);
-Diag("\n");
-#endif
             Spm( SPM_LOAD_WORD, addr, *bufNext ); // Load bufNext to address
             ++bufNext;
             addr  += 2;
             bytes -= 2;
         }
 
-//TODO: Kill this
-#if 3 <= DIAG_ENABLE
-Diag("check: ");
-DiagNumber(page,16);
-DiagChar(' ');
-DiagNumber(page + PAGE_BYTES,16);
-DiagChar(' ');
-DiagNumber(addr,16);
-Diag("\n");
-#endif
         if ( page + PAGE_BYTES <= addr ) {
-//TODO: Kill this
-#if 2 <= DIAG_ENABLE
-Diag("write page:\n");
-#endif
             Spm( SPM_WRITE_PG, page, 0 ); // Write page
             ENABLE_RWW;                   // Re-enable RWW section
         }
 
-//TODO: Kill this
-#if 2 <= DIAG_ENABLE
-Diag("bottom: ");
-DiagNumber(addr,16);
-DiagChar(' ');
-DiagNumber(bytes,16);
-Diag("\n\n");
-#endif
 // TODO: Get rid of this stupid return, or figure out why it is needed.
 // It seems like we are writing only the first page. Yet all pages
 // are uploaded?!?!? Is caller calling us once per page? I thought I
@@ -889,7 +831,6 @@ void boot_uart_put_char(char value)
     }
     #if defined BL_1_PIN
         if (bootuart == 1) {
-Diag("boot_uart_put 1\n");
             USART1_PUT_CHAR(value);
         }
     #endif
@@ -987,11 +928,9 @@ void byte_response(uint8_t val)
 void nothing_response(void)
 {
     if (getch() == ' ') {
-Diag("nothing\n");
         putch(0x14);
         putch(0x10);
     } else {
-Diag("nothing: error\n");
         if (++error_count == MAX_ERROR_COUNT)
             app_start();
     }
@@ -1046,8 +985,6 @@ void flash_led(uint8_t count)
     #define USART_PORT_DIAG PORTD
     #define USART_DIAG USARTD1
     #define USART_DIAG_SET_DIR() \
-            USART_PORT_DIAG.PIN6CTRL = WIRED_AND_PULL; \
-            USART_PORT_DIAG.PIN7CTRL = WIRED_AND_PULL; \
             USART_PORT_DIAG.DIRSET = PIN7_bm; \
             USART_PORT_DIAG.DIRCLR = PIN6_bm;
     #define USART_DIAG_SET_TO_8N1()   \
@@ -1061,8 +998,8 @@ void flash_led(uint8_t count)
       USART_DIAG_SET_DIR();
       USART_DIAG_SET_TO_8N1();
     //USART_DIAG.BAUDCTRLA = 207; // 9600
-    //USART_DIAG.BAUDCTRLA =  33; // 57600
-      USART_DIAG.BAUDCTRLA =  52; // 38400
+    //USART_DIAG.BAUDCTRLA =  52; // 38400
+      USART_DIAG.BAUDCTRLA =  33; // 57600
       USART_DIAG_TX_ENABLE();
     }
 
