@@ -66,9 +66,9 @@
 
     #define USART0_GET_CHAR() (UDR0)
 #elif defined USARTC0
-    #define USART_SET_DIR(port, read_bm, write_bm) \
-            port.DIRCLR = read_bm; \
-            port.DIRSET = write_bm;
+    #define USART_SET_DIR(port, read_pin, write_pin) \
+            port.DIRCLR = _BV(read_pin); \
+            port.DIRSET = _BV(write_pin);
 
     #define USART_SET_TO_8N1(usart)   \
             usart.CTRLC = USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc
@@ -91,7 +91,7 @@
     #define USART_GET_CHAR(usart) (usart.DATA)
 
 
-    #define USART0_SET_DIR()      USART_SET_DIR(USART_0_PORT,2,3) 
+    #define USART0_SET_DIR()      USART_SET_DIR(USART_0_PORT,USART_0_RD_PIN,USART_0_WR_PIN) 
     #define USART0_SET_TO_8N1()   USART_SET_TO_8N1(USART_0) 
     #define USART0_SET_BAUD(baud) USART_SET_BAUD(USART_0,baud) 
     #define USART0_RX_ENABLE()    USART_RX_ENABLE(USART_0) 
@@ -101,7 +101,7 @@
     #define USART0_PUT_CHAR(c)    USART_PUT_CHAR(USART_0,c) 
     #define USART0_GET_CHAR()     USART_GET_CHAR(USART_0) 
 
-    #define USART1_SET_DIR()      USART_SET_DIR(USART_1_PORT,2,3) 
+    #define USART1_SET_DIR()      USART_SET_DIR(USART_1_PORT,USART_1_RD_PIN,USART_1_WR_PIN) 
     #define USART1_SET_TO_8N1()   USART_SET_TO_8N1(USART_1) 
     #define USART1_SET_BAUD(baud) USART_SET_BAUD(USART_1,baud) 
     #define USART1_RX_ENABLE()    USART_RX_ENABLE(USART_1) 
@@ -111,7 +111,7 @@
     #define USART1_PUT_CHAR(c)    USART_PUT_CHAR(USART_1,c) 
     #define USART1_GET_CHAR()     USART_GET_CHAR(USART_1) 
 
-    #define USART2_SET_DIR()      USART_SET_DIR(USART_2_PORT,6,7) 
+    #define USART2_SET_DIR()      USART_SET_DIR(USART_2_PORT,USART_2_RD_PIN,USART_2_WR_PIN) 
     #define USART2_SET_TO_8N1()   USART_SET_TO_8N1(USART_2) 
     #define USART2_SET_BAUD(baud) USART_SET_BAUD(USART_2,baud) 
     #define USART2_RX_ENABLE()    USART_RX_ENABLE(USART_2) 

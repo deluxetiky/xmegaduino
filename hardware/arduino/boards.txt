@@ -282,7 +282,7 @@ xplain_serial.name=XPlain using serial
 
 xplain_serial.upload.protocol=arduino
 xplain_serial.upload.maximum_size=131072
-xplain_serial.upload.speed=38400
+xplain_serial.upload.speed=57600
 
 xplain_serial.bootloader.low_fuses=0xdf
 xplain_serial.bootloader.high_fuses=0xca
