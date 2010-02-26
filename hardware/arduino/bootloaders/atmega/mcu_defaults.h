@@ -24,10 +24,10 @@
     #define UCSR0A UCSRA
 #endif
 
-#define USART_BSEL_NEG(n,scale) ( (uint16_t)(F_CPU/(16L*n)*(2^scale)-1) )
-#define USART_BSEL_POS(n,scale) ( (uint16_t)(F_CPU/(16L*n)/(2^scale)-1) )
-#define USART_BSEL(n,scale) \
-        ( 0<=(scale) ? USART_BSEL_POS(n,scale) : USART_BSEL_NEG(n,-scale) )
+#define USART_BSEL_NEG(baud,scale) ( (uint16_t)(F_CPU/16L/baud*(2^scale)-1) )
+#define USART_BSEL_POS(baud,scale) ( (uint16_t)(F_CPU/16L/baud/(2^scale)-1) )
+#define USART_BSEL(baud,scale) \
+        ( 0<=(scale) ? USART_BSEL_POS(baud,scale) : USART_BSEL_NEG(baud,-scale) )
 
 #if defined UBRR0L
     #define USART0_SET_DIR()
