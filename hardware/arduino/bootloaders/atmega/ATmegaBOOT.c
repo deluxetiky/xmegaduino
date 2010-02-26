@@ -158,7 +158,17 @@ uint8_t buff[LOADER_BUFF_SIZE];
  
 uint8_t error_count = 0;
 
-void (*app_start)(void) = 0x0000;
+#if 16 < ADDR_BITS
+    void app_start(void) {
+        asm (
+            "ldi r30, 0\n\t"
+            "ldi r31, 0\n\t"
+            "ijmp      \n\t"
+        );
+    }
+#else
+    void (*app_start)(void) = 0x0000;
+#endif
 
 void InitClock() {
 #if defined OSC_RC32MEN_bm
@@ -254,11 +264,13 @@ static inline void SetBootloaderPinDirections() {
 // TODO: kill bootuart. Keep pointer to boot usart.
 static inline uint8_t GetBootUart() {
 
+    // Light LED's next to buttons that do something.
+	PORTE.OUT = 0xF0;
+
     #if defined APP_PIN
         while (1) {
     #endif
 
-PORTE.OUT = ~(uint8_t)PORTF.IN;
     /* check which UART should be used for booting */
     #if defined BL_0_PIN
         if(bit_is_clear(BL_IN, BL_0_PIN)) {
@@ -316,6 +328,8 @@ static inline void InitBootUart() {
         USART1_SET_DIR();
         USART1_SET_BAUD(BAUD_RATE_1);
         USART1_RX_ENABLE();
+		USART_1.BAUDCTRLA = (uint16_t)(F_CPU / 16L / BAUD_RATE_1 - 1);
+        USART_1.BAUDCTRLB = (uint16_t)(F_CPU / 16L / BAUD_RATE_1 - 1) >> 8;
         USART1_TX_ENABLE();
         USART1_SET_TO_8N1();
 //      USART_1.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
