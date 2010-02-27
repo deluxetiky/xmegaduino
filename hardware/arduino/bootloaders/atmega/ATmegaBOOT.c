@@ -64,6 +64,7 @@
 
 /* $Id$ */
 
+#define DIAG_ENABLE 0
 
 /* some includes */
 #include <inttypes.h>
@@ -74,10 +75,7 @@
 #include <util/delay.h>
 
 #include "config.h"
-#define PAGE_BYTES (PAGE_SIZE*2)
-#define DIAG_ENABLE 1
-// Addresses seem to be byte oriented?!?!?!?!
-#define ADDRESS_IN_WORDS 0
+#include "diag.h"
 
 /* function prototypes */
 void putch(char);
@@ -101,15 +99,6 @@ static inline uint8_t GetBootUart(void);
 static inline void    InitBootUart(void);
 static inline void    SuppressLineNoise(void);
 static inline void    InitClock(void);
-
-#if 1 <= DIAG_ENABLE
-    static void DiagEnable(void);
-    static void DiagChar(char value);
-    static void Diag(const char *value);
-    static void DiagNumber(unsigned long value, uint8_t base);
-#else
-    #define DiagEnable()
-#endif
 
 // TODO: kill bootuart. Keep pointer to boot usart.
 static uint8_t bootuart = -1;
@@ -272,6 +261,8 @@ static inline uint8_t GetBootUart() {
 
     /* check which UART should be used for booting */
     #if defined BL_0_PIN
+        PORTE.OUT = 0xF0 | ~BL_IN;
+
         if(bit_is_clear(BL_IN, BL_0_PIN)) {
             return 0;
         }
@@ -337,18 +328,15 @@ static inline void InitBootUart() {
 #endif
 }
 
-#if LINE_NOISE_PIN
-    static inline void SuppressLineNoise() {
+static inline void SuppressLineNoise() {
+    #if LINE_NOISE_PIN
         /* Enable internal pull-up resistor on pin D0 (RX), in order
         to supress line noise that prevents the bootloader from
         timing out (DAM: 20070509) */
         DDR_LINE_NOISE  &= ~_BV(LINE_NOISE_PIN);
         PORT_LINE_NOISE |= _BV(LINE_NOISE_PIN);
-    }
-#else
-    static inline void SuppressLineNoise() {
-    }
-#endif
+    #endif
+}
 
 int program_load_in_progress = 0;
 
@@ -527,7 +515,7 @@ void HandleChar(register int ch) {
     else if(ch=='t') {
         length.byte[1] = getch();
         length.byte[0] = getch();
-#if ADDRESS_IN_WORDS
+#if STK500_ADDRESSES_IN_WORDS
 #if 16 < ADDR_BITS
         if (address.word>0x7FFF) flags.rampz = 1;       // No go with m256, FIXME
         else flags.rampz = 0;
@@ -708,7 +696,7 @@ void LoadProgram() {
 
     program_load_in_progress = 1;
 
-#if ADDRESS_IN_WORDS
+#if STK500_ADDRESSES_IN_WORDS
     uint8_t address_high = 0;
 
     //Write to FLASH one page at a time
@@ -721,7 +709,7 @@ void LoadProgram() {
     cli();                            // Disable interrupts, just to be sure
     WAIT_FOR_EPROM_WRITE;             // Wait for previous EEPROM writes to complete
 
-#if ADDRESS_IN_WORDS
+#if STK500_ADDRESSES_IN_WORDS
     int bytes = length.word << 1;
 #else
     int bytes = length.word;
@@ -974,53 +962,5 @@ void flash_led(uint8_t count)
     }
 #endif
 }
-
-#if 1 <= DIAG_ENABLE
-    USART_t* usart_diag;
-
-
-    void DiagEnable()
-    {
-        if (2 == bootuart) {
-            usart_diag = &USARTD0;
-        } else {
-            usart_diag = &USARTD1;
-        }
-    }
-
-    void DiagChar(char c)
-    {
-      while ( !USART_IS_TX_READY(*usart_diag) );
-      USART_PUT_CHAR(*usart_diag, c);
-    }
-
-    void Diag(const char *str)
-    {
-      while (*str)
-        DiagChar(*str++);
-    }
-
-    void DiagNumber(unsigned long n, uint8_t base)
-    {
-      unsigned char buf[8 * sizeof(long)]; // Assumes 8-bit chars. 
-      unsigned long i = 0;
-
-      if (n == 0) {
-        Diag("0");
-        return;
-      } 
-
-      while (n > 0) {
-        buf[i++] = n % base;
-        n /= base;
-      }
-
-      for (; i > 0; i--)
-        DiagChar((char) (buf[i - 1] < 10 ?
-          '0' + buf[i - 1] :
-          'A' + buf[i - 1] - 10));
-    }
-
-#endif
 
 /* end of file ATmegaBOOT.c */
