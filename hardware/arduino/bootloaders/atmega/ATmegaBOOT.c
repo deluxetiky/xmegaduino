@@ -127,7 +127,6 @@ int main(void)
     bootuart = GetBootUart();
     InitBootUart();
     SuppressLineNoise();
-Diag("Boot UART: "); DiagNumber(bootuart,10); Diag("\n"); delay_ms(1);
 
     /* forever loop */
     for (;;) {
@@ -265,7 +264,7 @@ static inline void SetBootloaderPinDirections() {
 static inline uint8_t GetBootUart() {
 
     // Light LED's next to buttons that do something.
-	PORTE.OUT = 0xF0;
+    PORTE.OUT = 0xF0;
 
     #if defined APP_PIN
         while (1) {
@@ -309,50 +308,33 @@ static inline uint8_t GetBootUart() {
 }
 
 static inline void InitBootUart() {
-    if(bootuart == 0) {
-        USART0_SET_DIR();
-        USART0_SET_BAUD(BAUD_RATE_0);
-        USART0_RX_ENABLE();
-        USART0_TX_ENABLE();
-        USART0_SET_TO_8N1();
-// TODO: gc: Fix baud calc
-        USART_0.BAUDCTRLA = 207; //   9600 baud with 32Mhz clock
-//      USART_0.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
-//      USART_0.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
-//      USART_0.BAUDCTRLA =  17; // 115200 baud with 32Mhz clock
-        USART_0.BAUDCTRLB =   0;
-        return;
-    }
-#if defined BL_1_PIN
-    if(bootuart == 1) {
-        USART1_SET_DIR();
-        USART1_SET_BAUD(BAUD_RATE_1);
-        USART1_RX_ENABLE();
-		USART_1.BAUDCTRLA = (uint16_t)(F_CPU / 16L / BAUD_RATE_1 - 1);
-        USART_1.BAUDCTRLB = (uint16_t)(F_CPU / 16L / BAUD_RATE_1 - 1) >> 8;
-        USART1_TX_ENABLE();
-        USART1_SET_TO_8N1();
-//      USART_1.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
-        USART_1.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
-        USART_1.BAUDCTRLB =   0;
-        return;
-    }
-#endif
-#if defined BL_2_PIN
-    if(bootuart == 2) {
-        USART2_SET_DIR();
-        USART2_SET_BAUD(BAUD_RATE_2);
-        USART2_RX_ENABLE();
-        USART2_TX_ENABLE();
-        USART2_SET_TO_8N1();
-//      USART_2.BAUDCTRLA =  52; //  38400 baud with 32Mhz clock
-        USART_2.BAUDCTRLA =  33; //  57600 baud with 32Mhz clock
-        USART_2.BAUDCTRLB =   0;
-        return;
-    }
-#endif
     // bootuart should be set, if not, start app.
-    app_start();
+    if ( -1 == bootuart ) {
+        app_start();
+    }
+
+    USART0_SET_DIR();
+    USART0_SET_BAUD(BAUD_RATE_0);
+    USART0_RX_ENABLE();
+    USART0_TX_ENABLE();
+    USART0_SET_TO_8N1();
+    USART_0.BAUDCTRLA = 207; // 9600 baud with 32Mhz clock
+
+#if defined BL_1_PIN
+    USART1_SET_DIR();
+    USART1_SET_BAUD(BAUD_RATE_1);
+    USART1_RX_ENABLE();
+    USART1_TX_ENABLE();
+    USART1_SET_TO_8N1();
+#endif
+
+#if defined BL_2_PIN
+    USART2_SET_DIR();
+    USART2_SET_BAUD(BAUD_RATE_2);
+    USART2_RX_ENABLE();
+    USART2_TX_ENABLE();
+    USART2_SET_TO_8N1();
+#endif
 }
 
 #if LINE_NOISE_PIN
@@ -474,7 +456,7 @@ void HandleChar(register int ch) {
         WDTCSR = _BV(WDE);
         while (1); // 16 ms
 #else
-		delay_ms(3);
+        delay_ms(3);
         app_start();
 #endif
     }
@@ -994,33 +976,22 @@ void flash_led(uint8_t count)
 }
 
 #if 1 <= DIAG_ENABLE
+    USART_t* usart_diag;
 
-    // TODO: Move to someplace else
-    #define USART_PORT_DIAG PORTD
-    #define USART_DIAG USARTD1
-    #define USART_DIAG_SET_DIR() \
-            USART_PORT_DIAG.DIRSET = PIN7_bm; \
-            USART_PORT_DIAG.DIRCLR = PIN6_bm;
-    #define USART_DIAG_SET_TO_8N1()   \
-            USART_DIAG.CTRLC = USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc
-    #define USART_DIAG_TX_ENABLE() USART_DIAG.CTRLB |= USART_TXEN_bm;
-    #define USART_DIAG_IS_TX_READY() ( (USART_DIAG.STATUS & USART_DREIF_bm) != 0)
-    #define USART_DIAG_PUT_CHAR(c) (USART_DIAG.DATA = c)
 
     void DiagEnable()
     {
-      USART_DIAG_SET_DIR();
-      USART_DIAG_SET_TO_8N1();
-    //USART_DIAG.BAUDCTRLA = 207; // 9600
-    //USART_DIAG.BAUDCTRLA =  52; // 38400
-      USART_DIAG.BAUDCTRLA =  33; // 57600
-      USART_DIAG_TX_ENABLE();
+        if (2 == bootuart) {
+            usart_diag = &USARTD0;
+        } else {
+            usart_diag = &USARTD1;
+        }
     }
 
     void DiagChar(char c)
     {
-      while ( !USART_DIAG_IS_TX_READY() );
-      USART_DIAG_PUT_CHAR(c);
+      while ( !USART_IS_TX_READY(*usart_diag) );
+      USART_PUT_CHAR(*usart_diag, c);
     }
 
     void Diag(const char *str)
