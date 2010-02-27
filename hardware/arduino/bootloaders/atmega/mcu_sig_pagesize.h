@@ -127,4 +127,6 @@ An xmega128a1 with 128K+8K of code, or 136K bytes, requires 18 address bits.
 #define ADDR_BITS   13
 #endif
 
+#define PAGE_BYTES (PAGE_SIZE*2)
+
 #endif // MCU_SIG_PAGESIZE_H

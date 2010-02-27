@@ -20,6 +20,8 @@
 #endif
 
 #if defined __AVR_ATxmega128A1__
+    #define STK500_ADDRESSES_IN_WORDS 0 // STK500 addresses seem to be byte oriented?!?!?!?!
+
     #define TOTEMPOLE      0x00  // Totempole
     #define BUSKEEPER      0x08  // Buskeeper
     #define WIRED_AND_PULL 0x38  // Wired-AND-PullUp
