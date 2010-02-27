@@ -24,8 +24,8 @@
     #define UCSR0A UCSRA
 #endif
 
-#define USART_BSEL_NEG(baud,scale) ( (uint16_t)(F_CPU/16L/baud*(2^scale)-1) )
-#define USART_BSEL_POS(baud,scale) ( (uint16_t)(F_CPU/16L/baud/(2^scale)-1) )
+#define USART_BSEL_NEG(baud,scale) ( (uint16_t)(F_CPU/16L/baud*(1<<scale)-1) )
+#define USART_BSEL_POS(baud,scale) ( (uint16_t)(F_CPU/16L/baud/(1<<scale)-1) )
 #define USART_BSEL(baud,scale) \
         ( 0<=(scale) ? USART_BSEL_POS(baud,scale) : USART_BSEL_NEG(baud,-scale) )
 
@@ -82,13 +82,13 @@
 
     #define USART_TX_ENABLE(usart) usart.CTRLB |= USART_TXEN_bm;
 
-    #define USART_IS_TX_READY(usart) ( (usart.STATUS & USART_DREIF_bm) != 0)
+    #define USART_IS_TX_READY(usart) ( ((usart).STATUS & USART_DREIF_bm) != 0)
 
-    #define USART_IS_RX_READY(usart) ( (usart.STATUS & USART_RXCIF_bm) != 0)
+    #define USART_IS_RX_READY(usart) ( ((usart).STATUS & USART_RXCIF_bm) != 0)
 
-    #define USART_PUT_CHAR(usart, c) (usart.DATA = c)
+    #define USART_PUT_CHAR(usart, c) ((usart).DATA = c)
 
-    #define USART_GET_CHAR(usart) (usart.DATA)
+    #define USART_GET_CHAR(usart) ((usart).DATA)
 
 
     #define USART0_SET_DIR()      USART_SET_DIR(USART_0_PORT,USART_0_RD_PIN,USART_0_WR_PIN) 
