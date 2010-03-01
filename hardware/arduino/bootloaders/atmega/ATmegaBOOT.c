@@ -252,8 +252,10 @@ static inline void SetBootloaderPinDirections() {
 // TODO: kill bootuart. Keep pointer to boot usart.
 static inline uint8_t GetBootUart() {
 
-    // Light LED's next to buttons that do something.
-    PORTE.OUT = 0xF0;
+    #if xplain == TARGET
+        // Light LED's next to buttons that do something.
+        PORTE.OUT = 0xF0;
+    #endif
 
     #if defined APP_PIN
         while (1) {
@@ -305,11 +307,10 @@ static inline void InitBootUart() {
     }
 
     USART0_SET_DIR();
-    USART0_SET_BAUD(BAUD_RATE_0);
+    USART0_SET_BAUD(BAUD_RATE);
     USART0_RX_ENABLE();
     USART0_TX_ENABLE();
     USART0_SET_TO_8N1();
-    USART_0.BAUDCTRLA = 207; // 9600 baud with 32Mhz clock
 
 #if defined BL_1_PIN
     USART1_SET_DIR();

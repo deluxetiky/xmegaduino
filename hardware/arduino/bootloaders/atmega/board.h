@@ -3,6 +3,10 @@
 
 // USARTs
 
+#if xplain == TARGET && lilypad == TARGET
+#error
+#endif
+
 #if xplain == TARGET
     #define BL_PORT      PORTF
     #define BL_DIR       BL_PORT.DIR
@@ -18,7 +22,7 @@
     #define USART_0_PORT   PORTC
     #define USART_0_RD_PIN 2
     #define USART_0_WR_PIN 3
-    #define BAUD_RATE_0    9600UL
+    #define BAUD_RATE      9600UL
 
     #define USART_1        USARTD0
     #define USART_1_PORT   PORTD

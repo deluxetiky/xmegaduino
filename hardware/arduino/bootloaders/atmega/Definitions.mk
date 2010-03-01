@@ -53,11 +53,11 @@ CC         := avr-gcc
 # Override is only needed by avr-lib build system.
 
 override CFLAGS   = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) -DF_CPU=$(AVR_FREQ) \
-                    -DTARGET=$(TARGET) $(DEFS)
+                    -DTARGET=$(TARGET) -D$(TARGET)=1 $(DEFS)
 override LDFLAGS  = -Wl,$(LDSECTION)
 #override LDFLAGS = -Wl,-Map,$(PROGRAM).map,$(LDSECTION)
 
 OBJCOPY        := avr-objcopy
 OBJDUMP        := avr-objdump
 
-SOURCES = $(PROGRAM).c spm.c
+SOURCES = $(PROGRAM).c diag.c spm.c
