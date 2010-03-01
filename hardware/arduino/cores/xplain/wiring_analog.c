@@ -37,33 +37,113 @@ void analogReference(uint8_t mode)
 
 int analogRead(uint8_t pin)
 {
+#if 0
 	uint8_t low, high;
 
 	// set the analog reference (high two bits of ADMUX) and select the
 	// channel (low 4 bits).  this also sets ADLAR (left-adjust result)
 	// to 0 (the default).
-	//ADMUX = (analog_reference << 6) | (pin & 0x07);
+	ADMUX = (analog_reference << 6) | (pin & 0x07);
 
 	// without a delay, we seem to read from the wrong channel
-	//delay(1);
+	delay(1);
 
 	// start the conversion
-	//sbi(ADCSRA, ADSC);
+	sbi(ADCSRA, ADSC);
 
 	// ADSC is cleared when the conversion finishes
-	//while (bit_is_set(ADCSRA, ADSC));
+	while (bit_is_set(ADCSRA, ADSC));
 
 	// we have to read ADCL first; doing so locks both ADCL
 	// and ADCH until ADCH is read.  reading ADCL second would
 	// cause the results of each conversion to be discarded,
 	// as ADCL and ADCH would be locked when it completed.
-	//low = ADCL;
-	//high = ADCH;
+	low = ADCL;
+	high = ADCH;
 
 	// combine the two bytes
-	//return (high << 8) | low;
+	return (high << 8) | low;
+#else
+        ADC_t* adc;
+        if ( pin < 8 ) {
+            adc = &ADCA;
+        } else if ( pin < 16 ) {
+            adc = &ADCB;
+            pin -= 8;
+        } else {
+            return -1;
+        }
+
+        adc->CTRLA   = ADC_DMASEL_OFF_gc // DMA off
+                     | 0                 // don't start ADC
+                     | 0                 // don't flush
+                     | ADC_ENABLE_bm     // enable
+                     ;
+
+        // TODO: Signed conversions?
+        adc->CTRLB   = ADC_CONMODE_bm           // signed conversion
+                     | 0                        // no freerun
+                     | ADC_RESOLUTION_12BIT_gc  // 12bit resolution
+                     ;
+
+        // TODO: What's the correct analog ref?
+        // TODO: What the heck is bandgap
+        adc->REFCTRL = ADC_REFSEL_VCC_gc // VCC/1.6 analog ref
+                     | 0                 // bandgap enable
+                     | 0                 // temerature reference enable
+                     ;
+
+        adc->EVCTRL = ADC_SWEEP_0_gc    // Have to set it to something, but no sweep.
+                    | ADC_EVSEL_7_gc    // Have to set it to something, but no sweep.
+                    | ADC_EVACT_NONE_gc // No event action
+                    ;
+
+        // TODO: What's correct for prescalar mode?
+        adc->PRESCALER = ADC_PRESCALER_DIV512_gc;
+
+        adc->INTFLAGS = 0; // No interrupt on conversion complete
+
+        adc->CALL = 0; // TODO: Need to set
+
+        adc->CALH = 0; // TODO: Need to set
+
+        adc->CH0.MUXCTRL = 1 << (ADC_CH_MUXPOS_gp + pin); // Select pin for positive input
+
+        // TODO: What shoult INTCTRL be?
+        adc->CH0.INTCTRL = 0;
 	
-	return 0;
+        adc->CH0.INTFLAGS = 0xF; // Strangely enough, clears IF
+	
+        // TODO: What's correct for input mode?
+        adc->CH0.CTRL = ADC_CH_START_bm                 // Start conversion
+                      | ADC_CH_GAIN_1X_gc               // 1x gain
+                      | ADC_CH_INPUTMODE_SINGLEENDED_gc // single ended
+                      ;
+
+        while (!adc->INTFLAGS); // wait for adc to finish
+        adc->INTFLAGS = 0xF;
+
+        uint16_t result;
+        result = (adc->CH0.RESH << 8) + adc->CH0.RESL;
+        // With a signed mode conversion x<2048 means the high bit is clear, which
+        // means the result is positive, otherwise it is negative.
+        // We want to normalize  the results between [0 to 4096).
+#if 0
+        if ( result < 2048 ) {
+            // Positive results need to be normalized to [2048, 4096), which
+            // is easily done by adding 2048.
+            result += 2048;
+        } else if ( result < 4096 ) {
+            // Negative results need to be normalized to [0-4096).
+            // Due to the properties of two's complement the below does this.
+            result = 2047 - result + 1;
+        } else {
+            // Something insane has happened xmegas aren't supposed to do this ....
+        }
+#endif
+
+	return result;
+#endif
 }
 
 // Right now, PWM output only works on the pins with

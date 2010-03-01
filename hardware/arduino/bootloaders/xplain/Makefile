@@ -11,7 +11,7 @@ TARGET     := xplain
 MCU_TARGET := atxmega128a1
 include $(SOURCE)/TargetRules.mk
 
-$(HEX): CFLAGS    += '-DNUM_LED_FLASHES=5' -DBAUD_RATE=9600
+$(HEX): CFLAGS    += '-DNUM_LED_FLASHES=3'
 $(HEX): AVR_FREQ   = 32000000L
 $(HEX): BOOT_ADDR  = 0x20000
 
