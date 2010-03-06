@@ -118,8 +118,7 @@ public abstract class Uploader implements MessageConsumer  {
       }
       
       commandArray[0] = avrBasePath + commandArray[0];
-      
-verbose=true;
+
       if (verbose || Preferences.getBoolean("upload.verbose")) {
         for(int i = 0; i < commandArray.length; i++) {
           System.out.print(commandArray[i] + " ");
