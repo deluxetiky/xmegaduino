@@ -22,6 +22,8 @@
   $Id: wiring.c 808 2009-12-18 17:44:08Z dmellis $
 */
 
+#include <stddef.h>
+#include <avr/pgmspace.h>
 #include "wiring_private.h"
 
 volatile unsigned long rtc_millis = 0;
@@ -136,6 +138,9 @@ void delayMicroseconds(unsigned int us)
 	);
 }
 
+static void initAdc();
+static uint8_t ReadCalibrationByte(uint8_t index);
+
 void init()
 {
 	// this needs to be called before setup() or some functions won't
@@ -197,28 +202,12 @@ void init()
         // Wait for it to stablize
         while ( !(OSC.STATUS & OSC_RC32MEN_bm) ) ;
 
-#if 0
-        /*  Probably won't work, but would be neat if we could run 32Mhz
-            clock through 4x PLL and have it run at 128Mhz. Datasheet implies
-            this should work. But everything I read says 32Mhz max.
-        */
-        // Does this go before or after internal 32M internal crystal in enabled and stable?
-        // Dunno, try after first.
-    
-        // PLL source: internal 32M crystal multiplied by 4 - max PLL factor for 32M crystal.
-        OSC.PLLCTRL = ((uint8_t)OSC_PLLSRC_RC2M_gc) | ( (4&OSC_PLLFAC_gm) << OSC_PLLFAC_gp);
-        // Enable PLL
-        OSC.CTRL |= OSC_PLLEN_bm;
-        // Wait for PLL to stabilize
-        while ( !(OSC.STATUS & OSC_PLLRDY_bm ) ) ;
-#endif
-
-        // #define CLOCK_SOURCE CLK_SCLKSEL_PLL_gc
-        #define CLOCK_SOURCE CLK_SCLKSEL_RC32M_gc
-
-        register uint8_t value = (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLOCK_SOURCE;
-
-        // Set main system clock to PLL
+        // Set main system clock to 32Mhz internal clock
+#if 1
+        CCP = CCP_IOREG_gc; // Secret handshake so we can change clock
+        CLK.CTRL = (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLK_SCLKSEL_RC32M_gc;
+#else // TODO: Kill this
+        register uint8_t value = (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLK_SCLKSEL_RC32M_gc;
         asm volatile(
             "ldi  r30, lo8(%0)     \n\t"
             "ldi  r31, hi8(%0)     \n\t"
@@ -232,8 +221,8 @@ void init()
               "i" (&CCP)
             : "r16", "r30", "r31"
         );
+#endif
 
-        // TODO: gc: Check out using the DFLL
         // TODO: gc: ClkPer2 should really be 2x ClkSys for EBI to work (Xmega A doc, 4.10.1)
         // TODO: gc: ClkPer4 should really be 4x ClkSys for Hi-Res extensions (16.2)
 
@@ -251,32 +240,48 @@ void init()
 	/* Set internal 32kHz oscillator as clock source for RTC. */
 	CLK.RTCCTRL = CLK_RTCSRC_RCOSC_gc | CLK_RTCEN_bm;//1kHz
 
+        /*************************************/
+        /* Init I/O ports */
+	
 #define TOTEMPOLE      0x00  // Totempole
+#define PULLDOWN       0x10  // Pull down
+#define PULLUP         0x18  // Pull up
 #define BUSKEEPER      0x08  // Buskeeper
 #define WIRED_AND_PULL 0x38  // Wired-AND-PullUp
-//#define OUT_PULL_CONFIG TOTEMPOLE
+#define OUT_PULL_CONFIG TOTEMPOLE
 //#define OUT_PULL_CONFIG BUSKEEPER
-#define OUT_PULL_CONFIG WIRED_AND_PULL
+//#define OUT_PULL_CONFIG WIRED_AND_PULL
 	
 	//configure pins of xmega
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTA.PIN0CTRL = OUT_PULL_CONFIG;
+	PORTA.PIN0CTRL  = PULLDOWN;
+	PORTA.DIR       = 0;
+        ADCA.CALL       = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL0) );
+        ADCA.CALH       = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL1) );
+        initAdc(&ADCA);
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTB.PIN0CTRL = OUT_PULL_CONFIG;
+	PORTB.PIN0CTRL  = PULLDOWN;
+	PORTB.DIR       = 0;
+        ADCB.CALL       = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCBCAL0) );
+        ADCB.CALH       = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCBCAL1) );
+        initAdc(&ADCB);
 	
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTC.PIN0CTRL = OUT_PULL_CONFIG;
+	PORTC.PIN0CTRL  = OUT_PULL_CONFIG;
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTD.PIN0CTRL = OUT_PULL_CONFIG;
+	PORTD.PIN0CTRL  = OUT_PULL_CONFIG;
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTE.PIN0CTRL = OUT_PULL_CONFIG;
+	PORTE.PIN0CTRL  = OUT_PULL_CONFIG;
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-	PORTF.PIN0CTRL = OUT_PULL_CONFIG;
+	PORTF.PIN0CTRL  = PULLUP;
+
+        /*************************************/
+        /* Finish init of real time clock for millis() */
 	
 	do {
 		/* Wait until RTC is not busy. */
@@ -296,8 +301,63 @@ void init()
 	/* Enable interrupts. */
 	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 	sei();
-	
-	
-		
-	
 }
+
+static void initAdc( ADC_t* adc ) {
+        /* ADC INIT */
+
+        adc->CTRLB   = 0 << ADC_CONMODE_bp      // unsigned conversion
+                     | 0 << ADC_FREERUN_bp      // no freerun
+                     | ADC_RESOLUTION_12BIT_gc  // 12bit resolution
+                     ;
+
+        // TODO: What should we use as analog ref?
+        adc->REFCTRL = ADC_REFSEL_VCC_gc   // VCC/1.6 analog ref
+                     | 0 << ADC_BANDGAP_bp // bandgap not enabled
+                     | 0 << ADC_TEMPREF_bp // temerature reference not enabled
+                     ;
+
+        adc->EVCTRL = 0 << ADC_SWEEP_gp // Have to set it to something, so sweep only channel 0.
+                    | 0 << ADC_EVSEL_gp // Have to set it to something, so event channels 0123.
+                    | 0 << ADC_EVACT_gp // No event action
+                    ;
+
+        // TODO: What should we use as prescalar?
+        // 128K times per second with 32Mhz sys clock. That's what the mega based
+        // arduinos use. No idea if that is appropriate for xmegas.
+        adc->PRESCALER = ADC_PRESCALER_DIV256_gc;
+
+        adc->INTFLAGS = 0; // No interrupt on conversion complete
+
+        /* CHANNEL INIT */
+
+        // TODO: Perhaps we should create API so we can use all ADC channels, events, free run, etc.
+        // TODO: Perhaps we should use ADC channel 3 rather than 0 ...
+
+        adc->CH0.CTRL = 0 << ADC_CH_START_bp            // Don't start conversion yet
+                      | 0 << ADC_CH_GAINFAC_gp          // 1x gain (2^0 is 1)
+                      | ADC_CH_INPUTMODE_SINGLEENDED_gc // single ended
+                      ;
+
+        adc->CH0.INTCTRL = ADC_CH_INTMODE_COMPLETE_gc // Not really, below value turns interrupts off ...
+                         | ADC_CH_INTLVL_OFF_gc       // Interrupt off
+                         ;
+
+        adc->CH0.INTFLAGS = 1; // Strangely enough, clears IF
+	
+        // Do CTRLA last so everything is initialized before we enable.
+        adc->CTRLA   = 0 << ADC_DMASEL_gp   // DMA off
+                     | 0 << ADC_CH0START_bp // don't start ADC
+                     | 0 << ADC_FLUSH_bp    // don't flush
+                     | 1 << ADC_ENABLE_bp   // enable
+                     ;
+}
+
+static uint8_t ReadCalibrationByte(uint8_t index) {
+    NVM_CMD = NVM_CMD_READ_CALIB_ROW_gc;
+    uint8_t result = pgm_read_byte(index);
+    NVM_CMD = NVM_CMD_NO_OPERATION_gc;
+
+    return result;
+}
+
