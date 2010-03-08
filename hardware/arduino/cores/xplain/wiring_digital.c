@@ -44,7 +44,7 @@ void pinMode(uint8_t pin, uint8_t mode)
 
 // Forcing this inline keeps the callers from having to push their own stuff
 // on the stack. It is a good performance win and only takes 1 more byte per
-// user than calling. (It will take more bytes on the 168.)
+// user than calling. (It will take more bytes on the 168/328p/xmega.)
 //
 // But shouldn't this be moved into pinMode? Seems silly to check and do on
 // each digitalread or write.
@@ -52,15 +52,15 @@ void pinMode(uint8_t pin, uint8_t mode)
 static inline void turnOffPWM(uint8_t timer) __attribute__ ((always_inline));
 static inline void turnOffPWM(uint8_t timer)
 {
-	/*
-	if (timer == TIMER1A) cbi(TCCR1A, COM1A1);
-	if (timer == TIMER1B) cbi(TCCR1A, COM1B1);
+	TC0_t*  tc0 = timerToTC0(timer);
+	TC1_t*  tc1 = timerToTC0(timer);
+        uint8_t channel = timerToChannel(timer);
 
-	if (timer == TIMER0A) cbi(TCCR0A, COM0A1);
-	if (timer == TIMER0B) cbi(TCCR0A, COM0B1);
-	if (timer == TIMER2A) cbi(TCCR2A, COM2A1);
-	if (timer == TIMER2B) cbi(TCCR2A, COM2B1);
-	 */
+        if ( tc0 ) {
+        	tc0->CTRLB &= ~(TC0_CCAEN_bm << channel);
+        } else if ( tc1 ) {
+        	tc1->CTRLB &= ~(TC1_CCAEN_bm << channel);
+        }
 }
 
 void digitalWrite(uint8_t pin, uint8_t val)
