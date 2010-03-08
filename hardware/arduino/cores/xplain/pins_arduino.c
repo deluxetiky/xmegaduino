@@ -230,6 +230,60 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	REPEAT8(NOT_ON_TIMER), // PORT F Switches
 	};
 
+const TC0_t* PROGMEM timer_to_tc0_PGM[] = {
+	NULL,
+
+	&TCD0,
+	&TCD0,
+	&TCD0,
+	&TCD0,
+	NULL,
+	NULL,
+
+	&TCE0,
+	&TCE0,
+	&TCE0,
+	&TCE0,
+	NULL,
+	NULL,
+	};
+
+const TC1_t* PROGMEM timer_to_tc1_PGM[] = {
+	NULL,
+
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	&TCD1,
+	&TCD1,
+
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	&TCE1,
+	&TCE1,
+	};
+
+const uint8_t PROGMEM timer_to_channel_PGM[] = {
+    NULL,
+
+    0,
+    1,
+    2,
+    3,
+    0,
+    1,
+
+    0,
+    1,
+    2,
+    3,
+    0,
+    1,
+};
+
 #else
 
 #error No pin map defined

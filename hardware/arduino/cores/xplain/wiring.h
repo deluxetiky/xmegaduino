@@ -103,6 +103,10 @@ void pinMode(uint8_t, uint8_t);
 void digitalWrite(uint8_t, uint8_t);
 int digitalRead(uint8_t);
 int analogRead(uint8_t);
+int analogRead12(uint8_t);
+unsigned analogRead16(uint8_t);
+long analogRead24(uint8_t);
+double analogReadFloat(uint8_t);
 void analogReference(uint8_t mode);
 void analogWrite(uint8_t, int);
 
