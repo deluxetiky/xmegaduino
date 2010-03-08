@@ -353,11 +353,11 @@ static void initAdc( ADC_t* adc ) {
                      ;
 }
 
-static uint8_t ReadCalibrationByte(uint8_t index) {
+static uint8_t ReadCalibrationByte(uint8_t index)
+{
     NVM_CMD = NVM_CMD_READ_CALIB_ROW_gc;
     uint8_t result = pgm_read_byte(index);
     NVM_CMD = NVM_CMD_NO_OPERATION_gc;
 
     return result;
 }
-
