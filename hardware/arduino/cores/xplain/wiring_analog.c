@@ -74,6 +74,79 @@ unsigned analogRead16(uint8_t pin)
     return ( (unsigned)analogRead12(pin) ) << 4;
 }
 
+// TODO: Wrap all this frufra within objects
+const TC0_t* PROGMEM timer_to_tc0_PGM[] = {
+    NULL,
+
+    &TCD0,
+    &TCD0,
+    &TCD0,
+    &TCD0,
+    NULL,
+    NULL,
+
+    &TCE0,
+    &TCE0,
+    &TCE0,
+    &TCE0,
+    NULL,
+    NULL,
+};
+
+const TC0_t* PROGMEM timer_to_tc1_PGM[] = {
+    NULL,
+
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    &TCD1,
+    &TCD1,
+
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    &TCE1,
+    &TCE1,
+};
+
+const uint8_t PROGMEM timer_to_channel_PGM[] = {
+    NULL,
+
+    0,
+    1,
+    2,
+    3,
+    0,
+    1,
+
+    0,
+    1,
+    2,
+    3,
+    0,
+    1,
+};
+
+
+// TODO: templatize for TC1_t*
+static void InitializeTC0(TC0_t* tc)
+{
+    // 
+
+
+    // TODO: Should we use channel D (for TC0 and B for TC1)?
+    // Enable Compare channel A.
+    tc->CCA =TC0_CCAEN_bm;
+
+    // TODO: 2, 4, 8, 64, 256 or 1024?
+    // Clock source.
+    tc->CTRLA = ( tc->CTRLA & ~TC0_CLKSEL_gm ) | TC_CLKSEL_DIV1024_gc;
+}
+
+// TODO: Add pwm12, pwm16, and pwm24.
+
 // Right now, PWM output only works on the pins with
 // hardware support.  These are defined in the appropriate
 // pins_*.c file.  For the rest of the pins, we default
@@ -85,51 +158,64 @@ void analogWrite(uint8_t pin, int val)
 	// writing with them.  Also, make sure the pin is in output mode
 	// for consistenty with Wiring, which doesn't require a pinMode
 	// call for the analog output pins.
-	
-#if 0
+
 	pinMode(pin, OUTPUT);
-	
-	if (digitalPinToTimer(pin) == TIMER1A) {
-		// connect pwm to pin on timer 1, channel A
-		sbi(TCCR1A, COM1A1);
-		// set pwm duty
-		OCR1A = val;
-	} else if (digitalPinToTimer(pin) == TIMER1B) {
-		// connect pwm to pin on timer 1, channel B
-		sbi(TCCR1A, COM1B1);
-		// set pwm duty
-		OCR1B = val;
-	} else if (digitalPinToTimer(pin) == TIMER0A) {
-		if (val == 0) {
-			digitalWrite(pin, LOW);
-		} else {
-			// connect pwm to pin on timer 0, channel A
-			sbi(TCCR0A, COM0A1);
-			// set pwm duty
-			OCR0A = val;      
-		}
-	} else if (digitalPinToTimer(pin) == TIMER0B) {
-		if (val == 0) {
-			digitalWrite(pin, LOW);
-		} else {
-			// connect pwm to pin on timer 0, channel B
-			sbi(TCCR0A, COM0B1);
-			// set pwm duty
-			OCR0B = val;
-		}
-	} else if (digitalPinToTimer(pin) == TIMER2A) {
-		// connect pwm to pin on timer 2, channel A
-		sbi(TCCR2A, COM2A1);
-		// set pwm duty
-		OCR2A = val;	
-	} else if (digitalPinToTimer(pin) == TIMER2B) {
-		// connect pwm to pin on timer 2, channel B
-		sbi(TCCR2A, COM2B1);
-		// set pwm duty
-		OCR2B = val;
-	} else if (val < 128)
-		digitalWrite(pin, LOW);
-	else
-		digitalWrite(pin, HIGH);
-#endif
+
+        uint8_t timer_index   = pgm_read_byte(digital_pin_to_timer_PGM + pin);
+        TC0_t*  tc0           = pgm_read_word(timer_to_tc0_PGM         + timer_index);
+        TC1_t*  tc1           = pgm_read_word(timer_to_tc1_PGM         + timer_index);
+        uint8_t channel_index = pgm_read_byte(timer_to_channel_PGM     + timer_index);
+
+
+        // freq pwm = 32Mhz / (2 x N x PER)
+        /// TODO: Can we run at 31Khz, well above the audible range?
+        /// Issue is whether existing circuits can handle this.
+        /// TODO: Add API to set freq pwm. Default to 1000khz,
+        /// compatible with existing code.
+        /// N = 32Mhz / (2 x freq pwm x PER)
+        // 976hz = 32Mhz / (2 x 64 x 0xFF)
+        if ( tc0 ) {
+            tc0->PERBUF = 0xFF;
+            tc0->CTRLA  = TC_CLKSEL_DIV64_gc;
+
+            /// TODO: Update pin at waveform top, bottom, or both?
+            /// Seems that by doing at top and bottom we can increase the
+            /// pwm freq and resolution.
+            /// For now, do at bottom for compatibility.
+
+            // Dual slope mode.
+            tc0->CTRLB  = ( tc0->CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_DS_B_gc; // TODO: Factor out and move to wiring.c init.
+            tc0->CTRLB |= TC0_CCAEN_bm << channel_index;
+        } else if ( tc1 ) {
+            tc1->PERBUF  = 0xFF;
+            tc1->CTRLA   = TC_CLKSEL_DIV64_gc;
+            tc1->CTRLB   = ( tc1->CTRLB & ~TC1_WGMODE_gm ) | TC_WGMODE_DS_B_gc;
+            tc1->CTRLB  |= TC1_CCAEN_bm << channel_index;
+	} else if (val < 128) {
+            digitalWrite(pin, LOW);
+            return;
+	} else {
+            digitalWrite(pin, HIGH);
+            return;
+        }
+
+        // TODO: Add timer_to_channel.
+        // Set value
+        if ( tc0 && 0 == channel_index ) {
+            tc0->CCABUF = val;
+        } else if ( tc0 && 1 == channel_index ) {
+            tc0->CCBBUF = val;
+        } else if ( tc0 && 2 == channel_index ) {
+            tc0->CCCBUF = val;
+        } else if ( tc0 && 3 == channel_index ) {
+            tc0->CCDBUF = val;
+        } else if ( tc1 && 0 == channel_index ) {
+            tc1->CCABUF = val;
+        } else if ( tc1 && 1 == channel_index ) {
+            tc1->CCBBUF = val;
+	} else if (val < 128) {
+           digitalWrite(pin, LOW);
+	} else {
+            digitalWrite(pin, HIGH);
+        }
 }
