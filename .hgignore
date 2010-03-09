@@ -10,8 +10,8 @@ syntax: regexp
 
 build/windows/launcher/arduino.exe
 
-hardware/arduino/bootloaders/atmega/xplain-loader.aps
-hardware/arduino/bootloaders/atmega/xplain-loader.aws
-hardware/arduino/bootloaders/.*/.*\.sh
-hardware/arduino/bootloaders/.*/build
-hardware/arduino/bootloaders/.*/*.hex
+hardware/.*/bootloaders/atmega/xplain-loader.aps
+hardware/.*/bootloaders/atmega/xplain-loader.aws
+hardware/.*/bootloaders/.*/.*\.sh
+hardware/.*/bootloaders/.*/build
+hardware/.*/bootloaders/.*/*.hex
