@@ -31,11 +31,14 @@ $(BUILD)/%_$(TARGET).o: $(SOURCE)/%.c $(MAKEFILE_LIST)
 $(BUILD)/%_$(TARGET).s: $(SOURCE)/%.c $(MAKEFILE_LIST)
 	$(CC) -S $(CFLAGS) -o $@ $<
 
-$(BUILD)/%_$(TARGET).d: $(SOURCE)/%.c $(MAKEFILE_LIST)
+$(BUILD)/%_$(TARGET).d: $(SOURCE)/%.c $(MAKEFILE_LIST) $(BUILD)
 	@set -e; rm -f $@; \
 	$(CC) -MM $(CFLAGS) $< > $@.$$$$; \
 	sed 's,.*\.o[ :]*,$(@:.d=.o) $(@:.d=.s) $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
+
+$(BUILD):
+	mkdir -p $(BUILD)
 
 ifneq ($(MAKECMDGOALS),clean)
     include $(OBJ_DEPS)

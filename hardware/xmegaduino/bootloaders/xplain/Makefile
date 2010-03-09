@@ -1,4 +1,10 @@
-SOURCE=../atmega
+TOP=../../..
+
+ifndef ARDUINO_BOOTLOADER_FOLDER
+ARDUINO_BOOTLOADER_FOLDER:=$(TOP)/arduino/bootloaders
+endif
+
+SOURCE:=$(ARDUINO_BOOTLOADER_FOLDER)/atmega
 
 include $(SOURCE)/Definitions.mk
 
