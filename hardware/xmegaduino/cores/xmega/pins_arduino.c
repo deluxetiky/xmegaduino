@@ -35,13 +35,6 @@
 // (PWM+ indicates the additional PWM pins on the ATmega168.)
 
 
-#define PA 1
-#define PB 2
-#define PC 3
-#define PD 4
-#define PE 5
-#define PF 6
-
 #define REPEAT8(x) x, x, x, x, x, x, x, x
 #define BV0TO7 _BV(0), _BV(1), _BV(2), _BV(3), _BV(4), _BV(5), _BV(6), _BV(7)
 #define BV7TO0 _BV(7), _BV(6), _BV(5), _BV(4), _BV(3), _BV(2), _BV(1), _BV(0)
@@ -69,6 +62,21 @@
 #define PINF PORTF_IN
 
 
+#define PIN_MAP_RENE     1
+#define PIN_MAP_GIULIANO 2
+#define PIN_MAP_DEFAULT  PIN_MAP_GIULIANO
+
+#ifndef PIN_MAP
+#define PIN_MAP PIN_MAP_DEFAULT
+#endif
+
+#if PIN_MAP_RENE == PIN_MAP
+#define PA 1
+#define PB 2
+#define PC 3
+#define PD 4
+#define PE 5
+#define PF 6
 
 const uint16_t PROGMEM port_to_mode_PGM[] = {
 	NOT_A_PORT,
@@ -100,15 +108,6 @@ const uint16_t PROGMEM port_to_input_PGM[] = {
 	&PINF,//switches
 };
 
-#define PIN_MAP_RENE     1
-#define PIN_MAP_GIULIANO 2
-#define PIN_MAP_DEFAULT  PIN_MAP_GIULIANO
-
-#ifndef PIN_MAP
-#define PIN_MAP PIN_MAP_DEFAULT
-#endif
-
-#if PIN_MAP_RENE == PIN_MAP
 const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	// PORTLIST
 	PC,
@@ -183,34 +182,71 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	NOT_ON_TIMER	, 
 	NOT_ON_TIMER	, 
 	};
+
 #elif PIN_MAP_GIULIANO == PIN_MAP
+
+#define PA 1 // pin  0
+#define PD 2 // pin  8
+#define PE 3 // pin 16
+#define PF 4 // pin 24
+#define PB 5 // pin 32
+#define PC 6 // pin 40
+
+const uint16_t PROGMEM port_to_mode_PGM[] = {
+	NOT_A_PORT,
+	&DDRA,//pin header, analog in
+	&DDRD,//pin header
+	&DDRE,//leds
+	&DDRF,//switches
+	&DDRB,//internal, analog in, pot and speaker
+	&DDRC,//internal, usartc0 to usb on 2&3
+};
+
+const uint16_t PROGMEM port_to_output_PGM[] = {
+	NOT_A_PORT,
+	&PORTA,//pin header, analog in
+	&PORTD,//pin header
+	&PORTE,//leds
+	&PORTF,//switches
+	&PORTB,//internal, analog in, pot and speaker
+	&PORTC,//internal, usartc0 to usb on 2&3
+};
+
+const uint16_t PROGMEM port_to_input_PGM[] = {
+	NOT_A_PIN,
+	&PINA,//pin header, analog in
+	&PIND,//pin header
+	&PINE,//leds
+	&PINF,//switches
+	&PINB,//internal, analog in, pot and speaker
+	&PINC,//internal, usartc0 to usb on 2&3
+};
+
 const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	// PORTLIST
         REPEAT8(PA), // Header
-        REPEAT8(PB), // Pot and Speaker
-        REPEAT8(PC), // USARTC0 connected to USB on 2&3
         REPEAT8(PD), // Header
         REPEAT8(PE), // LEDs
         REPEAT8(PF), // Switches
+        REPEAT8(PB), // Pot and Speaker
+        REPEAT8(PC), // USARTC0 connected to USB on 2&3
 };
 
 const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
 	// PIN IN PORT		
 	// -------------------------------------------		
 	BV0TO7, // PORT A Header
-	BV0TO7, // PORT B Pot and Speaker
-	BV0TO7, // PORT C USARTC0 to USB on 2&3
 	BV0TO7, // PORT D Header
 	BV0TO7, // PORT E LEDs
 	BV0TO7, // PORT F Switches
+	BV0TO7, // PORT B Pot and Speaker
+	BV0TO7, // PORT C USARTC0 to USB on 2&3
 	};
 
 const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	// TIMERS		
 	// -------------------------------------------		
 	REPEAT8(NOT_ON_TIMER), // PORT A Header
-	REPEAT8(NOT_ON_TIMER), // PORT B Pot and Speaker
-	REPEAT8(NOT_ON_TIMER), // PORT C USARTC0 to USB on 2&3
 	TIMER_D0A, // PORT D Header
 	TIMER_D0B,
 	TIMER_D0C,
@@ -228,6 +264,8 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	NOT_ON_TIMER,
 	NOT_ON_TIMER,
 	REPEAT8(NOT_ON_TIMER), // PORT F Switches
+	REPEAT8(NOT_ON_TIMER), // PORT B Pot and Speaker
+	REPEAT8(NOT_ON_TIMER), // PORT C USARTC0 to USB on 2&3
 	};
 
 const TC0_t* PROGMEM timer_to_tc0_PGM[] = {
