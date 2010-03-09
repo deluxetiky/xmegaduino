@@ -51,6 +51,7 @@ public class AvrdudeUploader extends Uploader  {
       // fall back on global preference
       uploadUsing = Preferences.get("upload.using");
     }
+System.out.println("uploadUsing=" + uploadUsing);
     if (uploadUsing.equals("bootloader")) {
       return uploadViaBootloader(buildPath, className);
     } else {
