@@ -79,7 +79,7 @@ unsigned long micros(void) {
         // If so TCF1 count may be updated even when interrupts are off.
 	uint8_t oldSREG = SREG; // Save and restore the interrupt enable bit
 	cli();
-	unsigned long result = seconds_count*1000000UL + TCF1.CNT*1000 + (TCF0.CNT>>2);
+	unsigned long result = seconds_count*1000000UL + millis_count*1000 + TCF1.CNT*1000UL + (TCF0.CNT>>2);
 	SREG = oldSREG;
 
 	return result;
