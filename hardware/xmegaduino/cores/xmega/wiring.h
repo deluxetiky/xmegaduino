@@ -120,7 +120,7 @@ unsigned long millis(void);
 unsigned long micros(void);
 uint64_t micros_huge(void);
 void delay(unsigned long);
-void delayMicroseconds(unsigned int us);
+void delayMicroseconds(unsigned long us);
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
 
 void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, byte val);
