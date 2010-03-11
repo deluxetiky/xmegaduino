@@ -26,57 +26,63 @@
 #include <avr/pgmspace.h>
 #include "wiring_private.h"
 
-volatile unsigned long rtc_millis = 0;
+volatile unsigned long millis_count = 0;
+volatile unsigned long seconds_count = 0;
 
-/*! \brief RTC overflow interrupt service routine.
- *
- *  This ISR keeps track of the milliseconds 
- */
-ISR(RTC_OVF_vect)
+ISR(TCF0_OVF_vect)
 {
-	rtc_millis = rtc_millis+4;
+	/// TODO: Do we need to call cli()?
+	++millis_count;
+        EVSYS.STROBE = 0xF;
 }
 
-
-unsigned long millis()
+ISR(TCF1_OVF_vect)
 {
-	
-	unsigned long m;
-	
-	uint8_t oldSREG = SREG;
+	/// TODO: Do we need to call cli()?
+	++seconds_count;
+}
 
+unsigned long millis(void)
+{
+	// disable interrupts while we read millis_count or we might get an
+	// inconsistent value (e.g. in the middle of a write to millis_count)
+
+	uint8_t oldSREG = SREG; // Save and restore the interrupt enable bit
+	cli();
+	unsigned long result = seconds_count*1000UL + TCF1.CNT;
+	SREG = oldSREG;
+
+	return result + millis_count;
+}
+
+uint64_t micros_huge(void) {
 	// disable interrupts while we read rtc_millis or we might get an
 	// inconsistent value (e.g. in the middle of a write to rtc_millis)
+
+        // TODO: Will micros and millis be consistent?
+        // Are events processed even when interrupts are disabled?
+        // If so TCF1 count may be updated even when interrupts are off.
+	uint8_t oldSREG = SREG; // Save and restore the interrupt enable bit
 	cli();
-	m = rtc_millis;
+	uint64_t result = ((uint64_t)seconds_count)*1000000UL + TCF1.CNT*1000UL + (TCF0.CNT>>2);
 	SREG = oldSREG;
 
-	return m;
+	return result;
 }
 
-unsigned long micros() {
-	/*
-	unsigned long m;
-	
-	uint8_t oldSREG = SREG, t;
-	
-	cli();
-	m = timer0_overflow_count;
-	t = TCNT0;
-  
-#ifdef TIFR0
-	if ((TIFR0 & _BV(TOV0)) && (t < 255))
-		m++;
-#else
-	if ((TIFR & _BV(TOV0)) && (t < 255))
-		m++;
-#endif
+unsigned long micros(void) {
+	// disable interrupts while we read rtc_millis or we might get an
+	// inconsistent value (e.g. in the middle of a write to rtc_millis)
 
+        // TODO: Will micros and millis be consistent?
+        // Are events processed even when interrupts are disabled?
+        // If so TCF1 count may be updated even when interrupts are off.
+	uint8_t oldSREG = SREG; // Save and restore the interrupt enable bit
+	cli();
+	unsigned long result = seconds_count*1000000UL + TCF1.CNT*1000 + (TCF0.CNT>>2);
 	SREG = oldSREG;
-	
-	return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
-	 */
-	return 0;
+
+	return result;
 }
 
 void delay(unsigned long ms)
@@ -84,8 +90,7 @@ void delay(unsigned long ms)
 	
 	unsigned long start = millis();
 	
-	while (millis() - start <= ms)
-		;
+	while (millis() - start <= ms);
 }
 
 /* Delay for the given number of microseconds.  Assumes a 8 or 16 MHz clock. */
@@ -147,52 +152,20 @@ void init()
 	// work there
 	sei();
 	
-	// on the ATmega168, timer 0 is also used for fast hardware pwm
-	// (using phase-correct PWM would mean that timer 0 overflowed half as often
-	// resulting in different millis() behavior on the ATmega8 and ATmega168)
-	//sbi(TCCR0A, WGM01);
-	//sbi(TCCR0A, WGM00);
+        // TODO: micros/millis timer init.
 
-	// set timer 0 prescale factor to 64
-	//sbi(TCCR0B, CS01);
-	//sbi(TCCR0B, CS00);
-
-	// enable timer 0 overflow interrupt
-	//sbi(TIMSK0, TOIE0);
-
-
-	// timers 1 and 2 are used for phase-correct hardware pwm
-	// this is better for motors as it ensures an even waveform
-	// note, however, that fast pwm mode can achieve a frequency of up
-	// 8 MHz (with a 16 MHz clock) at 50% duty cycle
-
-	// set timer 1 prescale factor to 64
-	//sbi(TCCR1B, CS11);
-	//sbi(TCCR1B, CS10);
-	// put timer 1 in 8-bit phase correct pwm mode
-	//sbi(TCCR1A, WGM10);
-
-	// set timer 2 prescale factor to 64
-	//sbi(TCCR2B, CS22);
-
-	// configure timer 2 for phase correct pwm (8-bit)
-	//sbi(TCCR2A, WGM20);
+        // TODO: pwm init
 
 	// set a2d prescale factor to 128
 	// 16 MHz / 128 = 125 KHz, inside the desired 50-200 KHz range.
 	// XXX: this will not work properly for other clock speeds, and
 	// this code should use F_CPU to determine the prescale factor.
-	//sbi(ADCSRA, ADPS2);
-	//sbi(ADCSRA, ADPS1);
-	//sbi(ADCSRA, ADPS0);
-
-	// enable a2d conversions
-	//sbi(ADCSRA, ADEN);
+	// TODO: Init a2d
 
 	// the bootloader connects pins 0 and 1 to the USART; disconnect them
 	// here so they can be used as normal digital i/o; they will be
 	// reconnected in Serial.begin()
-	//UCSR0B = 0;
+	// TODO: Disconnect bootloader USARTS
 	
         /**************************************/
         /* Init system clock: run it at 32Mhz */
@@ -203,42 +176,34 @@ void init()
         while ( !(OSC.STATUS & OSC_RC32MEN_bm) ) ;
 
         // Set main system clock to 32Mhz internal clock
-#if 1
         CCP = CCP_IOREG_gc; // Secret handshake so we can change clock
         CLK.CTRL = (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLK_SCLKSEL_RC32M_gc;
-#else // TODO: Kill this
-        register uint8_t value = (CLK.CTRL & ~CLK_SCLKSEL_gm ) | CLK_SCLKSEL_RC32M_gc;
-        asm volatile(
-            "ldi  r30, lo8(%0)     \n\t"
-            "ldi  r31, hi8(%0)     \n\t"
-            "ldi  r16,  %2         \n\t"
-            "out   %3, r16         \n\t"
-            "st     Z,  %1         \n\t"
-            :
-            : "i" (&CLK.CTRL),
-              "r" ( value ),
-              "M" (CCP_IOREG_gc),
-              "i" (&CCP)
-            : "r16", "r30", "r31"
-        );
-#endif
 
         // TODO: gc: ClkPer2 should really be 2x ClkSys for EBI to work (Xmega A doc, 4.10.1)
         // TODO: gc: ClkPer4 should really be 4x ClkSys for Hi-Res extensions (16.2)
 
         /*************************************/
         /* Init real time clock for millis() */
-	
-	/* Turn on internal 32kHz. */
-	OSC.CTRL |= OSC_RC32KEN_bm;
 
-	do {
-		/* Wait for the 32kHz oscillator to stabilize. */
-	} while ( ( OSC.STATUS & OSC_RC32KRDY_bm ) == 0);
-		
+        /* Timer 1 uses the system clock as its source. 32Mhz with a prescalar of 8 is 4Mhz.
+         * 4 ticks per microsecond. 4000 ticks per milli. On overflow generate an event.
+         *
+         * Timer 2 uses timer 1's overlow event as its source. Each tick is a ms.
+         * 1000 ticks per second. On overflow generates an interrupt.
+         *
+         * interrupt handler increments seconds counter.
+        */
+        TCF0.CTRLA    = TC_CLKSEL_DIV8_gc;
+        TCF0.PERBUF   = 4000;
+        TCF0.CTRLB    = ( TCF0.CTRLB & ~TC0_WGMODE_gm ) | TC_WGMODE_NORMAL_gc;
+//      EVSYS.CH0MUX  = EVSYS_CHMUX_TCF0_OVF_gc;
+        TCF0.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
-	/* Set internal 32kHz oscillator as clock source for RTC. */
-	CLK.RTCCTRL = CLK_RTCSRC_RCOSC_gc | CLK_RTCEN_bm;//1kHz
+        TCF1.CTRLA    = TC_CLKSEL_EVCH0_gc;
+        TCF1.PERBUF   = 1000;
+        TCF1.CTRLB    = ( TCF1.CTRLB & ~TC1_WGMODE_gm ) | TC_WGMODE_NORMAL_gc;
+        TCF1.CTRLD    = TC_EVACT_UPDOWN_gc | TC1_EVDLY_bm;
+        TCF1.INTCTRLA = TC_OVFINTLVL_HI_gc;
 
         /*************************************/
         /* Init I/O ports */
@@ -281,25 +246,8 @@ void init()
 	PORTF.PIN0CTRL  = PULLUP;
 
         /*************************************/
-        /* Finish init of real time clock for millis() */
-	
-	do {
-		/* Wait until RTC is not busy. */
-	} while (  RTC.STATUS & RTC_SYNCBUSY_bm );
-	
-	/* Configure RTC period to 1 millisecond. */
-	RTC.PER = 0;//1ms
-	RTC.CNT = 0;
-	RTC.COMP = 0;
-	RTC.CTRL = ( RTC.CTRL & ~RTC_PRESCALER_gm ) | RTC_PRESCALER_DIV1_gc;
-
-	/* Enable overflow interrupt. */	
-	RTC.INTCTRL = ( RTC.INTCTRL & ~( RTC_COMPINTLVL_gm | RTC_OVFINTLVL_gm ) ) |
-	              RTC_OVFINTLVL_LO_gc |
-	              RTC_COMPINTLVL_OFF_gc;
-
-	/* Enable interrupts. */
-	PMIC.CTRL |= PMIC_LOLVLEN_bm;
+	/* Enable interrupts.                */
+	PMIC.CTRL |= PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 	sei();
 }
 
