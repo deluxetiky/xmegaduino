@@ -29,10 +29,12 @@
 #include <avr/pgmspace.h>
 #include <stdio.h>
 
+#include "pins_arduino.h"
 #include "WConstants.h"
 #include "wiring_private.h"
 
 volatile static voidFuncPtr intFunc[EXTERNAL_NUM_INTERRUPTS];
+static uint8_t portLastValue[EXTERNAL_NUM_INTERRUPTS/8];
 // volatile static voidFuncPtr twiIntFunc;
 
 #if defined(__AVR_ATmega8__)
@@ -40,47 +42,46 @@ volatile static voidFuncPtr intFunc[EXTERNAL_NUM_INTERRUPTS];
 #define EIMSK GICR
 #endif
 
-void attachInterrupt(uint8_t interruptNum, void (*userFunc)(void), int mode) {
-  if(interruptNum < EXTERNAL_NUM_INTERRUPTS) {
-    intFunc[interruptNum] = userFunc;
-    
-    // Configure the interrupt mode (trigger on low input, any change, rising
-    // edge, or falling edge).  The mode constants were chosen to correspond
-    // to the configuration bits in the hardware register, so we simply shift
-    // the mode into place.
-      
-    // Enable the interrupt.
-      
-    switch (interruptNum) {
-			/*
-    case 0:
-      EICRA = (EICRA & ~((1 << ISC00) | (1 << ISC01))) | (mode << ISC00);
-      EIMSK |= (1 << INT0);
-      break;
-    case 1:
-      EICRA = (EICRA & ~((1 << ISC10) | (1 << ISC11))) | (mode << ISC10);
-      EIMSK |= (1 << INT1);
-      break;
-			 */
-    }
+/// TODO: Add param to userFunc
+void attachInterrupt(uint8_t pin, void (*userFunc)(void), int mode) {
+  if( EXTERNAL_NUM_INTERRUPTS <= pin ) {
+      return;
   }
+  intFunc[pin] = userFunc;
+    
+  // Configure the interrupt mode (trigger on low input, any change, rising
+  // edge, or falling edge).  The mode constants were chosen to correspond
+  // to the configuration bits in the hardware register, so we simply shift
+  // the mode into place.
+      
+  // Enable the interrupt.
+
+  uint8_t  portIndex = digitalPinToPort(pin);
+  PORT_t*  port      = portRegister(portIndex);
+  uint8_t* pinctrl   = &port->PIN0CTRL;
+
+  port->INTCTRL  |= PORT_INT1LVL_LO_gc;
+  port->INT1MASK |= 1 << (pin&7);
+  pinctrl[pin]   |= mode;
+  portLastValue[portIndex] = port->IN;
 }
 
-void detachInterrupt(uint8_t interruptNum) {
-  if(interruptNum < EXTERNAL_NUM_INTERRUPTS) {
-  /*
-    switch (interruptNum) {
-    case 0:
-      EIMSK &= ~(1 << INT0);
-      break;
-    case 1:
-      EIMSK &= ~(1 << INT1);
-      break;
-    }
-   */
-      
-    intFunc[interruptNum] = 0;
+void detachInterrupt(uint8_t pin) {
+  if( EXTERNAL_NUM_INTERRUPTS <= pin ) {
+      return;
   }
+      
+  uint8_t  portIndex = digitalPinToPort(pin);
+  PORT_t*  port      = portRegister(portIndex);
+  uint8_t* pinctrl   = &port->PIN0CTRL;
+
+  intFunc[pin] = 0;
+  port->INT1MASK &= ~(1 << (pin&7));
+  if ( 0 == port->INT1MASK ) {
+    // No interrupts on any of ports pins, turn it off.
+    port->INTCTRL &= ~PORT_INT1LVL_gm;
+  }
+  pinctrl[pin] &= ~PORT_ISC_gm;
 }
 
 /*
@@ -89,22 +90,51 @@ void attachInterruptTwi(void (*userFunc)(void) ) {
 }
 */
 
-/*
-SIGNAL(INT0_vect) {
-  if(intFunc[EXTERNAL_INT_0])
-    intFunc[EXTERNAL_INT_0]();
+void PORT_INT( int portIndex )
+{
+  PORT_t* port = portRegister(portIndex);
+
+  uint8_t inValue = port->IN;
+  uint8_t pin     = (portIndex-1)*8;
+  int     index;
+  for ( index = 0; index < 8; ++index ) {
+    if ( inValue & 1 ) {
+      intFunc[pin]();
+    }
+    inValue >>= 1;
+    ++pin;
+  }
+
+  port->INTFLAGS &= ~PORT_INT1IF_bm;
 }
 
-SIGNAL(INT1_vect) {
-  if(intFunc[EXTERNAL_INT_1])
-    intFunc[EXTERNAL_INT_1]();
+ISR(PORTA_INT1_vect)
+{
+  PORT_INT(PA);
 }
-*/
 
-/*
-SIGNAL(SIG_2WIRE_SERIAL) {
-  if(twiIntFunc)
-    twiIntFunc();
+ISR(PORTB_INT1_vect)
+{
+  PORT_INT(PB);
 }
-*/
+
+ISR(PORTC_INT1_vect)
+{
+  PORT_INT(PC);
+}
+
+ISR(PORTD_INT1_vect)
+{
+  PORT_INT(PD);
+}
+
+ISR(PORTE_INT1_vect)
+{
+  PORT_INT(PE);
+}
+
+ISR(PORTF_INT1_vect)
+{
+  PORT_INT(PF);
+}
 

@@ -55,6 +55,9 @@ extern "C"{
 
 #if defined(__AVR_ATmega1280__)
 #define EXTERNAL_NUM_INTERRUPTS 8
+#elif defined(__AVR_ATxmega128A1__)
+// TODO: Use board macro rather than chip macro
+#define EXTERNAL_NUM_INTERRUPTS 48
 #else
 #define EXTERNAL_NUM_INTERRUPTS 2
 #endif
