@@ -61,22 +61,7 @@
 #define PINE PORTE_IN
 #define PINF PORTF_IN
 
-
-#define PIN_MAP_RENE     1
-#define PIN_MAP_GIULIANO 2
-#define PIN_MAP_DEFAULT  PIN_MAP_GIULIANO
-
-#ifndef PIN_MAP
-#define PIN_MAP PIN_MAP_DEFAULT
-#endif
-
 #if PIN_MAP_RENE == PIN_MAP
-#define PA 1
-#define PB 2
-#define PC 3
-#define PD 4
-#define PE 5
-#define PF 6
 
 const uint16_t PROGMEM port_to_mode_PGM[] = {
 	NOT_A_PORT,
@@ -88,7 +73,7 @@ const uint16_t PROGMEM port_to_mode_PGM[] = {
 	&DDRF,//switches
 };
 
-const uint16_t PROGMEM port_to_output_PGM[] = {
+const uint16_t PROGMEM port_to_portReg_PGM[] = {
 	NOT_A_PORT,
 	&PORTA,//pin header, analog in
 	&PORTB,//internal, analog in, pot and speaker
@@ -185,13 +170,6 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 
 #elif PIN_MAP_GIULIANO == PIN_MAP
 
-#define PA 1 // pin  0
-#define PD 2 // pin  8
-#define PE 3 // pin 16
-#define PF 4 // pin 24
-#define PB 5 // pin 32
-#define PC 6 // pin 40
-
 const uint16_t PROGMEM port_to_mode_PGM[] = {
 	NOT_A_PORT,
 	&DDRA,//pin header, analog in
@@ -202,16 +180,6 @@ const uint16_t PROGMEM port_to_mode_PGM[] = {
 	&DDRC,//internal, usartc0 to usb on 2&3
 };
 
-const uint16_t PROGMEM port_to_output_PGM[] = {
-	NOT_A_PORT,
-	&PORTA,//pin header, analog in
-	&PORTD,//pin header
-	&PORTE,//leds
-	&PORTF,//switches
-	&PORTB,//internal, analog in, pot and speaker
-	&PORTC,//internal, usartc0 to usb on 2&3
-};
-
 const uint16_t PROGMEM port_to_input_PGM[] = {
 	NOT_A_PIN,
 	&PINA,//pin header, analog in
@@ -220,6 +188,16 @@ const uint16_t PROGMEM port_to_input_PGM[] = {
 	&PINF,//switches
 	&PINB,//internal, analog in, pot and speaker
 	&PINC,//internal, usartc0 to usb on 2&3
+};
+
+const uint16_t PROGMEM port_to_portReg_PGM[] = {
+	NOT_A_PORT,
+	&PORTA, //pin header, analog in
+	&PORTD, //pin header
+	&PORTE, //leds
+	&PORTF, //switches
+	&PORTB, //internal, analog in, pot and speaker
+	&PORTC, //internal, usartc0 to usb on 2&3
 };
 
 const uint8_t PROGMEM digital_pin_to_port_PGM[] = {

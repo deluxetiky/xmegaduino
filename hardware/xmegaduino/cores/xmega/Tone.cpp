@@ -109,7 +109,7 @@ static int8_t toneBegin(uint8_t _pin)
         TCCR1B = 0;
         bitWrite(TCCR1B, WGM12, 1);
         bitWrite(TCCR1B, CS10, 1);
-        timer1_pin_port = portOutputRegister(digitalPinToPort(_pin));
+        timer1_pin_port = portRegister(digitalPinToPort(_pin));
         timer1_pin_mask = digitalPinToBitMask(_pin);
         break;
       case 2:
@@ -118,7 +118,7 @@ static int8_t toneBegin(uint8_t _pin)
         TCCR2B = 0;
         bitWrite(TCCR2A, WGM21, 1);
         bitWrite(TCCR2B, CS20, 1);
-        timer2_pin_port = portOutputRegister(digitalPinToPort(_pin));
+        timer2_pin_port = portRegister(digitalPinToPort(_pin));
         timer2_pin_mask = digitalPinToBitMask(_pin);
         break;
     }
