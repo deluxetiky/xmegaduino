@@ -53,13 +53,32 @@ extern "C"{
 #define LSBFIRST 0
 #define MSBFIRST 1
 
-#define CHANGE 1
-#define FALLING 2
-#define RISING 3
+// TODO: Move to a chip related header
+#if defined __AVR_ATxmega128A1__
+    #define CHANGE  0
+    #define FALLING 1
+    #define RISING  2
+#else
+    #define CHANGE  1
+    #define FALLING 2
+    #define RISING  3
+#endif
 
-#define INTERNAL 3
-#define DEFAULT 1
-#define EXTERNAL 0
+// TODO: Move to a chip related header
+#if defined __AVR_ATxmega128A1__
+    #define AREF_INTERNAL   0
+    #define AREF_VCC        1
+    #define AREF_EXTERNAL_A 2
+    #define AREF_EXTERNAL_B 3
+
+    #define INTERNAL   AREF_INTERNAL
+    #define DEFAULT    AREF_VCC
+    #define EXTERNAL   AREF_EXTERNAL_A
+#else
+    #define INTERNAL 3
+    #define DEFAULT 1
+    #define EXTERNAL 0
+#endif
 
 // undefine stdlib's abs if encountered
 #ifdef abs

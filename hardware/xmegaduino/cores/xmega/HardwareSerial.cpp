@@ -264,3 +264,28 @@ void HardwareSerial::write(uint8_t c)
 #else
     extern HardwareSerial Serial(&rx_buffer, &UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRE0, U2X0);
 #endif
+
+#if 1
+
+extern "C" void diag_ln() {
+    Serial1.println();
+}
+
+extern "C" void diag(const char* str) {
+    Serial1.print(str);
+}
+
+extern "C" void diagln(const char* str) {
+    diag(str);
+    diag_ln();
+}
+
+extern "C" void diagN(long n) {
+    Serial1.print(n);
+}
+
+extern "C" void diagN2(long n, int base) {
+    Serial1.print(n,base);
+}
+
+#endif
