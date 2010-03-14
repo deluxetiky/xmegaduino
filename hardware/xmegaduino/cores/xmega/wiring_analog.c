@@ -47,6 +47,7 @@ int analogRead12(uint8_t pin)
         return -1;
     }
 
+    adc->REFCTRL     = analog_reference << ADC_REFSEL_gp;
     adc->CH0.MUXCTRL = pin << ADC_CH_MUXPOS_gp; // Select pin for positive input
 
     adc->CH0.CTRL |= ADC_CH_START_bm; // Start conversion

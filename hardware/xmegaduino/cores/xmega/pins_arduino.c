@@ -47,13 +47,7 @@
 #define DDRE PORTE_DIR
 #define DDRF PORTF_DIR
 
-#define PORTA PORTA_OUT
-#define PORTB PORTB_OUT
-#define PORTC PORTC_OUT
-#define PORTD PORTD_OUT
-#define PORTE PORTE_OUT
-#define PORTF PORTF_OUT
-
+// TODO: Kill PINX. Just use PORTX_IN.
 #define PINA PORTA_IN
 #define PINB PORTB_IN
 #define PINC PORTC_IN

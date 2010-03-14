@@ -45,6 +45,7 @@ static uint8_t portLastValue[EXTERNAL_NUM_INTERRUPTS/8];
 /// TODO: Add param to userFunc
 void attachInterrupt(uint8_t pin, void (*userFunc)(void), int mode) {
   if( EXTERNAL_NUM_INTERRUPTS <= pin ) {
+diagln("attachInterrupt: pin too big");
       return;
   }
   intFunc[pin] = userFunc;
@@ -59,11 +60,29 @@ void attachInterrupt(uint8_t pin, void (*userFunc)(void), int mode) {
   uint8_t  portIndex = digitalPinToPort(pin);
   PORT_t*  port      = portRegister(portIndex);
   uint8_t* pinctrl   = &port->PIN0CTRL;
+diag("attachInterrupt: portIndex: ");
+diagN(portIndex);
+
+diag(" pin: ");
+diagN(pin);
+  pin = pin&7;
+diag(" ");
+diagN(pin);
+
+diag(" port: ");
+diagN2(port,16);
+
+diag(" pinctrl: ");
+diagN2(pinctrl,16);
 
   port->INTCTRL  |= PORT_INT1LVL_LO_gc;
-  port->INT1MASK |= 1 << (pin&7);
+  port->INT1MASK |= 1 << pin;
   pinctrl[pin]   |= mode;
   portLastValue[portIndex] = port->IN;
+diag(" lastValue: ");
+diagN2(portLastValue[portIndex],16);
+
+diag_ln();
 }
 
 void detachInterrupt(uint8_t pin) {
@@ -92,17 +111,43 @@ void attachInterruptTwi(void (*userFunc)(void) ) {
 
 void PORT_INT( int portIndex )
 {
-  PORT_t* port = portRegister(portIndex);
+  PORT_t*  port    = portRegister(portIndex);
+  uint8_t* pinctrl = &port->PIN0CTRL;
+  uint8_t  value   = port->IN;
+  uint8_t  prev    = portLastValue[portIndex];
+  uint8_t  pin     = (portIndex-1)*8;
 
-  uint8_t inValue = port->IN;
-  uint8_t pin     = (portIndex-1)*8;
+  portLastValue[portIndex] = value;
+
   int     index;
   for ( index = 0; index < 8; ++index ) {
-    if ( inValue & 1 ) {
+    int     valueHigh = value&1;
+    int     valueLow  = !valueHigh;
+    int     prevHigh  = prev&1;
+    int     prevLow   = !prevHigh;
+    int     falling   = prevHigh && valueLow;
+    int     rising    = prevLow  && valueHigh;
+    int     changing  = prevLow  != valueLow;
+    uint8_t mode      = *pinctrl & PORT_ISC_gm;
+    int     call      = 0;
+
+    if ( 0 == intFunc[pin] ) {
+        // Nothing to do
+        call = 0;
+    } else if ( PORT_ISC_BOTHEDGES_gc==mode && changing ) {
+        call = 1;
+    } else if ( PORT_ISC_RISING_gc==mode && rising ) {
+        call = 1;
+    } else if ( PORT_ISC_FALLING_gc==mode && falling ) {
+        call = 1;
+    }
+    if ( call ) {
       intFunc[pin]();
     }
-    inValue >>= 1;
+    value >>= 1;
+    prev  >>= 1;
     ++pin;
+    ++pinctrl;
   }
 
   port->INTFLAGS &= ~PORT_INT1IF_bm;
