@@ -125,6 +125,10 @@ public abstract class Uploader implements MessageConsumer  {
         }
         System.out.println();
       }
+System.out.println("Execute command");
+for ( String str : commandArray ) {
+ System.out.println(str);
+}
       Process process = Runtime.getRuntime().exec(commandArray);
       new MessageSiphon(process.getInputStream(), this);
       new MessageSiphon(process.getErrorStream(), this);
