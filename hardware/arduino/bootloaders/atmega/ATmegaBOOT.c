@@ -526,7 +526,6 @@ void HandleChar(register int ch) {
         if (getch() == 'E') flags.eeprom = 1;
         else flags.eeprom = 0;
         if (getch() == ' ') {                       // Command terminator
-            putch(0x14);
             for (w=0;w < length.word;w++) {             // Can handle odd and even lengths okay
                 if (flags.eeprom) {                         // Byte access EEPROM read
 #if USE_BUILT_IN_AVR_EEPROM_H
@@ -549,6 +548,7 @@ void HandleChar(register int ch) {
                     address.word++;
                 }
             }
+            putch(0x14);
             putch(0x10);
         }
     }
