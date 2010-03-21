@@ -732,7 +732,6 @@ void LoadProgram() {
             ENABLE_RWW; // Re-enable RWW section
         }
 
-
         // Load words into FLASH page buffer
         int index;
         int count = PAGE_BYTES;

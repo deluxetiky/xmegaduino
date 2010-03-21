@@ -12,7 +12,7 @@ isp-stk500: $(PROGRAM)_$(TARGET).hex
 	$(STK500-2)
 
 clean:
-	rm -rf $(BUILD)/* *.hex *.srec
+	rm -rf $(BUILD)/* *.hex *.srec *.bin
 	rm -rf *.map *.sym *.lst *.bin
 
 %.hex: $(BUILD)/%.elf
