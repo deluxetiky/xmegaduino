@@ -1,19 +1,9 @@
 /* some includes */
-#if 0 // TODO: Kill this
-#include <inttypes.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
-#include <avr/interrupt.h>
-#include <avr/wdt.h>
-#include <util/delay.h>
-#endif
-
 #include "config.h"
 #include "diag.h"
 
 #if 1 <= DIAG_ENABLE
     USART_t* usart_diag;
-
 
     void DiagEnable(uint8_t bootuart)
     {
@@ -57,6 +47,15 @@
           '0' + buf[i - 1] :
           'A' + buf[i - 1] - 10));
     }
+
+    void DiagStrNumber( const char* str, unsigned long n, uint8_t base, int nl )
+	{
+		Diag(str);
+		DiagNumber(n, base);
+		if (nl) {
+		    Diag("\n");
+		}
+	}
 
 #endif
 

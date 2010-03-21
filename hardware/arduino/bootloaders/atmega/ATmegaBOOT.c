@@ -64,8 +64,6 @@
 
 /* $Id$ */
 
-#define DIAG_ENABLE 0
-
 /* some includes */
 #include <inttypes.h>
 #include <avr/io.h>
@@ -108,7 +106,7 @@ int main(void)
 {
     CheckWatchDogAtStartup();
     InitClock();
-    DiagEnable();
+    DiagEnable(bootuart);
     InitLed();
     /* flash onboard LED to signal entering of bootloader */
     flash_led(LED_FLASHES_AT_BOOT);
@@ -263,8 +261,6 @@ static inline uint8_t GetBootUart() {
 
     /* check which UART should be used for booting */
     #if defined BL_0_PIN
-        PORTE.OUT = 0xF0 | ~BL_IN;
-
         if(bit_is_clear(BL_IN, BL_0_PIN)) {
             return 0;
         }
@@ -305,6 +301,11 @@ static inline void InitBootUart() {
     if ( -1 == bootuart ) {
         app_start();
     }
+
+    #if defined BL_0_PIN
+        PORTE.OUT = ~( 1 << bootuart );
+	#endif
+
 
     USART0_SET_DIR();
     USART0_SET_BAUD(BAUD_RATE);
@@ -526,6 +527,7 @@ void HandleChar(register int ch) {
         if (getch() == 'E') flags.eeprom = 1;
         else flags.eeprom = 0;
         if (getch() == ' ') {                       // Command terminator
+            putch(0x14);
             for (w=0;w < length.word;w++) {             // Can handle odd and even lengths okay
                 if (flags.eeprom) {                         // Byte access EEPROM read
 #if USE_BUILT_IN_AVR_EEPROM_H
@@ -540,15 +542,19 @@ void HandleChar(register int ch) {
                 }
                 else {
 
-                    if (!flags.rampz) putch(pgm_read_byte_near(address.word));
+                    if (!flags.rampz) {
+
+					    putch(pgm_read_byte_near(address.word));
 #if 16 < ADDR_BITS
-                    else putch(pgm_read_byte_far(address.word + 0x10000));
+                    } else {
+
+					    putch(pgm_read_byte_far(address.word + 0x10000));
+					}
                     // Hmmmm, yuck  FIXME when m256 arrvies
 #endif
                     address.word++;
                 }
             }
-            putch(0x14);
             putch(0x10);
         }
     }
@@ -743,6 +749,8 @@ void LoadProgram() {
         if ( page + PAGE_BYTES <= addr ) {
             Spm( SPM_WRITE_PG, page, 0 ); // Write page
             ENABLE_RWW;                   // Re-enable RWW section
+			Diag("Writing page: ");
+			DiagNumber(page, 16);
         }
 
 // TODO: Get rid of this stupid return, or figure out why it is needed.
@@ -813,6 +821,7 @@ void boot_uart_put_char(char value)
 {
     if (bootuart == 0) {
         USART0_PUT_CHAR(value);
+		_delay_ms(2); // NO_COMMIT: Kill this.
     }
     #if defined BL_1_PIN
         if (bootuart == 1) {
@@ -871,12 +880,11 @@ char boot_uart_get_char()
 
 char getch(void)
 {
-    uint32_t count = 0;
+	static uint32_t count = 0;
     while ( !is_boot_uart_rx_ready() ) {
-        #if 1 <= DIAG_ENABLE
-            PORTE.OUT = ~(uint8_t)(count >> 17);
-        #endif
+		// TODO: Might be better to make the led flash by using a timer
         count++;
+        PORTE.OUT = ~( ((count>>17)&1) << bootuart );
         #if !defined APP_PIN
             if (count > MAX_TIME_COUNT) {
                 app_start();
