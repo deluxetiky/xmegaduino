@@ -2,6 +2,7 @@
 # E.Lins, 18.7.2005
 # GorillaCoder 2010-02-09
 
+BIN      := $(PROGRAM)_$(TARGET).bin
 HEX      := $(PROGRAM)_$(TARGET).hex
 ELF      := $(BUILD)/$(PROGRAM)_$(TARGET).elf
 LST      := $(BUILD)/$(PROGRAM)_$(TARGET).lst
@@ -9,6 +10,10 @@ ISP      := $(TARGET)_isp
 
 OBJS     := $(SOURCES:%.c=$(BUILD)/%_$(TARGET).o)
 OBJ_DEPS := $(OBJS:.o=.d)
+
+$(BIN): MCU_TARGET := $(MCU_TARGET)
+$(BIN): $(ELF) $(OBJS:.o=.s)
+$(BIN): $(LST)
 
 $(HEX): MCU_TARGET := $(MCU_TARGET)
 $(HEX): $(ELF) $(OBJS:.o=.s)

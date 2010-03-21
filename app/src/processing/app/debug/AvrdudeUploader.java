@@ -171,7 +171,7 @@ public class AvrdudeUploader extends Uploader  {
                    boardPreferences.get("bootloader.file") + ":i");
     */
     bootloader.add("-Uboot:w:" + bootloaderPath + File.separator +
-                   boardPreferences.get("bootloader.file") + ":i");
+                   boardPreferences.get("bootloader.file"));
     bootloader.add("-Ulock:w:" + boardPreferences.get("bootloader.lock_bits") + ":m");
 
     return avrdude(params, bootloader);

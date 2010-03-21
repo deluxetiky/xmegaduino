@@ -6,7 +6,7 @@ xplain_jtag.upload.using=dragon
 xplain_jtag.upload.maximum_size=131072
 
 xplain_jtag.bootloader.path=xplain
-xplain_jtag.bootloader.file=ATmegaBOOT_xplain.hex
+xplain_jtag.bootloader.file=ATmegaBOOT_xplain.bin
 xplain_jtag.bootloader.unlock_bits=0x3F
 xplain_jtag.bootloader.lock_bits=0x3F
 # FUSE BITS
@@ -34,7 +34,7 @@ xplain_lufa.upload.maximum_size=131072
 xplain_lufa.upload.speed=9600
 
 xplain_lufa.bootloader.path=xplain
-xplain_lufa.bootloader.file=ATmegaBOOT_xplain.hex
+xplain_lufa.bootloader.file=ATmegaBOOT_xplain.bin
 xplain_lufa.bootloader.unlock_bits=0x3F
 xplain_lufa.bootloader.lock_bits=0x3F
 # FUSE BITS
@@ -62,7 +62,7 @@ xplain_usb.upload.maximum_size=131072
 xplain_usb.upload.speed=9600
 
 xplain_usb.bootloader.path=xplain
-xplain_usb.bootloader.file=ATmegaBOOT_xplain.hex
+xplain_usb.bootloader.file=ATmegaBOOT_xplain.bin
 xplain_usb.bootloader.unlock_bits=0x3F
 xplain_usb.bootloader.lock_bits=0x3F
 # FUSE BITS
@@ -90,7 +90,7 @@ xplain_serial.upload.maximum_size=131072
 xplain_serial.upload.speed=57600
 
 xplain_serial.bootloader.path=xplain
-xplain_serial.bootloader.file=ATmegaBOOT_xplain_xplain.hex
+xplain_serial.bootloader.file=ATmegaBOOT_xplain_xplain.bin
 xplain_serial.bootloader.unlock_bits=0x3F
 xplain_serial.bootloader.lock_bits=0x3F
 # FUSE BITS
