@@ -62,7 +62,7 @@ echo Creating disk image...
 
 SOURCE_DIR="work"
 SOURCE_FILES="Arduino.app"
-OUTPUT_DMG="arduino-$RELEASE"
+OUTPUT_DMG="xmegaduino-$RELEASE"
 WORK_DMG="working.dmg"
 WORK_DIR="working_dir"
 
