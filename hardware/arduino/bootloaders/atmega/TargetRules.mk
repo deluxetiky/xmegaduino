@@ -42,9 +42,6 @@ $(BUILD)/%_$(TARGET).d: $(SOURCE)/%.c $(MAKEFILE_LIST) $(BUILD)
 	sed 's,.*\.o[ :]*,$(@:.d=.o) $(@:.d=.s) $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
-$(BUILD):
-	mkdir -p $(BUILD)
-
 ifneq ($(MAKECMDGOALS),clean)
     include $(OBJ_DEPS)
 endif

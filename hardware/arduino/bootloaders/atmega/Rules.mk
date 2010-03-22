@@ -29,3 +29,6 @@ clean:
 
 $(BUILD)/%.lst: $(BUILD)/%.elf
 	$(OBJDUMP) -h -S $< > $@
+
+$(BUILD):
+	mkdir -p $(BUILD)

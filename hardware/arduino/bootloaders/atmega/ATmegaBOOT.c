@@ -125,10 +125,17 @@ int main(void)
 }
 
 /* some variables */
+
+// Wait for flash to "stabilize" after writing ...
+// See LoadProgram.
+uint8_t byte0;
+
 union address_union {
     uint16_t word;
     uint8_t  byte[2];
 } address;
+
+uint32_t last_flash_address;
 
 union length_union {
     uint16_t word;
@@ -304,7 +311,7 @@ static inline void InitBootUart() {
 
     #if defined BL_0_PIN
         PORTE.OUT = ~( 1 << bootuart );
-	#endif
+    #endif
 
 
     USART0_SET_DIR();
@@ -419,17 +426,11 @@ void HandleChar(register int ch) {
     }
 
 
-// TODO: Kill this or restore it.
-// We don't seem to need this, so save the bytes and kill it.
-// If it turns out we do need it, then restore it.
-// (gc 2010-02-22)
-#if 0
     /* Parallel programming stuff  DON'T CARE  */
     else if(ch=='E') {
         getNch(5);
         nothing_response();
     }
-#endif
 
     /* P: Enter programming mode  */
     /* R: Erase device, don't care as we will erase one page at a time anyway.  */
@@ -459,6 +460,20 @@ void HandleChar(register int ch) {
         address.byte[0] = getch();
         address.byte[1] = getch();
         nothing_response();
+        // We have to write the last partial page
+        // It's not the last page if the address we loaded is the next address
+        int noWrite = last_flash_address == address.word;
+        // It's not a partial page if it's at the start of a page
+        noWrite = noWrite || 0 == (last_flash_address & (PAGE_BYTES-1));
+        if ( !noWrite ) {
+            uint16_t page = last_flash_address & ~(PAGE_BYTES-1);
+#if 16 < ADDR_BITS
+            RAMPZ=0; // TODO: fix this
+#endif
+            Spm( SPM_WRITE_PG, page, 0 ); // Write page
+            ENABLE_RWW;                   // Re-enable RWW section
+            last_flash_address = 0;
+        }
     }
 
 
@@ -524,8 +539,11 @@ void HandleChar(register int ch) {
 #endif
         address.word = address.word << 1;           // address * 2 -> byte location
 #endif
-        if (getch() == 'E') flags.eeprom = 1;
-        else flags.eeprom = 0;
+        flags.eeprom = getch() == 'E';
+        if ( !flags.eeprom && 0 == address.word ) {
+            while ( byte0 != pgm_read_byte_near(0) ); // Wait for memory to "stabilize". See LoadMemory.
+        }
+
         if (getch() == ' ') {                       // Command terminator
             putch(0x14);
             for (w=0;w < length.word;w++) {             // Can handle odd and even lengths okay
@@ -543,13 +561,11 @@ void HandleChar(register int ch) {
                 else {
 
                     if (!flags.rampz) {
-
-					    putch(pgm_read_byte_near(address.word));
+                        putch(pgm_read_byte_near(address.word));
 #if 16 < ADDR_BITS
                     } else {
-
-					    putch(pgm_read_byte_far(address.word + 0x10000));
-					}
+                        putch(pgm_read_byte_far(address.word + 0x10000));
+                    }
                     // Hmmmm, yuck  FIXME when m256 arrvies
 #endif
                     address.word++;
@@ -700,6 +716,10 @@ void HandleChar(register int ch) {
 }
 
 void LoadProgram() {
+    /* For some weird reason, after writing ANY flash page, pgm_read_Xxx_Yyy returns 0.
+     * So, we save the first byte of the program we are writing. We'll check that
+     * memory has become "stable" by checking if pgm_read_byte_near(0) returns that byte.
+    */
 
     program_load_in_progress = 1;
 
@@ -724,6 +744,9 @@ void LoadProgram() {
 
     uint16_t* bufNext = (uint16_t*)buff;
     uint16_t  addr    = address.word;
+    if ( 0 == addr ) {
+        byte0 = *bufNext;
+    }
     while (0 < bytes) {
         uint16_t page = addr & ~(PAGE_BYTES-1);
         // Erase page pointed to by Z
@@ -748,10 +771,9 @@ void LoadProgram() {
         if ( page + PAGE_BYTES <= addr ) {
             Spm( SPM_WRITE_PG, page, 0 ); // Write page
             ENABLE_RWW;                   // Re-enable RWW section
-			Diag("Writing page: ");
-			DiagNumber(page, 16);
         }
 
+        last_flash_address = addr;
 // TODO: Get rid of this stupid return, or figure out why it is needed.
 // It seems like we are writing only the first page. Yet all pages
 // are uploaded?!?!? Is caller calling us once per page? I thought I
@@ -820,7 +842,7 @@ void boot_uart_put_char(char value)
 {
     if (bootuart == 0) {
         USART0_PUT_CHAR(value);
-		_delay_ms(2); // NO_COMMIT: Kill this.
+        _delay_ms(2); // NO_COMMIT: Kill this.
     }
     #if defined BL_1_PIN
         if (bootuart == 1) {
@@ -879,11 +901,13 @@ char boot_uart_get_char()
 
 char getch(void)
 {
-	static uint32_t count = 0;
+    static uint32_t count = 0;
     while ( !is_boot_uart_rx_ready() ) {
-		// TODO: Might be better to make the led flash by using a timer
+        // TODO: Might be better to make the led flash by using a timer
         count++;
-        PORTE.OUT = ~( ((count>>17)&1) << bootuart );
+        #if xplain == TARGET
+            PORTE.OUT = ~( ((count>>17)&1) << bootuart );
+        #endif
         #if !defined APP_PIN
             if (count > MAX_TIME_COUNT) {
                 app_start();

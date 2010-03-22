@@ -141,12 +141,12 @@
 #endif
 
 #if defined EEWE
- 	#define WAIT_FOR_EPROM_WRITE while(bit_is_set(EECR,EEWE))
+     #define WAIT_FOR_EPROM_WRITE while(bit_is_set(EECR,EEWE))
 #elif defined EEPE
- 	#define WAIT_FOR_EPROM_WRITE while(bit_is_set(EECR,EEPE))
+     #define WAIT_FOR_EPROM_WRITE while(bit_is_set(EECR,EEPE))
 #elif defined __AVR_ATxmega128A1__
-	// TODO: Figure out what to do with XMEGA
-	#define WAIT_FOR_EPROM_WRITE
+    // TODO: Figure out what to do with XMEGA
+    #define WAIT_FOR_EPROM_WRITE
 #else
     #error Do not know how to define WAIT_FOR_EPROM_WRITE
 #endif
@@ -185,7 +185,7 @@
 #if defined SPM_RWW_EN
     #define ENABLE_RWW Spm( SPM_RWW_EN, 0, 0 ); // Re-enable RWW section
 #else
-	#define ENABLE_RWW
+    #define ENABLE_RWW
 #endif
 
 #endif // MCU_DEFAULTS_H
