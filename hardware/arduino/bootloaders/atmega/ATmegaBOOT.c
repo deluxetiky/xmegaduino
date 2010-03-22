@@ -259,7 +259,7 @@ static inline uint8_t GetBootUart() {
 
     #if xplain == TARGET
         // Light LED's next to buttons that do something.
-        PORTE.OUT = 0xF0;
+        LED_PORT.OUT = 0xF0;
     #endif
 
     #if defined APP_PIN
@@ -310,7 +310,7 @@ static inline void InitBootUart() {
     }
 
     #if defined BL_0_PIN
-        PORTE.OUT = ~( 1 << bootuart );
+        LED_PORT.OUT = ~( 1 << bootuart );
     #endif
 
 
@@ -476,7 +476,6 @@ void HandleChar(register int ch) {
         }
     }
 
-
 // TODO: Kill this or restore it.
 // We don't seem to need this, so save the bytes and kill it.
 // If it turns out we do need it, then restore it.
@@ -562,8 +561,9 @@ void HandleChar(register int ch) {
 
                     if (!flags.rampz) {
                         putch(pgm_read_byte_near(address.word));
+                    }
 #if 16 < ADDR_BITS
-                    } else {
+                    else {
                         putch(pgm_read_byte_far(address.word + 0x10000));
                     }
                     // Hmmmm, yuck  FIXME when m256 arrvies
@@ -574,7 +574,6 @@ void HandleChar(register int ch) {
             putch(0x10);
         }
     }
-
 
     /* Get device signature bytes  */
     else if(ch=='u') {
@@ -589,6 +588,7 @@ void HandleChar(register int ch) {
                 app_start();
         }
     }
+
 
 // TODO: Kill this or restore it.
 // We don't seem to need this, so save the bytes and kill it.
@@ -906,7 +906,7 @@ char getch(void)
         // TODO: Might be better to make the led flash by using a timer
         count++;
         #if xplain == TARGET
-            PORTE.OUT = ~( ((count>>17)&1) << bootuart );
+            LED_PORT.OUT = ~( ((count>>17)&1) << bootuart );
         #endif
         #if !defined APP_PIN
             if (count > MAX_TIME_COUNT) {
@@ -965,10 +965,10 @@ void InitLed(void)
     /* set LED pin as output */
     #if xplain == TARGET
         PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-        PORTE.PIN0CTRL = WIRED_AND_PULL;
+        LED_PORT.PIN0CTRL = WIRED_AND_PULL;
 
-        PORTE.DIR      = 0xFF;
-        PORTE.OUT      = 0xFF;
+        LED_PORT.DIR      = 0xFF;
+        LED_PORT.OUT      = 0xFF;
     #else
         LED_DDR |= _BV(LED);
     #endif
@@ -980,9 +980,9 @@ void flash_led(uint8_t count)
     // TODO: Need to abstract and not use cpu macro.
     // TODO: Need code
     while (count--) {
-        PORTE.OUTTGL = 0xFF;
+        LED_PORT.OUTTGL = 0xFF;
         delay_ms(200);
-        PORTE.OUTTGL = 0xFF;
+        LED_PORT.OUTTGL = 0xFF;
         delay_ms(200);
     }
 #else

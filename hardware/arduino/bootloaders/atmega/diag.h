@@ -6,7 +6,7 @@
 */
 
 #if !defined DIAG_ENABLE
-    #define DIAG_ENABLE 1
+    #define DIAG_ENABLE 0
 #endif
 
 // TODO: Move to diag.h
