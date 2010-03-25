@@ -16,14 +16,15 @@ ARCH=`uname -m`
 if [ $ARCH != "i686" ]
 then
   echo At present, the Linux distribution can only be built on i686 \(32-bit\).
-  exit
+#  exit
 fi
 
-./make.sh
+#./make.sh
 
 # remove any old boogers
 rm -rf arduino
 rm -rf arduino-*
+rm -rf xmegaduino-*
 
 mkdir arduino
 cp -r ../shared/lib arduino/
@@ -39,7 +40,7 @@ cp -r ../../hardware arduino/
 cp -r ../../libraries arduino/
 
 cp -r dist/tools arduino/hardware
-cp dist/lib/librxtxSerial.so arduino/lib
+#cp dist/lib/librxtxSerial.so arduino/lib
 
 if [ $1 ]
 then
@@ -81,7 +82,7 @@ find arduino -name ".svn" -exec rm -rf {} 2> /dev/null ';'
 
 # zip it all up for release
 echo Creating tarball and finishing...
-P5=arduino-$RELEASE
+P5=xmegaduino-$RELEASE
 mv arduino $P5
 
 tar cfz $P5.tgz $P5
