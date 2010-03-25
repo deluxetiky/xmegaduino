@@ -25,6 +25,13 @@
 #include "wiring_private.h"
 #include "pins_arduino.h"
 
+#if !defined ADC_CH_MUXPOS_gp
+    #define ADC_CH_MUXPOS_gp  ADC_CH_MUXPOS0_bp
+#endif
+#if !defined ADC_REFSEL_gp
+    #define ADC_REFSEL_gp  ADC_REFSEL0_bp
+#endif
+
 uint8_t analog_reference = DEFAULT;
 
 void analogReference(uint8_t mode)

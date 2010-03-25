@@ -26,6 +26,23 @@
 #include <avr/pgmspace.h>
 #include "wiring_private.h"
 
+// Some versions of avr-gcc on linux defines XXX_bp instead of _gp.
+#if !defined ADC_SWEEP_gp
+    #define ADC_SWEEP_gp  ADC_SWEEP0_bp
+#endif
+#if !defined ADC_EVSEL_gp
+    #define ADC_EVSEL_gp  ADC_EVSEL0_bp
+#endif
+#if !defined ADC_EVACT_gp
+    #define ADC_EVACT_gp  ADC_EVACT0_bp
+#endif
+#if !defined ADC_CH_GAINFAC_gp
+    #define ADC_CH_GAINFAC_gp  ADC_CH_GAINFAC0_bp
+#endif
+#if !defined ADC_DMASEL_gp
+    #define ADC_DMASEL_gp  ADC_DMASEL0_bp
+#endif
+
 volatile unsigned long millis_count = 0;
 volatile unsigned long seconds_count = 0;
 
@@ -179,15 +196,21 @@ void init()
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTA.PIN0CTRL  = PULLDOWN;
 	PORTA.DIR       = 0;
+#if defined ADCACAL0
+// TODO: Linux avr-gcc doesn't seem to declare CAL[LH]
         ADCA.CALL       = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL0) );
         ADCA.CALH       = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCACAL1) );
+#endif
         initAdc(&ADCA);
 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTB.PIN0CTRL  = PULLDOWN;
 	PORTB.DIR       = 0;
+#if defined ADCBCAL0
+// TODO: Linux avr-gcc doesn't seem to declare CAL[LH]
         ADCB.CALL       = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCBCAL0) );
         ADCB.CALH       = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCBCAL1) );
+#endif
         initAdc(&ADCB);
 	
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
