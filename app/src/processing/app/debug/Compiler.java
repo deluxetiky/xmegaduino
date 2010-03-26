@@ -74,6 +74,13 @@ public class Compiler implements MessageConsumer {
     Map<String, String> boardPreferences = Base.getBoardPreferences();
     String core = boardPreferences.get("build.core");
     String corePath;
+
+    if ( !boardPreferences.containsKey("build.board") ) {
+        boardPreferences.put("build.board", Preferences.get("board"));
+    }
+    if ( !boardPreferences.containsKey("build.mcu_family") ) {
+        boardPreferences.put("build.mcu_family", "MCU_FAMILY_ATMEGA");
+    }
     
     if (core.indexOf(':') == -1) {
       Target t = Base.getTarget();
@@ -474,6 +481,9 @@ public class Compiler implements MessageConsumer {
       "-g", // include debugging info (so errors include line numbers)
       "-assembler-with-cpp",
       "-mmcu=" + boardPreferences.get("build.mcu"),
+      "-DMCU_FAMILY=" + boardPreferences.get("build.mcu_family"),
+      "-DMCU_FAMILY_" + boardPreferences.get("build.mcu_family") + "=1",
+      "-DBOARD=" + boardPreferences.get("build.board"),
       "-DF_CPU=" + boardPreferences.get("build.f_cpu"),
       "-DARDUINO=" + Base.REVISION,
     }));
@@ -501,6 +511,9 @@ public class Compiler implements MessageConsumer {
       "-ffunction-sections", // place each function in its own section
       "-fdata-sections",
       "-mmcu=" + boardPreferences.get("build.mcu"),
+      "-DMCU_FAMILY=" + boardPreferences.get("build.mcu_family"),
+      "-DMCU_FAMILY_" + boardPreferences.get("build.mcu_family") + "=1",
+      "-DBOARD=" + boardPreferences.get("build.board"),
       "-DF_CPU=" + boardPreferences.get("build.f_cpu"),
       "-DARDUINO=" + Base.REVISION,
     }));
@@ -530,6 +543,9 @@ public class Compiler implements MessageConsumer {
       "-ffunction-sections", // place each function in its own section
       "-fdata-sections",
       "-mmcu=" + boardPreferences.get("build.mcu"),
+      "-DMCU_FAMILY=" + boardPreferences.get("build.mcu_family"),
+      "-DMCU_FAMILY_" + boardPreferences.get("build.mcu_family") + "=1",
+      "-DBOARD=" + boardPreferences.get("build.board"),
       "-DF_CPU=" + boardPreferences.get("build.f_cpu"),
       "-DARDUINO=" + Base.REVISION,
     }));

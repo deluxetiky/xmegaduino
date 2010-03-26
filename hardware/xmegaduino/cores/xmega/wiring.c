@@ -100,6 +100,7 @@ void delayMicroseconds(unsigned long us)
 	while (micros() - start <= us);
 }
 
+static void initResetButton();
 static void initAdc();
 static uint8_t ReadCalibrationByte(uint8_t index);
 
@@ -203,6 +204,10 @@ void init()
 	PORTF.PIN0CTRL  = PULLUP;
 
         /*************************************/
+        /* Enable reset button               */
+        initResetButton();
+
+        /*************************************/
 	/* Enable interrupts.                */
 	PMIC.CTRL |= PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 	sei();
@@ -265,4 +270,21 @@ static uint8_t ReadCalibrationByte(uint8_t index)
     NVM_CMD = NVM_CMD_NO_OPERATION_gc;
 
     return result;
+}
+
+// TODO: Do this only for xplain board.
+
+static const byte resetPin = 31;
+
+static void resetRupt() {
+    if ( 1 == digitalRead(resetPin) ) {
+        CCP = CCP_IOREG_gc;
+        WDT.CTRL = WDT_PER_8CLK_gc
+                 | WDT_ENABLE_bm
+                 | WDT_CEN_bm;
+    }
+}
+
+static void initResetButton() {
+    attachInterrupt( resetPin, resetRupt, FALLING );
 }

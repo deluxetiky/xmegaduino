@@ -30,29 +30,12 @@
 #define NOT_A_PIN 0
 #define NOT_A_PORT 0
 
-#define PIN_MAP_RENE     1
-#define PIN_MAP_GIULIANO 2
-#define PIN_MAP_DEFAULT  PIN_MAP_GIULIANO
-
-#ifndef PIN_MAP
-    #define PIN_MAP PIN_MAP_DEFAULT
-#endif
-
-#if PIN_MAP_RENE == PIN_MAP
-    #define PA 1 // pin  0
-    #define PB 2 // pin  8
-    #define PC 3 // pin 16
-    #define PD 4 // pin 24
-    #define PE 5 // pin 32
-    #define PF 6 // pin 40
-#elif PIN_MAP_GIULIANO == PIN_MAP
-    #define PA 1 // pin  0
-    #define PD 2 // pin  8
-    #define PE 3 // pin 16
-    #define PF 4 // pin 24
-    #define PB 5 // pin 32
-    #define PC 6 // pin 40
-#endif
+#define PA 1 // pin  0
+#define PD 2 // pin  8
+#define PE 3 // pin 16
+#define PF 4 // pin 24
+#define PB 5 // pin 32
+#define PC 6 // pin 40
 
 #define NOT_ON_TIMER 0
 #define TIMER_D0A  1

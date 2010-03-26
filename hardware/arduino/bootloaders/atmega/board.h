@@ -1,11 +1,9 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-// USARTs
+#include TARGET_H
 
-#if xplain == TARGET && lilypad == TARGET
-#error
-#endif
+// USARTs
 
 #if xplain == TARGET
     #define BL_PORT      PORTF

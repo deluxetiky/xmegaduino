@@ -26,19 +26,9 @@
 #include "wiring_private.h"
 #include "pins_arduino.h"
 
-// First draft of xplain pin mapping
-// 07.Feb.2010 by R. Bohne
-//
-// Alternate xplain pin mapping
-// 2010-02-14 GorillaCoder
-//
-// (PWM+ indicates the additional PWM pins on the ATmega168.)
-
-
 #define REPEAT8(x) x, x, x, x, x, x, x, x
 #define BV0TO7 _BV(0), _BV(1), _BV(2), _BV(3), _BV(4), _BV(5), _BV(6), _BV(7)
 #define BV7TO0 _BV(7), _BV(6), _BV(5), _BV(4), _BV(3), _BV(2), _BV(1), _BV(0)
-
 
 #define DDRA PORTA_DIR
 #define DDRB PORTB_DIR
@@ -54,115 +44,6 @@
 #define PIND PORTD_IN
 #define PINE PORTE_IN
 #define PINF PORTF_IN
-
-#if PIN_MAP_RENE == PIN_MAP
-
-const uint16_t PROGMEM port_to_mode_PGM[] = {
-	NOT_A_PORT,
-	&DDRA,//pin header, analog in
-	&DDRB,//internal, analog in, pot and speaker
-	&DDRC,//internal, usartc0 to usb on 2&3
-	&DDRD,//pin header
-	&DDRE,//leds
-	&DDRF,//switches
-};
-
-const uint16_t PROGMEM port_to_portReg_PGM[] = {
-	NOT_A_PORT,
-	&PORTA,//pin header, analog in
-	&PORTB,//internal, analog in, pot and speaker
-	&PORTC,//internal, usartc0 to usb on 2&3
-	&PORTD,//pin header
-	&PORTE,//leds
-	&PORTF,//switches
-};
-
-const uint16_t PROGMEM port_to_input_PGM[] = {
-	NOT_A_PIN,
-	&PINA,//pin header, analog in
-	&PINB,//internal, analog in, pot and speaker
-	&PINC,//internal, usartc0 to usb on 2&3
-	&PIND,//pin header
-	&PINE,//leds
-	&PINF,//switches
-};
-
-const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
-	// PORTLIST
-	PC,
-	PC,
-	PA,
-	PA,
-	PA,
-	PD,
-	PD,
-	PA,
-	PA,
-	PA,
-	PD,
-	PD,
-	PF,//PD, //DEBUG !!!
-	PE,//PD, //DEBUG !!!
-	PD,
-	PB,
-	PB,
-	PB,
-	PB,
-	PD,
-	PD,
-};
-
-const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
-	// PIN IN PORT		
-	// -------------------------------------------		
-	_BV( 2 )	,
-	_BV( 3 )	,	
-	_BV( 0 )	,
-	_BV( 2 )	,	
-	_BV( 1 )	,
-	_BV( 2 )	,
-	_BV( 3 )	,	
-	_BV( 5 )	,	
-	_BV( 6 )	,
-	_BV( 7 )	,	
-	_BV( 4 )	,
-	_BV( 5 )	,
-	_BV( 6 )	,	
-	_BV( 7 )	,
-	_BV( 4 )	,	
-	_BV( 5 )	,
-	_BV( 6 )	,
-	_BV( 7 )	,	
-	_BV( 0 )	,	
-	_BV( 1 )	,
-	};
-
-const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
-	// TIMERS		
-	// -------------------------------------------		
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	NOT_ON_TIMER	, 
-	};
-
-#elif PIN_MAP_GIULIANO == PIN_MAP
 
 const uint16_t PROGMEM port_to_mode_PGM[] = {
 	NOT_A_PORT,
@@ -293,9 +174,3 @@ const uint8_t PROGMEM timer_to_channel_PGM[] = {
     0,
     1,
 };
-
-#else
-
-#error No pin map defined
-
-#endif

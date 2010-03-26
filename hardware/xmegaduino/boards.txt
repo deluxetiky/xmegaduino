@@ -9,6 +9,7 @@ xplain_jtag.bootloader.path=xplain
 xplain_jtag.bootloader.file=ATmegaBOOT_xplain.bin
 xplain_jtag.bootloader.unlock_bits=0x3F
 xplain_jtag.bootloader.lock_bits=0x3F
+
 # FUSE BITS
 # fuse0: JTAGUSERID
 # fuse1: WDWP=0xF WDP=0xF
@@ -22,12 +23,15 @@ xplain_jtag.bootloader.fuse4=0xFE
 xplain_jtag.bootloader.fuse5=0xFD
 
 xplain_jtag.build.mcu=atxmega128a1
+xplain_jtag.build.mcu_family=xmega
 xplain_jtag.build.f_cpu=32000000L
 xplain_jtag.build.core=xmega
+xplain_jtag.build.board=xplain
 
 ##############################################################
 
 xplain_lufa.name=XPlain using lufa
+
 xplain_lufa.upload.using=avrispmkii
 xplain_lufa.upload.protocol=arduino
 xplain_lufa.upload.maximum_size=131072
@@ -37,6 +41,7 @@ xplain_lufa.bootloader.path=xplain
 xplain_lufa.bootloader.file=ATmegaBOOT_xplain.bin
 xplain_lufa.bootloader.unlock_bits=0x3F
 xplain_lufa.bootloader.lock_bits=0x3F
+
 # FUSE BITS
 # fuse0: JTAGUSERID
 # fuse1: WDWP=0xF WDP=0xF
@@ -50,8 +55,10 @@ xplain_lufa.bootloader.fuse4=0xFE
 xplain_lufa.bootloader.fuse5=0xFD
 
 xplain_lufa.build.mcu=atxmega128a1
+xplain_lufa.build.mcu_family=xmega
 xplain_lufa.build.f_cpu=32000000L
 xplain_lufa.build.core=xmega
+xplain_lufa.build.board=xplain
 
 ##############################################################
 
@@ -65,6 +72,7 @@ xplain_usb.bootloader.path=xplain
 xplain_usb.bootloader.file=ATmegaBOOT_xplain.bin
 xplain_usb.bootloader.unlock_bits=0x3F
 xplain_usb.bootloader.lock_bits=0x3F
+
 # FUSE BITS
 # fuse0: JTAGUSERID
 # fuse1: WDWP=0xF WDP=0xF
@@ -78,8 +86,10 @@ xplain_usb.bootloader.fuse4=0xFE
 xplain_usb.bootloader.fuse5=0xFD
 
 xplain_usb.build.mcu=atxmega128a1
+xplain_usb.build.mcu_family=xmega
 xplain_usb.build.f_cpu=32000000L
 xplain_usb.build.core=xmega
+xplain_usb.build.board=xplain
 
 ##############################################################
 
@@ -93,6 +103,7 @@ xplain_serial.bootloader.path=xplain
 xplain_serial.bootloader.file=ATmegaBOOT_xplain.bin
 xplain_serial.bootloader.unlock_bits=0x3F
 xplain_serial.bootloader.lock_bits=0x3F
+
 # FUSE BITS
 # fuse0: JTAGUSERID
 # fuse1: WDWP=0xF WDP=0xF
@@ -106,5 +117,7 @@ xplain_serial.bootloader.fuse4=0xFE
 xplain_serial.bootloader.fuse5=0xFD
 
 xplain_serial.build.mcu=atxmega128a1
+xplain_serial.build.mcu_family=xmega
 xplain_serial.build.f_cpu=32000000L
 xplain_serial.build.core=xmega
+xplain_serial.build.board=xplain
