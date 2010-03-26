@@ -1,0 +1,3 @@
+dragon.name=dragon jtag
+dragon.communication=usb
+dragon.protocol=dragon_jtag

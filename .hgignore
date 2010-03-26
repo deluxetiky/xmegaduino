@@ -1,0 +1,17 @@
+syntax: glob
+
+.svn
+work
+*.class
+,*
+.*.sw?
+
+syntax: regexp
+
+build/windows/launcher/arduino.exe
+
+hardware/.*/bootloaders/atmega/xplain-loader.aps
+hardware/.*/bootloaders/atmega/xplain-loader.aws
+hardware/.*/bootloaders/.*/.*\.sh
+hardware/.*/bootloaders/.*/build
+hardware/.*/bootloaders/.*/*.hex

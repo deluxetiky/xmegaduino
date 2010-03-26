@@ -1,0 +1,15 @@
+syntax: glob
+
+.svn
+save
+save.0
+save.1
+save2
+save3
+
+*.orig
+*.hex
+,*
+.*.swp
+*.flash
+*.s
