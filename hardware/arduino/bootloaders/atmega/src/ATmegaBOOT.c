@@ -257,7 +257,7 @@ static inline void SetBootloaderPinDirections() {
 // TODO: kill bootuart. Keep pointer to boot usart.
 static inline uint8_t GetBootUart() {
 
-    #if xplain == TARGET
+    #if TARGET_xplain == TARGET
         // Light LED's next to buttons that do something.
         LED_PORT.OUT = 0xF0;
     #endif
@@ -905,7 +905,7 @@ char getch(void)
     while ( !is_boot_uart_rx_ready() ) {
         // TODO: Might be better to make the led flash by using a timer
         count++;
-        #if xplain == TARGET
+        #if TARGET_xplain == TARGET
             LED_PORT.OUT = ~( ((count>>17)&1) << bootuart );
         #endif
         #if !defined APP_PIN
@@ -963,7 +963,7 @@ void delay_ms(uint32_t count)
 void InitLed(void)
 {
     /* set LED pin as output */
-    #if xplain == TARGET
+    #if TARGET_xplain == TARGET
         PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
         LED_PORT.PIN0CTRL = WIRED_AND_PULL;
 
@@ -976,7 +976,7 @@ void InitLed(void)
 
 void flash_led(uint8_t count)
 {
-#if xplain == TARGET
+#if TARGET_xplain == TARGET
     // TODO: Need to abstract and not use cpu macro.
     // TODO: Need code
     while (count--) {

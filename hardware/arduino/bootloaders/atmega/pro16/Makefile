@@ -1,3 +1,7 @@
+# Makefile for ATmegaBOOT
+# E.Lins, 18.7.2005
+# GorillaCoder 2010-02-09
+
 DEPTH := $(DEPTH).x
 
 MAKEFILE_STACK_$(DEPTH)        := $(MAKEFILE)
@@ -7,39 +11,33 @@ MAKEFILE        := $(lastword $(MAKEFILE_LIST))
 MAKEFILE        := $(abspath $(MAKEFILE))
 MAKEFILE_FOLDER := $(dir $(MAKEFILE))
 
-TOP := $(abspath $(MAKEFILE_FOLDER)/../../..)
-
 ifndef SOURCE
-SOURCE := $(TOP)/arduino/bootloaders/atmega/src
+SOURCE:=$(abspath $(MAKEFILE_FOLDER)/../src)
 endif
-
-BUILD_FOLDER := $(abspath build)
-HEX_FOLDER   := $(abspath .)
 
 include $(SOURCE)/Definitions.mk
 
 .PHONY: all
-all: xplain
+all: pro16
 
 ######################
 
-TARGET     := xplain
-MCU_TARGET := atxmega128a1
+TARGET       := pro16
+MCU_TARGET   := atmega168
 CFLAGS_LOCAL := -I$(MAKEFILE_FOLDER)
 CFLAGS_LOCAL += -DNUM_LED_FLASHES=3
-AVR_FREQ     := 32000000L
-BOOT_ADDR    := 0x20000
+CFLAGS_LOCAL += -DWATCHDOG_MODS
 
 include $(SOURCE)/TargetRules.mk
 
-$(TARGET): $(BIN)
-
-$(ISP): FUSE0 = 
-$(ISP): FUSE1 = 
-$(ISP): FUSE2 = 
-$(ISP): FUSE4 = 
-$(ISP): FUSE5 = 
+$(ISP): HFUSE = DD
+$(ISP): LFUSE = C6
+$(ISP): EFUSE = 00
 
 ######################
 
 include $(SOURCE)/Rules.mk
+
+MAKEFILE        := $(MAKEFILE_STACK_$(DEPTH))
+MAKEFILE_FOLDER := $(MAKEFILE_FOLDER_STACK_$(DEPTH))
+DEPTH           := $(basename $(DEPTH))

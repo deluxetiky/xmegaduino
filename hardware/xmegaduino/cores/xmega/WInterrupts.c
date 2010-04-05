@@ -45,7 +45,6 @@ static uint8_t portLastValue[EXTERNAL_NUM_INTERRUPTS/8];
 /// TODO: Add param to userFunc
 void attachInterrupt(uint8_t pin, void (*userFunc)(void), int mode) {
   if( EXTERNAL_NUM_INTERRUPTS <= pin ) {
-diagln("attachInterrupt: pin too big");
       return;
   }
   intFunc[pin] = userFunc;
@@ -56,33 +55,16 @@ diagln("attachInterrupt: pin too big");
   // the mode into place.
       
   // Enable the interrupt.
-
   uint8_t  portIndex = digitalPinToPort(pin);
   PORT_t*  port      = portRegister(portIndex);
   uint8_t* pinctrl   = &port->PIN0CTRL;
-diag("attachInterrupt: portIndex: ");
-diagN(portIndex);
 
-diag(" pin: ");
-diagN(pin);
   pin = pin&7;
-diag(" ");
-diagN(pin);
-
-diag(" port: ");
-diagN2(port,16);
-
-diag(" pinctrl: ");
-diagN2(pinctrl,16);
 
   port->INTCTRL  |= PORT_INT1LVL_LO_gc;
   port->INT1MASK |= 1 << pin;
   pinctrl[pin]   |= mode;
   portLastValue[portIndex] = port->IN;
-diag(" lastValue: ");
-diagN2(portLastValue[portIndex],16);
-
-diag_ln();
 }
 
 void detachInterrupt(uint8_t pin) {
