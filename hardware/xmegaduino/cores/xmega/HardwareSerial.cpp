@@ -39,10 +39,6 @@ struct ring_buffer {
   int tail;
 };
 
-ring_buffer rx_buffer_c0 = { { 0 }, 0, 0 };
-ring_buffer rx_buffer_d0 = { { 0 }, 0, 0 };
-ring_buffer rx_buffer_d1 = { { 0 }, 0, 0 };
-
 inline void store_char(unsigned char c, ring_buffer *rx_buffer)
 {
   int i = (rx_buffer->head + 1) % RX_BUFFER_SIZE;
@@ -57,41 +53,8 @@ inline void store_char(unsigned char c, ring_buffer *rx_buffer)
   }
 }
 
-
-#if 1
-//TODO: gc: ISR or SIGNAL?
-ISR(USARTC0_RXC_vect)
-{
-  unsigned char c = USARTC0.DATA;
-  store_char(c, &rx_buffer_c0);
-}
-
-ISR(USARTD0_RXC_vect)
-{
-  unsigned char c = USARTD0.DATA;
-  store_char(c, &rx_buffer_d0);
-}
-
-ISR(USARTD1_RXC_vect)
-{
-  unsigned char c = USARTD1.DATA;
-  store_char(c, &rx_buffer_d1);
-}
-
-#else
-
-SIGNAL(USART_RX_vect)
-{
-  unsigned char c = UDR0;
-  store_char(c, &rx_buffer);
-}
-
-#endif
-
-
 // Constructors ////////////////////////////////////////////////////////////////
 
-#if 1
 HardwareSerial::HardwareSerial(
   ring_buffer *rx_buffer,
   USART_t     *usart,
@@ -107,41 +70,14 @@ HardwareSerial::HardwareSerial(
   this->_out_bm    = out_bm;
   this->_u2x       = u2x;
 }
-#else
-HardwareSerial::HardwareSerial(ring_buffer *rx_buffer,
-  volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
-  volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
-  volatile uint8_t *udr,
-  uint8_t rxen, uint8_t txen, uint8_t rxcie, uint8_t udre, uint8_t u2x)
-{
-  _rx_buffer = rx_buffer;
-  _ubrrh = ubrrh;
-  _ubrrl = ubrrl;
-  _ucsra = ucsra;
-  _ucsrb = ucsrb;
-  _udr = udr;
-  _rxen = rxen;
-  _txen = txen;
-  _rxcie = rxcie;
-  _udre = udre;
-  _u2x = u2x;
-}
-#endif
 
 // Public Methods //////////////////////////////////////////////////////////////
-
-void HardwareSerial::bsel(unsigned value)
-{
-  _usart->BAUDCTRLA = value;
-  _usart->BAUDCTRLB = value >> 8;
-}
 
 void HardwareSerial::begin(long baud)
 {
   uint16_t baud_setting;
   bool use_u2x;
 
-#if 1
   // TODO: Serial. Fix serial double clock.
   use_u2x = false;
 
@@ -166,59 +102,14 @@ void HardwareSerial::begin(long baud)
 
   // Char size, parity and stop bits: 8N1
   _usart->CTRLC = USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc;
-
-  // Set PMIC to level low
-  PMIC.CTRL |= PMIC_LOLVLEX_bm;
-
-  // Enable global interrupts
-  sei();
-
-#else
-  // U2X mode is needed for baud rates higher than (CPU Hz / 16)
-  if (baud > F_CPU / 16) {
-    use_u2x = true;
-  } else {
-    // figure out if U2X mode would allow for a better connection
-    
-    // calculate the percent difference between the baud-rate specified and
-    // the real baud rate for both U2X and non-U2X mode (0-255 error percent)
-    uint8_t nonu2x_baud_error = abs((int)(255-((F_CPU/(16*(((F_CPU/8/baud-1)/2)+1))*255)/baud)));
-    uint8_t u2x_baud_error    = abs((int)(255-((F_CPU/( 8*(((F_CPU/4/baud-1)/2)+1))*255)/baud)));
-    
-    // prefer non-U2X mode because it handles clock skew better
-    use_u2x = (nonu2x_baud_error > u2x_baud_error);
-  }
-  
-  if (use_u2x) {
-    *_ucsra = 1 << _u2x;
-    baud_setting = (F_CPU / 4 / baud - 1) / 2;
-  } else {
-    *_ucsra = 0;
-    baud_setting = (F_CPU / 8 / baud - 1) / 2;
-  }
-
-  // assign the baud_setting, a.k.a. ubbr (USART Baud Rate Register)
-  *_ubrrh = baud_setting >> 8;
-  *_ubrrl = baud_setting;
-
-  sbi(*_ucsrb, _rxcie);
-  sbi(*_ucsrb, _rxen);
-  cbi(*_ucsrb, _txen);
-#endif
 }
 
 void HardwareSerial::end()
 {
-#if 1
   // disable Rx and Tx
   _usart->CTRLB &= ~(USART_RXEN_bm | USART_TXEN_bm);
   // disable interrupt
   _usart->CTRLA = (_usart->CTRLA & ~USART_RXCINTLVL_gm) | USART_RXCINTLVL_LO_gc;
-#else
-  cbi(*_ucsrb, _rxen);
-  cbi(*_ucsrb, _txen);
-  cbi(*_ucsrb, _rxcie);  
-#endif
 }
 
 uint8_t HardwareSerial::available(void)
@@ -255,17 +146,51 @@ void HardwareSerial::write(uint8_t c)
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
-#if 1
-    HardwareSerial Serial (&rx_buffer_c0, &USARTC0, &PORTC, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
-    HardwareSerial Serial1(&rx_buffer_d0, &USARTD0, &PORTD, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
-    HardwareSerial Serial2(&rx_buffer_d1, &USARTD1, &PORTD, PIN6_bm, PIN7_bm, USART_CLK2X_bp);
 
-    extern HardwareSerial* Serial1ptr = &Serial1;
-#else
-    extern HardwareSerial Serial(&rx_buffer, &UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UDR0, RXEN0, TXEN0, RXCIE0, UDRE0, U2X0);
+#define SERIAL_DEFINE(name, usart, port, read_bm, write_bm) \
+ring_buffer name##rx_buffer = { { 0 }, 0, 0 }; \
+ISR(usart##_RXC_vect) \
+{ \
+  unsigned char c = usart.DATA; \
+  store_char(c, &name##rx_buffer); \
+} \
+HardwareSerial name (&name##rx_buffer, &usart, &port, read_bm, write_bm, USART_CLK2X_bp);
+
+#define SERIAL0_USART    USARTC0
+#define SERIAL0_PORT     PORTC
+#define SERIAL0_READ_BM  PIN2_bm
+#define SERIAL0_WRITE_BM PIN3_bm
+#if defined SERIAL0_USART
+    SERIAL_DEFINE(Serial, SERIAL0_USART, SERIAL0_PORT, SERIAL0_READ_BM, SERIAL0_WRITE_BM);
+#endif
+#if 0 // TODO: Kill this
+ring_buffer rx_buffer_c0 = { { 0 }, 0, 0 };
+ISR(USARTC0_RXC_vect)
+{
+  unsigned char c = USARTC0.DATA;
+  store_char(c, &rx_buffer_c0);
+}
+HardwareSerial Serial (&rx_buffer_c0, &USARTC0, &PORTC, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
 #endif
 
+ring_buffer rx_buffer_d0 = { { 0 }, 0, 0 };
+ISR(USARTD0_RXC_vect)
+{
+  unsigned char c = USARTD0.DATA;
+  store_char(c, &rx_buffer_d0);
+}
+HardwareSerial Serial1(&rx_buffer_d0, &USARTD0, &PORTD, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
+
+ring_buffer rx_buffer_d1 = { { 0 }, 0, 0 };
+ISR(USARTD1_RXC_vect)
+{
+  unsigned char c = USARTD1.DATA;
+  store_char(c, &rx_buffer_d1);
+}
+HardwareSerial Serial2(&rx_buffer_d1, &USARTD1, &PORTD, PIN6_bm, PIN7_bm, USART_CLK2X_bp);
+
 #if 1
+// TODO: Move to diag.{c h}
 
 extern "C" void diag_ln() {
     Serial1.println();

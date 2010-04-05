@@ -39,14 +39,6 @@ struct ring_buffer {
   int tail;
 };
 
-ring_buffer rx_buffer = { { 0 }, 0, 0 };
-
-#if defined(__AVR_ATmega1280__)
-ring_buffer rx_buffer1 = { { 0 }, 0, 0 };
-ring_buffer rx_buffer2 = { { 0 }, 0, 0 };
-ring_buffer rx_buffer3 = { { 0 }, 0, 0 };
-#endif
-
 inline void store_char(unsigned char c, ring_buffer *rx_buffer)
 {
   int i = (rx_buffer->head + 1) % RX_BUFFER_SIZE;
@@ -60,50 +52,6 @@ inline void store_char(unsigned char c, ring_buffer *rx_buffer)
     rx_buffer->head = i;
   }
 }
-
-#if defined(__AVR_ATmega1280__)
-
-SIGNAL(SIG_USART0_RECV)
-{
-  unsigned char c = UDR0;
-  store_char(c, &rx_buffer);
-}
-
-SIGNAL(SIG_USART1_RECV)
-{
-  unsigned char c = UDR1;
-  store_char(c, &rx_buffer1);
-}
-
-SIGNAL(SIG_USART2_RECV)
-{
-  unsigned char c = UDR2;
-  store_char(c, &rx_buffer2);
-}
-
-SIGNAL(SIG_USART3_RECV)
-{
-  unsigned char c = UDR3;
-  store_char(c, &rx_buffer3);
-}
-
-#else
-
-#if defined(__AVR_ATmega8__)
-SIGNAL(SIG_UART_RECV)
-#else
-SIGNAL(USART_RX_vect)
-#endif
-{
-#if defined(__AVR_ATmega8__)
-  unsigned char c = UDR;
-#else
-  unsigned char c = UDR0;
-#endif
-  store_char(c, &rx_buffer);
-}
-
-#endif
 
 // Constructors ////////////////////////////////////////////////////////////////
 
@@ -195,10 +143,6 @@ void HardwareSerial::flush()
   // occurs after reading the value of rx_buffer_head but before writing
   // the value to rx_buffer_tail; the previous value of rx_buffer_head
   // may be written to rx_buffer_tail, making it appear as if the buffer
-  // don't reverse this or there may be problems if the RX interrupt
-  // occurs after reading the value of rx_buffer_head but before writing
-  // the value to rx_buffer_tail; the previous value of rx_buffer_head
-  // may be written to rx_buffer_tail, making it appear as if the buffer
   // were full, not empty.
   _rx_buffer->head = _rx_buffer->tail;
 }
@@ -212,6 +156,58 @@ void HardwareSerial::write(uint8_t c)
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
+
+ring_buffer rx_buffer = { { 0 }, 0, 0 };
+
+#if defined(__AVR_ATmega1280__)
+ring_buffer rx_buffer1 = { { 0 }, 0, 0 };
+ring_buffer rx_buffer2 = { { 0 }, 0, 0 };
+ring_buffer rx_buffer3 = { { 0 }, 0, 0 };
+#endif
+
+#if defined(__AVR_ATmega1280__)
+
+SIGNAL(SIG_USART0_RECV)
+{
+  unsigned char c = UDR0;
+  store_char(c, &rx_buffer);
+}
+
+SIGNAL(SIG_USART1_RECV)
+{
+  unsigned char c = UDR1;
+  store_char(c, &rx_buffer1);
+}
+
+SIGNAL(SIG_USART2_RECV)
+{
+  unsigned char c = UDR2;
+  store_char(c, &rx_buffer2);
+}
+
+SIGNAL(SIG_USART3_RECV)
+{
+  unsigned char c = UDR3;
+  store_char(c, &rx_buffer3);
+}
+
+#else
+
+#if defined(__AVR_ATmega8__)
+SIGNAL(SIG_UART_RECV)
+#else
+SIGNAL(USART_RX_vect)
+#endif
+{
+#if defined(__AVR_ATmega8__)
+  unsigned char c = UDR;
+#else
+  unsigned char c = UDR0;
+#endif
+  store_char(c, &rx_buffer);
+}
+
+#endif
 
 #if defined(__AVR_ATmega8__)
 HardwareSerial Serial(&rx_buffer, &UBRRH, &UBRRL, &UCSRA, &UCSRB, &UDR, RXEN, TXEN, RXCIE, UDRE, U2X);

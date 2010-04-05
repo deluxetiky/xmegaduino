@@ -2,12 +2,25 @@
 # E.Lins, 18.7.2005
 # GorillaCoder 2010-02-09
 
-ifndef SOURCE
-SOURCE=.
+ifndef DEFINITIONS_MK
+DEFINITIONS_MK:=1
+
+ifndef TOP_FOLDER
+TOP_FOLDER := $(lastword $(MAKEFILE_LIST))
+TOP_FOLDER := $(dir $(TOP_FOLDER))/..
+TOP_FOLDER := $(abspath $(TOP_FOLDER))
 endif
 
-ifndef BUILD
-BUILD=build
+ifndef SOURCE
+SOURCE=$(TOP_FOLDER)/src
+endif
+
+ifndef BUILD_FOLDER
+BUILD_FOLDER := $(TOP_FOLDER)/build
+endif
+
+ifndef HEX_FOLDER
+HEX_FOLDER   := $(TOP_FOLDER)/hex
 endif
 
 # program name should not be changed...
@@ -45,15 +58,15 @@ STK500-2 = $(STK500) -d$(MCU_TARGET) -ms -q -lCF -LCF -cUSB -I200kHz -s -wt
 
 OPTIMIZE   := -Os
 
-DEFS       = 
-LIBS       =
+DEFS       := 
+LIBS       :=
 
 CC         := avr-gcc
 
 # Override is only needed by avr-lib build system.
 
-override CFLAGS   = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) -I. -DF_CPU=$(AVR_FREQ) \
-                    -DTARGET=$(TARGET) -D$(TARGET)=1 '-DTARGET_H="$(TARGET).h"' $(DEFS)
+override CFLAGS   = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) -DF_CPU=$(AVR_FREQ) \
+                    -DTARGET=TARGET_$(TARGET) -DTARGET_$(TARGET)=1
 override LDFLAGS  = -Wl,$(LDSECTION)
 #override LDFLAGS = -Wl,-Map,$(PROGRAM).map,$(LDSECTION)
 
@@ -61,3 +74,5 @@ OBJCOPY        := avr-objcopy
 OBJDUMP        := avr-objdump
 
 SOURCES = $(PROGRAM).c diag.c spm.c
+
+endif
