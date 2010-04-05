@@ -6,9 +6,10 @@ work
 ,*
 .*.sw?
 
-syntax: regexp
-
 build/windows/launcher/arduino.exe
+build/macosx/xmegaduino-*.dmg
+
+syntax: regexp
 
 hardware/.*/bootloaders/atmega/xplain-loader.aps
 hardware/.*/bootloaders/atmega/xplain-loader.aws
