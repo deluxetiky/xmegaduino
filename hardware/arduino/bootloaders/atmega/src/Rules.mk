@@ -16,7 +16,7 @@ isp-stk500: $(HEX_FOLDER)/$(PROGRAM)_$(TARGET).hex
 
 clean:
 	rm -rf $(BUILD_FOLDER)/*
-	rm -rf $(HEX_FOLDER)/*
+	rm -rf $(HEX_FOLDER)/*.hex $(HEX_FOLDER)/*.bin
 
 $(HEX_FOLDER)/%.hex: $(BUILD_FOLDER)/%.elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
