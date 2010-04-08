@@ -92,10 +92,6 @@ void delay_ms(uint32_t count);
 extern void Spm(uint8_t code, uint16_t addr, uint16_t value);
 
 static inline void    CheckWatchDogAtStartup(void);
-static inline void    SetBootloaderPinDirections(void);
-static inline uint8_t GetBootUart(void);
-static inline void    InitBootUart(void);
-static inline void    SuppressLineNoise(void);
 static inline void    InitClock(void);
 
 // TODO: kill bootuart. Keep pointer to boot usart.
@@ -112,7 +108,7 @@ int main(void)
     flash_led(LED_FLASHES_AT_BOOT);
     SetBootloaderPinDirections();
     bootuart = GetBootUart();
-    InitBootUart();
+    InitBootUart(bootuart);
     SuppressLineNoise();
 
     /* forever loop */
@@ -226,126 +222,6 @@ void InitClock() {
         asm volatile("nop\n\t");
     }
 #endif
-
-static inline void SetBootloaderPinDirections() {
-    #if defined BL_PORT
-        PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-        BL_PORT.PIN0CTRL = WIRED_AND_PULL;
-    #endif
-    
-    #if defined BL_0_PIN 
-        BL_DIR &= ~_BV(BL_0_PIN);
-        BL_OUT |=  _BV(BL_0_PIN);
-    #endif
-
-    #if defined BL_1_PIN
-        BL_DIR &= ~_BV(BL_1_PIN);
-        BL_OUT |=  _BV(BL_1_PIN);
-    #endif
-
-    #if defined BL_2_PIN
-        BL_DIR &= ~_BV(BL_2_PIN);
-        BL_OUT |=  _BV(BL_2_PIN);
-    #endif
-
-    #if defined APP_PIN
-        BL_DIR &= ~_BV(APP_PIN);
-        BL_OUT |=  _BV(APP_PIN);
-    #endif
-}
-
-// TODO: kill bootuart. Keep pointer to boot usart.
-static inline uint8_t GetBootUart() {
-
-    #if TARGET_xplain == TARGET
-        // Light LED's next to buttons that do something.
-        LED_PORT.OUT = 0xF0;
-    #endif
-
-    #if defined APP_PIN
-        while (1) {
-    #endif
-
-    /* check which UART should be used for booting */
-    #if defined BL_0_PIN
-        if(bit_is_clear(BL_IN, BL_0_PIN)) {
-            return 0;
-        }
-    #endif
-    #if defined BL_1_PIN
-        if(bit_is_clear(BL_IN, BL_1_PIN)) {
-            return 1;
-        }
-    #endif
-    #if defined BL_2_PIN
-        if(bit_is_clear(BL_IN, BL_2_PIN)) {
-            return 2;
-        }
-    #endif
-        /* no UART was selected */
-    #if START_APP_IF_FLASH_PROGRAMED
-        /* if flash is programmed already, start app, otherwise, start bootloader */
-        if(pgm_read_byte_near(0x0000) == 0xFF) {
-            app_start();
-        }
-    #endif
-    #if defined APP_PIN
-        if(bit_is_clear(BL_IN, APP_PIN)) {
-            app_start();
-        }
-    #endif
-
-    #if defined APP_PIN
-        }
-    #endif
-
-    /* default to uart 0 */
-    return 0;
-}
-
-static inline void InitBootUart() {
-    // bootuart should be set, if not, start app.
-    if ( -1 == bootuart ) {
-        app_start();
-    }
-
-    #if defined BL_0_PIN
-        LED_PORT.OUT = ~( 1 << bootuart );
-    #endif
-
-
-    USART0_SET_DIR();
-    USART0_SET_BAUD(BAUD_RATE);
-    USART0_RX_ENABLE();
-    USART0_TX_ENABLE();
-    USART0_SET_TO_8N1();
-
-#if defined BL_1_PIN
-    USART1_SET_DIR();
-    USART1_SET_BAUD(BAUD_RATE_1);
-    USART1_RX_ENABLE();
-    USART1_TX_ENABLE();
-    USART1_SET_TO_8N1();
-#endif
-
-#if defined BL_2_PIN
-    USART2_SET_DIR();
-    USART2_SET_BAUD(BAUD_RATE_2);
-    USART2_RX_ENABLE();
-    USART2_TX_ENABLE();
-    USART2_SET_TO_8N1();
-#endif
-}
-
-static inline void SuppressLineNoise() {
-    #if LINE_NOISE_PIN
-        /* Enable internal pull-up resistor on pin D0 (RX), in order
-        to supress line noise that prevents the bootloader from
-        timing out (DAM: 20070509) */
-        DDR_LINE_NOISE  &= ~_BV(LINE_NOISE_PIN);
-        PORT_LINE_NOISE |= _BV(LINE_NOISE_PIN);
-    #endif
-}
 
 int program_load_in_progress = 0;
 
@@ -883,6 +759,12 @@ int is_boot_uart_rx_ready()
 
 char boot_uart_get_char()
 {
+    // TODO: Might be better to make the led flash by using a timer
+    #if TARGET_xplain == TARGET
+        // flash LED so user gets feedback on boot progress
+        LED_PORT.OUTTGL = 1 << bootuart;
+    #endif
+
     if (bootuart == 0) {
         return USART0_GET_CHAR();
     }
@@ -896,6 +778,7 @@ char boot_uart_get_char()
             return USART2_GET_CHAR();
         }
     #endif
+
     return 0;
 }
 
@@ -903,11 +786,7 @@ char getch(void)
 {
     static uint32_t count = 0;
     while ( !is_boot_uart_rx_ready() ) {
-        // TODO: Might be better to make the led flash by using a timer
         count++;
-        #if TARGET_xplain == TARGET
-            LED_PORT.OUT = ~( ((count>>17)&1) << bootuart );
-        #endif
         #if !defined APP_PIN
             if (count > MAX_TIME_COUNT) {
                 app_start();

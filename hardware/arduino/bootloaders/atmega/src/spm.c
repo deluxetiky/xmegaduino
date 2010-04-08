@@ -11,6 +11,14 @@
 #include "config.h"
 
 extern void Spm(uint8_t code, uint16_t addr, uint16_t value) {
+#if 0
+    while ( SPM_STATUS & SPM_BUSY ) ; // wait while spm is busy
+    SPM_CMD = code;
+#if defined CCP
+    CCP = CCP_SPM_gc;
+#endif
+#endif
+
     asm volatile(
         "push  r0                  \n\t"
         "push  r1                  \n\t"
