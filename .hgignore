@@ -11,9 +11,11 @@ build/macosx/xmegaduino-*.dmg
 
 syntax: regexp
 
-hardware/.*/bootloaders/atmega/xplain-loader.aps
-hardware/.*/bootloaders/atmega/xplain-loader.aws
-hardware/.*/bootloaders/.*/.*\.sh
-hardware/.*/bootloaders/.*/build
-hardware/.*/bootloaders/.*/*.hex
-hardware/.*/bootloaders/.*/*.bin
+^hardware/.*/bootloaders/atmega/xplain-loader.aps
+^hardware/.*/bootloaders/atmega/xplain-loader.aws
+^hardware/.*/bootloaders/.*/.*\.sh
+^hardware/.*/bootloaders/.*/build
+^hardware/.*/bootloaders/.*/*.hex
+^hardware/.*/bootloaders/.*/*.bin
+^build/windows/launcher/arduino.exe
+^build/.*/xmegaduino-*
