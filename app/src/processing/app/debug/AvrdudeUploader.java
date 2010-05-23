@@ -196,6 +196,7 @@ public class AvrdudeUploader extends Uploader  {
       commandDownloader.add("-C" + Base.getHardwarePath() + "/tools/avr/etc/avrdude.conf");
     }
 
+verbose = true;
     if (verbose || Preferences.getBoolean("upload.verbose")) {
       commandDownloader.add("-v");
       commandDownloader.add("-v");

@@ -72,8 +72,11 @@
 #include <avr/wdt.h>
 #include <util/delay.h>
 
+// look for board_inlines on include path. This folder is on the path after the board folder,
+// so if the board folder has board_inlines.h it will override this ones, which is empty.
 #include "config.h"
 #include "diag.h"
+#include <board_inlines.h>
 
 /* function prototypes */
 void putch(char);
@@ -105,7 +108,7 @@ int main(void)
     DiagEnable(bootuart);
     InitLed();
     /* flash onboard LED to signal entering of bootloader */
-    flash_led(LED_FLASHES_AT_BOOT);
+//  flash_led(LED_FLASHES_AT_BOOT);
     SetBootloaderPinDirections();
     bootuart = GetBootUart();
     InitBootUart(bootuart);
@@ -785,6 +788,7 @@ char boot_uart_get_char()
 char getch(void)
 {
     static uint32_t count = 0;
+flash_led(1);
     while ( !is_boot_uart_rx_ready() ) {
         count++;
         #if !defined APP_PIN
@@ -793,9 +797,11 @@ char getch(void)
             }
         #endif
     }
-    return boot_uart_get_char();
+flash_led(1);
+    char result = boot_uart_get_char();
+flash_led(1);
 
-    return 0;
+    return result;
 }
 
 

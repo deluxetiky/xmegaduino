@@ -81,7 +81,6 @@ void digitalWrite(uint8_t pin, uint8_t val)
 
 	if (val == LOW) *out &= ~bit;
 	else *out |= bit;
-	 
 }
 
 int digitalRead(uint8_t pin)
@@ -99,7 +98,4 @@ int digitalRead(uint8_t pin)
 
 	if (*portInputRegister(port) & bit) return HIGH;
 	return LOW;
-	
-	
-	return 0;
 }

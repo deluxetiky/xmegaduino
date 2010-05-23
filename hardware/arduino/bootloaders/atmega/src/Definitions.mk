@@ -66,7 +66,7 @@ CC         := avr-gcc
 # Override is only needed by avr-lib build system.
 
 override CFLAGS   = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) -DF_CPU=$(AVR_FREQ) \
-                    -DTARGET=TARGET_$(TARGET) -DTARGET_$(TARGET)=1
+                    -DTARGET=TARGET_$(TARGET) -DTARGET_$(TARGET)=1 -I$(SOURCE)
 override LDFLAGS  = -Wl,$(LDSECTION)
 #override LDFLAGS = -Wl,-Map,$(PROGRAM).map,$(LDSECTION)
 

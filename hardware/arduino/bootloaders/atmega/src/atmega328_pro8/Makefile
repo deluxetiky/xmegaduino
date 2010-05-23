@@ -18,22 +18,24 @@ endif
 include $(SOURCE)/Definitions.mk
 
 .PHONY: all
-all: pro16
+all: atmega328_pro8
 
 ######################
 
-TARGET       := pro16
-MCU_TARGET   := atmega168
+TARGET       := atmega328_pro8
+MCU_TARGET   := atmega328p
 CFLAGS_LOCAL := -I$(MAKEFILE_FOLDER)
-CFLAGS_LOCAL += -DNUM_LED_FLASHES=3
-CFLAGS_LOCAL += -DWATCHDOG_MODS
-CFLAGS_LOCAL += -DBAUD_RATE=19200
+CFLAGS_LOCAL += -DNUM_LED_FLASHES=1
+CFLAGS_LOCAL += -DBAUD_RATE=57600 
+CFLAGS_LOCAL += -DDOUBLE_SPEED
+AVR_FREQ     := 8000000L
+BOOT_ADDR    := 0x7800
 
 include $(SOURCE)/TargetRules.mk
 
-$(ISP): HFUSE = DD
-$(ISP): LFUSE = C6
-$(ISP): EFUSE = 00
+$(ISP): HFUSE = DA
+$(ISP): LFUSE = FF
+$(ISP): EFUSE = 05
 
 ######################
 

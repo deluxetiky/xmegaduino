@@ -1,10 +1,13 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+// look for board on include path. This folder is on the path after the board folder,
+// so if the board folder has board.h it will override this folder's.
+// TODO: Add a local board.h with defaults so board folders don't have to have it.
+#include <board.h>
 #include "mcu.h"
 #include "mcu_sig_pagesize.h"
 #include "mcu_defaults.h"
-#include "board.h"
 
 /** config.h defines defaults for various configuration/policy macros.
   * These should be relatively arbitrary policies not dictated by

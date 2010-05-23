@@ -16,3 +16,4 @@ hardware/.*/bootloaders/atmega/xplain-loader.aws
 hardware/.*/bootloaders/.*/.*\.sh
 hardware/.*/bootloaders/.*/build
 hardware/.*/bootloaders/.*/*.hex
+hardware/.*/bootloaders/.*/*.bin

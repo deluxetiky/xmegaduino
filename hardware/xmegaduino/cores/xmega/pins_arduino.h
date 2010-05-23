@@ -30,38 +30,38 @@
 #define NOT_A_PIN 0
 #define NOT_A_PORT 0
 
-#if BOARD_xplain == BOARD
-    #define PA 1 // pin  0
-    #define PD 2 // pin  8
-    #define PE 3 // pin 16
-    #define PF 4 // pin 24
-    #define PB 5 // pin 32
-    #define PC 6 // pin 40
-#elif BOARD_xplain_arduino == BOARD
-    #define PA 1 // pin  0
-    #define PB 2 // pin  8
-    #define PC 3 // pin 16
-    #define PD 4 // pin 24
-    #define PE 5 // pin 32
-    #define PF 6 // pin 40
-#else
-    #error BOARD not defined
-#endif
+#define PA 1
+#define PB 2
+#define PC 3
+#define PD 4
+#define PE 5
+#define PF 6
+#define PH 7
+#define PJ 8
+#define PK 9
 
 #define NOT_ON_TIMER 0
-#define TIMER_D0A  1
-#define TIMER_D0B  2
-#define TIMER_D0C  3
-#define TIMER_D0D  4
-#define TIMER_D1A  5
-#define TIMER_D1B  6
 
-#define TIMER_E0A  7
-#define TIMER_E0B  8
-#define TIMER_E0C  9
-#define TIMER_E0D 10
-#define TIMER_E1A 11
-#define TIMER_E1B 12
+#define TIMER_C0A  1
+#define TIMER_C0B  2
+#define TIMER_C0C  3
+#define TIMER_C0D  4
+#define TIMER_C1A  5
+#define TIMER_C1B  6
+
+#define TIMER_D0A  7
+#define TIMER_D0B  8
+#define TIMER_D0C  9
+#define TIMER_D0D 10
+#define TIMER_D1A 11
+#define TIMER_D1B 12
+
+#define TIMER_E0A 13
+#define TIMER_E0B 14
+#define TIMER_E0C 15
+#define TIMER_E0D 16
+#define TIMER_E1A 17
+#define TIMER_E1B 18
 
 
 // TODO: Revise so we don't need the port index stuff: PORTA, ..., PORTF. Just use port register.
@@ -77,7 +77,7 @@ extern const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[];
 extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 extern const TC0_t* PROGMEM timer_to_tc0_PGM[];
 extern const TC1_t* PROGMEM timer_to_tc1_PGM[];
-extern const uint8_t PROGMEM timer_to_channel_PGM[];
+extern const uint8_t PROGMEM timer_to_channel_register_PGM[];
 
 // Get the bit location within the hardware port of the given virtual pin.
 // This comes from the pins_*.c file for the active board configuration.
@@ -93,6 +93,6 @@ extern const uint8_t PROGMEM timer_to_channel_PGM[];
 #define portRegister(P) ( (volatile PORT_t *)( pgm_read_word( port_to_portReg_PGM + (P))) )
 #define timerToTC0(T) ( (volatile TC0_t *)( pgm_read_word( timer_to_tc0_PGM + (T))) )
 #define timerToTC1(T) ( (volatile TC1_t *)( pgm_read_word( timer_to_tc1_PGM + (T))) )
-#define timerToChannel(T) ( (uint8_t)( pgm_read_word( timer_to_channel_PGM + (T))) )
+#define timerToChannel(T) ( (uint8_t)( pgm_read_word( timer_to_channel_register_PGM + (T))) )
 
 #endif
