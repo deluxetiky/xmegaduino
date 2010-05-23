@@ -16,14 +16,12 @@ $(BIN): CFLAGS_LOCAL := $(CFLAGS_LOCAL)
 $(BIN): $(OBJS:.o=.s)
 $(BIN): $(ELF)
 $(BIN): $(LST)
-$(BIN): $(HEX_FOLDER)
 
 $(HEX): MCU_TARGET   := $(MCU_TARGET)
 $(HEX): CFLAGS_LOCAL := $(CFLAGS_LOCAL)
 $(HEX): $(OBJS:.o=.s)
 $(HEX): $(ELF)
 $(HEX): $(LST)
-$(HEX): $(HEX_FOLDER)
 
 $(ELF): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
@@ -36,18 +34,19 @@ $(ISP): MCU_TARGET := $(MCU_TARGET)
 $(ISP): TARGET     := $(TARGET)
 $(ISP): isp
 
-$(BUILD_FOLDER)/%_$(TARGET).o: $(SOURCE)/%.c $(MAKEFILE_LIST) $(BUILD_FOLDER)
-	$(CC) -c $(CFLAGS) $(CFLAGS_LOCAL) -o $@ $<
+$(BUILD_FOLDER)/%_$(TARGET).o: $(SOURCE)/%.c $(MAKEFILE_LIST)
+	$(CC) -c $(CFLAGS_LOCAL) $(CFLAGS) -o $@ $<
 
-$(BUILD_FOLDER)/%_$(TARGET).s: $(SOURCE)/%.c $(MAKEFILE_LIST) $(BUILD_FOLDER)
-	$(CC) -S $(CFLAGS) $(CFLAGS_LOCAL) -o $@ $<
+$(BUILD_FOLDER)/%_$(TARGET).s: $(SOURCE)/%.c $(MAKEFILE_LIST)
+	$(CC) -S $(CFLAGS_LOCAL) $(CFLAGS) -o $@ $<
 
-$(BUILD_FOLDER)/%_$(TARGET).d: $(SOURCE)/%.c $(MAKEFILE_LIST) $(BUILD_FOLDER)
+$(BUILD_FOLDER)/%_$(TARGET).d: $(SOURCE)/%.c $(MAKEFILE_LIST)
 	@set -e; rm -f $@; \
-	$(CC) -MM $(CFLAGS) $(CFLAGS_LOCAL) $< > $@.$$$$; \
+	mkdir -p $(BUILD_FOLDER)
+	$(CC) -MM $(CFLAGS_LOCAL) $(CFLAGS) $< > $@.$$$$; \
 	sed 's,.*\.o[ :]*,$(@:.d=.o) $(@:.d=.s) $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
 ifneq ($(MAKECMDGOALS),clean)
-#    include $(OBJ_DEPS)
+    include $(OBJ_DEPS)
 endif

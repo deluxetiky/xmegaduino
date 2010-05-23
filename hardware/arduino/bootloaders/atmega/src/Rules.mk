@@ -19,14 +19,17 @@ clean:
 	rm -rf $(HEX_FOLDER)/*.hex $(HEX_FOLDER)/*.bin
 
 $(HEX_FOLDER)/%.hex: $(BUILD_FOLDER)/%.elf
+	mkdir -p $(HEX_FOLDER)
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
 	echo
 
 $(HEX_FOLDER)/%.srec: $(BUILD_FOLDER)/%.elf
+	mkdir -p $(HEX_FOLDER)
 	$(OBJCOPY) -j .text -j .data -O srec $< $@
 	echo
 
 $(HEX_FOLDER)/%.bin: $(BUILD_FOLDER)/%.elf
+	mkdir -p $(HEX_FOLDER)
 	$(OBJCOPY) -j .text -j .data -O binary $< $@
 	echo
 

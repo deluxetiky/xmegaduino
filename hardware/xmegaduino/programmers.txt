@@ -1,3 +1,12 @@
-dragon.name=dragon jtag
-dragon.communication=usb
-dragon.protocol=dragon_jtag
+dragonjtag.name=dragon jtag
+dragonjtag.communication=usb
+dragonjtag.protocol=dragon_jtag
+
+dragonpdi.name=dragon pdi
+dragonpdi.communication=usb
+dragonpdi.protocol=dragon_pdi
+
+avrisppdi.name=avrisp pdi
+avrisppdi.communication=usb
+avrisppdi.protocol=avrisp2
+

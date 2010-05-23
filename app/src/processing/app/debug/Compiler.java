@@ -70,21 +70,33 @@ public class Compiler implements MessageConsumer {
     // the pms object isn't used for anything but storage
     MessageStream pms = new MessageStream(this);
 
+    Target target = Base.getTarget();
     String avrBasePath = Base.getAvrBasePath();
     Map<String, String> boardPreferences = Base.getBoardPreferences();
     String core = boardPreferences.get("build.core");
     String corePath;
+    String board;
+    String mcuFamily;
+    File   boardFolder;
+    String boardPath;
+    File   mcuFamilyFolder;
+    String mcuFamilyPath;
 
-    if ( !boardPreferences.containsKey("build.board") ) {
-        boardPreferences.put("build.board", Preferences.get("board"));
+    if ( boardPreferences.containsKey("build.board") ) {
+      board = boardPreferences.get("build.board");
+    } else {
+      board = Preferences.get("board");
+      boardPreferences.put("build.board", board);
     }
-    if ( !boardPreferences.containsKey("build.mcu_family") ) {
-        boardPreferences.put("build.mcu_family", "MCU_FAMILY_ATMEGA");
+    if ( boardPreferences.containsKey("build.mcu_family") ) {
+      mcuFamily = boardPreferences.get("build.mcu_family");
+    } else {
+      mcuFamily = "MCU_FAMILY_atmega";
+      boardPreferences.put("build.mcu_family", mcuFamily);
     }
     
     if (core.indexOf(':') == -1) {
-      Target t = Base.getTarget();
-      File coreFolder = new File(new File(t.getFolder(), "cores"), core);
+      File coreFolder = new File(new File(target.getFolder(), "cores"), core);
       corePath = coreFolder.getAbsolutePath();
     } else {
       Target t = Base.targetsTable.get(core.substring(0, core.indexOf(':')));
@@ -93,9 +105,34 @@ public class Compiler implements MessageConsumer {
       corePath = coreFolder.getAbsolutePath();
     }
 
+    ArrayList<File> coreAsmFiles = new ArrayList<File>();
+    ArrayList<File> coreCFiles   = new ArrayList<File>();
+    ArrayList<File> coreCppFiles = new ArrayList<File>();
+    { 
+      File   coresFolder     = new File(new File(target.getFolder(), "cores"), core);
+      boardFolder     = new File(coresFolder, board);
+      boardPath       = boardFolder.getAbsolutePath();
+      mcuFamilyFolder = new File(coresFolder, board);
+      mcuFamilyPath   = mcuFamilyFolder.getAbsolutePath();
+
+      findFilesInPath( coreAsmFiles, boardPath, "S",   true );
+      findFilesInPath( coreCFiles,   boardPath, "c",   true );
+      findFilesInPath( coreCppFiles, boardPath, "cpp", true );
+
+      findFilesInPath( coreAsmFiles, mcuFamilyPath, "S",   true );
+      findFilesInPath( coreCFiles,   mcuFamilyPath, "c",   true );
+      findFilesInPath( coreCppFiles, mcuFamilyPath, "cpp", true );
+    }
+
     List<File> objectFiles = new ArrayList<File>();
 
     List includePaths = new ArrayList();
+    if ( boardFolder.isDirectory() ) {
+      includePaths.add(boardPath);
+    }
+    if ( mcuFamilyFolder.isDirectory() ) {
+      includePaths.add(mcuFamilyPath);
+    }
     includePaths.add(corePath);
     
     String runtimeLibraryName = buildPath + File.separator + "core.a";
@@ -105,9 +142,9 @@ public class Compiler implements MessageConsumer {
     
     List<File> coreObjectFiles = 
       compileFiles(avrBasePath, buildPath, includePaths,
-                   findFilesInPath(corePath, "S", true),
-                   findFilesInPath(corePath, "c", true),
-                   findFilesInPath(corePath, "cpp", true),
+                   findFilesInPath(coreAsmFiles, corePath, "S", true),
+                   findFilesInPath(coreCFiles,   corePath, "c", true),
+                   findFilesInPath(coreCppFiles, corePath, "cpp", true),
                    boardPreferences);
                    
     List baseCommandAR = new ArrayList(Arrays.asList(new String[] {
@@ -587,13 +624,23 @@ public class Compiler implements MessageConsumer {
   
   static public ArrayList<File> findFilesInPath(String path, String extension,
                                                 boolean recurse) {
-    return findFilesInFolder(new File(path), extension, recurse);
+    return findFilesInPath( new ArrayList<File>(), path, extension, recurse);
+  }
+  
+  static public ArrayList<File> findFilesInPath(ArrayList<File> files,
+                                                String path, String extension,
+                                                boolean recurse) {
+    return findFilesInFolder(files, new File(path), extension, recurse);
   }
   
   static public ArrayList<File> findFilesInFolder(File folder, String extension,
                                                   boolean recurse) {
-    ArrayList<File> files = new ArrayList<File>();
-    
+    return findFilesInFolder( new ArrayList<File>(), folder, extension, recurse);
+  }
+
+  static public ArrayList<File> findFilesInFolder(ArrayList<File> files,
+                                                  File folder, String extension,
+                                                  boolean recurse) {
     if (folder.listFiles() == null) return files;
     
     for (File file : folder.listFiles()) {
@@ -603,7 +650,7 @@ public class Compiler implements MessageConsumer {
         files.add(file);
         
       if (recurse && file.isDirectory()) {
-        files.addAll(findFilesInFolder(file, extension, true));
+        findFilesInFolder(files, file, extension, true);
       }
     }
     

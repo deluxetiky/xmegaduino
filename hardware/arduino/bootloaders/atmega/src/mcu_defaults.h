@@ -90,36 +90,41 @@
 
     #define USART_GET_CHAR(usart) ((usart).DATA)
 
+    #if defined USART_0
+        #define USART0_SET_DIR()      USART_SET_DIR(USART_0_PORT,USART_0_RD_PIN,USART_0_WR_PIN) 
+        #define USART0_SET_TO_8N1()   USART_SET_TO_8N1(USART_0) 
+        #define USART0_SET_BAUD(baud) USART_SET_BAUD(USART_0,baud) 
+        #define USART0_RX_ENABLE()    USART_RX_ENABLE(USART_0) 
+        #define USART0_TX_ENABLE()    USART_TX_ENABLE(USART_0) 
+        #define USART0_IS_TX_READY()  USART_IS_TX_READY(USART_0) 
+        #define USART0_IS_RX_READY()  USART_IS_RX_READY(USART_0) 
+        #define USART0_PUT_CHAR(c)    USART_PUT_CHAR(USART_0,c) 
+        #define USART0_GET_CHAR()     USART_GET_CHAR(USART_0) 
+    #endif
 
-    #define USART0_SET_DIR()      USART_SET_DIR(USART_0_PORT,USART_0_RD_PIN,USART_0_WR_PIN) 
-    #define USART0_SET_TO_8N1()   USART_SET_TO_8N1(USART_0) 
-    #define USART0_SET_BAUD(baud) USART_SET_BAUD(USART_0,baud) 
-    #define USART0_RX_ENABLE()    USART_RX_ENABLE(USART_0) 
-    #define USART0_TX_ENABLE()    USART_TX_ENABLE(USART_0) 
-    #define USART0_IS_TX_READY()  USART_IS_TX_READY(USART_0) 
-    #define USART0_IS_RX_READY()  USART_IS_RX_READY(USART_0) 
-    #define USART0_PUT_CHAR(c)    USART_PUT_CHAR(USART_0,c) 
-    #define USART0_GET_CHAR()     USART_GET_CHAR(USART_0) 
+    #if defined USART_1
+        #define USART1_SET_DIR()      USART_SET_DIR(USART_1_PORT,USART_1_RD_PIN,USART_1_WR_PIN) 
+        #define USART1_SET_TO_8N1()   USART_SET_TO_8N1(USART_1) 
+        #define USART1_SET_BAUD(baud) USART_SET_BAUD(USART_1,baud) 
+        #define USART1_RX_ENABLE()    USART_RX_ENABLE(USART_1) 
+        #define USART1_TX_ENABLE()    USART_TX_ENABLE(USART_1) 
+        #define USART1_IS_TX_READY()  USART_IS_TX_READY(USART_1) 
+        #define USART1_IS_RX_READY()  USART_IS_RX_READY(USART_1) 
+        #define USART1_PUT_CHAR(c)    USART_PUT_CHAR(USART_1,c) 
+        #define USART1_GET_CHAR()     USART_GET_CHAR(USART_1) 
+    #endif
 
-    #define USART1_SET_DIR()      USART_SET_DIR(USART_1_PORT,USART_1_RD_PIN,USART_1_WR_PIN) 
-    #define USART1_SET_TO_8N1()   USART_SET_TO_8N1(USART_1) 
-    #define USART1_SET_BAUD(baud) USART_SET_BAUD(USART_1,baud) 
-    #define USART1_RX_ENABLE()    USART_RX_ENABLE(USART_1) 
-    #define USART1_TX_ENABLE()    USART_TX_ENABLE(USART_1) 
-    #define USART1_IS_TX_READY()  USART_IS_TX_READY(USART_1) 
-    #define USART1_IS_RX_READY()  USART_IS_RX_READY(USART_1) 
-    #define USART1_PUT_CHAR(c)    USART_PUT_CHAR(USART_1,c) 
-    #define USART1_GET_CHAR()     USART_GET_CHAR(USART_1) 
-
-    #define USART2_SET_DIR()      USART_SET_DIR(USART_2_PORT,USART_2_RD_PIN,USART_2_WR_PIN) 
-    #define USART2_SET_TO_8N1()   USART_SET_TO_8N1(USART_2) 
-    #define USART2_SET_BAUD(baud) USART_SET_BAUD(USART_2,baud) 
-    #define USART2_RX_ENABLE()    USART_RX_ENABLE(USART_2) 
-    #define USART2_TX_ENABLE()    USART_TX_ENABLE(USART_2) 
-    #define USART2_IS_TX_READY()  USART_IS_TX_READY(USART_2) 
-    #define USART2_IS_RX_READY()  USART_IS_RX_READY(USART_2) 
-    #define USART2_PUT_CHAR(c)    USART_PUT_CHAR(USART_2,c) 
-    #define USART2_GET_CHAR()     USART_GET_CHAR(USART_2) 
+    #if defined USART_1
+        #define USART2_SET_DIR()      USART_SET_DIR(USART_2_PORT,USART_2_RD_PIN,USART_2_WR_PIN) 
+        #define USART2_SET_TO_8N1()   USART_SET_TO_8N1(USART_2) 
+        #define USART2_SET_BAUD(baud) USART_SET_BAUD(USART_2,baud) 
+        #define USART2_RX_ENABLE()    USART_RX_ENABLE(USART_2) 
+        #define USART2_TX_ENABLE()    USART_TX_ENABLE(USART_2) 
+        #define USART2_IS_TX_READY()  USART_IS_TX_READY(USART_2) 
+        #define USART2_IS_RX_READY()  USART_IS_RX_READY(USART_2) 
+        #define USART2_PUT_CHAR(c)    USART_PUT_CHAR(USART_2,c) 
+        #define USART2_GET_CHAR()     USART_GET_CHAR(USART_2) 
+    #endif 
 #else
     #error Do not know how to set up UART
 #endif
