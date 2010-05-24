@@ -8,11 +8,12 @@ MAKEFILE_STACK_$(DEPTH)        := $(MAKEFILE)
 MAKEFILE_FOLDER_STACK_$(DEPTH) := $(MAKEFILE_FOLDER)
 
 MAKEFILE        := $(lastword $(MAKEFILE_LIST))
-MAKEFILE        := $(abspath $(MAKEFILE))
+#MAKEFILE        := $(abspath $(MAKEFILE))
 MAKEFILE_FOLDER := $(dir $(MAKEFILE))
 
 ifndef SOURCE
-SOURCE:=$(abspath $(MAKEFILE_FOLDER)/../src)
+#SOURCE:=$(abspath $(MAKEFILE_FOLDER)/../src)
+SOURCE:=$(MAKEFILE_FOLDER)/../src
 endif
 
 include $(SOURCE)/Definitions.mk

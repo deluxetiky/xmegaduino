@@ -18,8 +18,6 @@ else
   cp -r dist/drivers work/
 
   mkdir ../../hardware/arduino/bootloaders/atmega/build
-  mkdir ../../hardware/arduino/bootloaders/sanguino/build
-  mkdir ../../hardware/arduino/bootloaders/xplain/build
   cp -r ../../hardware work/
   cp -r ../../libraries work/
 
