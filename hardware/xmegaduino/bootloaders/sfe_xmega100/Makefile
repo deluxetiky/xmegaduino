@@ -16,6 +16,9 @@ SOURCE:=$(ARDUINO_BOOTLOADER_FOLDER)/atmega/src
 SOURCE:=$(abspath $(SOURCE))
 endif
 
+BUILD_FOLDER := $(abspath build)
+HEX_FOLDER   := $(abspath .)
+
 include $(SOURCE)/Definitions.mk
 
 
@@ -26,8 +29,9 @@ all: sfe_xmega100
 
 TARGET       := sfe_xmega100
 MCU_TARGET   := atxmega128a1
-CFLAGS_LOCAL := -I$(MAKEFILE_FOLDER)
-CFLAGS_LOCAL += -Iblort
+CFLAGS_LOCAL := 
+CFLAGS_LOCAL += -I $(MAKEFILE_FOLDER).
+CFLAGS_LOCAL += -I $(SOURCE)/board
 CFLAGS_LOCAL += -DNUM_LED_FLASHES=3
 CFLAGS_LOCAL += -DBAUD_RATE=57600
 AVR_FREQ     := 32000000L

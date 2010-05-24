@@ -124,4 +124,24 @@ static inline void SuppressLineNoise() {
     #endif
 }
 
+void InitLed(void)
+{
+    /* set LED pin as output */
+    PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
+    LED_PORT.PIN0CTRL = WIRED_AND_PULL;
+
+    LED_PORT.DIR      = 0xFF;
+    LED_PORT.OUT      = 0xFF;
+}
+
+static inline void flash_led(uint8_t count)
+{
+    while (count--) {
+        LED_PORT.OUTTGL = 0xFF;
+        delay_ms(200);
+        LED_PORT.OUTTGL = 0xFF;
+        delay_ms(200);
+    }
+}
+
 #endif // BOARD_INLINES_H
