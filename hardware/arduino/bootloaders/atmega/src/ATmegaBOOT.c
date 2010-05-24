@@ -73,7 +73,7 @@
 #include <util/delay.h>
 
 // look for board_inlines on include path. This folder is on the path after the board folder,
-// so if the board folder has board_inlines.h it will override this ones, which is empty.
+// so if the board folder has board_inlines.h it will override this ones.
 #include "config.h"
 #include "diag.h"
 #include <board_inlines.h>
@@ -843,41 +843,6 @@ void delay_ms(uint32_t count)
     while (count--) {
         _delay_ms(1);
     }
-}
-
-void InitLed(void)
-{
-    /* set LED pin as output */
-    #if TARGET_xplain == TARGET
-        PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
-        LED_PORT.PIN0CTRL = WIRED_AND_PULL;
-
-        LED_PORT.DIR      = 0xFF;
-        LED_PORT.OUT      = 0xFF;
-    #else
-        LED_DDR |= _BV(LED);
-    #endif
-}
-
-void flash_led(uint8_t count)
-{
-#if TARGET_xplain == TARGET
-    // TODO: Need to abstract and not use cpu macro.
-    // TODO: Need code
-    while (count--) {
-        LED_PORT.OUTTGL = 0xFF;
-        delay_ms(200);
-        LED_PORT.OUTTGL = 0xFF;
-        delay_ms(200);
-    }
-#else
-    while (count--) {
-        LED_PORT |= _BV(LED);
-        _delay_ms(200);
-        LED_PORT &= ~_BV(LED);
-        _delay_ms(200);
-    }
-#endif
 }
 
 /* end of file ATmegaBOOT.c */
