@@ -521,6 +521,7 @@ public class Compiler implements MessageConsumer {
       "-DMCU_FAMILY=" + boardPreferences.get("build.mcu_family"),
       "-DMCU_FAMILY_" + boardPreferences.get("build.mcu_family") + "=1",
       "-DBOARD=" + boardPreferences.get("build.board"),
+      "-DBOARD_" + boardPreferences.get("build.board") + "=1",
       "-DF_CPU=" + boardPreferences.get("build.f_cpu"),
       "-DARDUINO=" + Base.REVISION,
     }));
@@ -551,6 +552,7 @@ public class Compiler implements MessageConsumer {
       "-DMCU_FAMILY=" + boardPreferences.get("build.mcu_family"),
       "-DMCU_FAMILY_" + boardPreferences.get("build.mcu_family") + "=1",
       "-DBOARD=" + boardPreferences.get("build.board"),
+      "-DBOARD_" + boardPreferences.get("build.board") + "=1",
       "-DF_CPU=" + boardPreferences.get("build.f_cpu"),
       "-DARDUINO=" + Base.REVISION,
     }));
@@ -583,6 +585,7 @@ public class Compiler implements MessageConsumer {
       "-DMCU_FAMILY=" + boardPreferences.get("build.mcu_family"),
       "-DMCU_FAMILY_" + boardPreferences.get("build.mcu_family") + "=1",
       "-DBOARD=" + boardPreferences.get("build.board"),
+      "-DBOARD_" + boardPreferences.get("build.board") + "=1",
       "-DF_CPU=" + boardPreferences.get("build.f_cpu"),
       "-DARDUINO=" + Base.REVISION,
     }));

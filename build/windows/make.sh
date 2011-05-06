@@ -44,7 +44,8 @@ else
   # to build them, use the following:
   # cd head_src/gui_head && make -f Makefile.win
   cd launcher
-  ./launch4j/launch4jc.exe config.xml
+  # ./launch4j/launch4jc.exe config.xml
+  USERPROFILE=. ./launch4j/launch4jc.exe config.xml
   cp arduino.exe ../work/
   cd ..
 
