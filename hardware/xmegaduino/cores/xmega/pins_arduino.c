@@ -58,10 +58,19 @@ const uint16_t PROGMEM port_to_mode_PGM[] = {
 	&DDRC,
 	&DDRD,
 	&DDRE,
+	// Not defined on all xmegas
+#if defined(PORTF)
 	&DDRF,
+#endif
+#if defined(PORTH)
 	&DDRH,
+#endif
+#if defined(PORTJ)
 	&DDRJ,
+#endif
+#if defined(PORTK)
 	&DDRK,
+#endif
 };
 
 const uint16_t PROGMEM port_to_portReg_PGM[] = {
@@ -71,10 +80,18 @@ const uint16_t PROGMEM port_to_portReg_PGM[] = {
 	&PORTC,
 	&PORTD,
 	&PORTE,
+#if defined(PORTF)
 	&PORTF,
+#endif
+#if defined(PORTH)
 	&PORTH,
+#endif
+#if defined(PORTJ)
 	&PORTJ,
+#endif
+#if defined(PORTK)
 	&PORTK,
+#endif
 };
 
 const uint16_t PROGMEM port_to_input_PGM[] = {
@@ -84,10 +101,18 @@ const uint16_t PROGMEM port_to_input_PGM[] = {
 	&PINC,
 	&PIND,
 	&PINE,
+#if defined(PORTF)
 	&PINF,
+#endif
+#if defined(PORTH)
 	&PINH,
+#endif
+#if defined(PORTJ)
 	&PINJ,
+#endif
+#if defined(PORTK)
 	&PINK,
+#endif
 };
 
 #if BOARD_sfe == BOARD
@@ -313,8 +338,14 @@ const TC1_t* PROGMEM timer_to_tc1_PGM[] = {
 	NULL,
 	NULL,
 	NULL,
+	// TCE1 not defined on all xmegas
+#if defined(PORTH)
 	&TCE1,
 	&TCE1,
+#else
+	NULL,
+	NULL,
+#endif
 	};
 
 const uint8_t PROGMEM timer_to_channel_PGM[] = {
