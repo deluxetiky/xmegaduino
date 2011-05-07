@@ -60,15 +60,13 @@ HardwareSerial::HardwareSerial(
   USART_t     *usart,
   PORT_t      *port,
   uint8_t      in_bm,
-  uint8_t      out_bm,
-  uint8_t      u2x)
+  uint8_t      out_bm)
 {
   this->_rx_buffer = rx_buffer;
   this->_usart     = usart;
   this->_port      = port;
   this->_in_bm     = in_bm;
   this->_out_bm    = out_bm;
-  this->_u2x       = u2x;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -107,7 +105,7 @@ void HardwareSerial::begin(long baud)
   else
 #endif
   if (use_u2x) {
-    _usart->CTRLB |= 1 << _u2x;
+    _usart->CTRLB |= 1 << USART_CLK2X_bp;
     baud_setting = ((F_CPU) / ((uint32_t)baud * 8) - 1);
   } else {
     baud_setting = ((F_CPU) / ((uint32_t)baud * 16) - 1);
@@ -168,57 +166,49 @@ void HardwareSerial::write(uint8_t c)
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
 
-#define SERIAL_DEFINE(name, usart, port, read_bm, write_bm) \
+#define SERIAL_DEFINE(name, usart_port, port_nr) \
 ring_buffer name##rx_buffer = { { 0 }, 0, 0 }; \
 ISR(usart##_RXC_vect) \
 { \
-  unsigned char c = usart.DATA; \
+  unsigned char c = USART##usart_port##port_nr.DATA; \
   store_char(c, &name##rx_buffer); \
 } \
-HardwareSerial name (&name##rx_buffer, &usart, &port, read_bm, write_bm, USART_CLK2X_bp);
+HardwareSerial name (&name##rx_buffer, &USART##usart_port##port_nr, &PORT##usart_port, (port_nr ? PIN6_bm : PIN2_bm), (port_nr ? PIN7_bm : PIN3_bm));
 
-#define SERIAL0_USART    USARTC0
-#define SERIAL0_PORT     PORTC
-#define SERIAL0_READ_BM  PIN2_bm
-#define SERIAL0_WRITE_BM PIN3_bm
-#if defined SERIAL0_USART
-    SERIAL_DEFINE(Serial, SERIAL0_USART, SERIAL0_PORT, SERIAL0_READ_BM, SERIAL0_WRITE_BM);
-#endif
-#if 0 // TODO: Kill this
-ring_buffer rx_buffer_c0 = { { 0 }, 0, 0 };
-ISR(USARTC0_RXC_vect)
-{
-  unsigned char c = USARTC0.DATA;
-  store_char(c, &rx_buffer_c0);
-}
-HardwareSerial Serial (&rx_buffer_c0, &USARTC0, &PORTC, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
+#if defined(USARTC0)
+SERIAL_DEFINE(Serial, C, 0);
 #endif
 
-ring_buffer rx_buffer_d0 = { { 0 }, 0, 0 };
-ISR(USARTD0_RXC_vect)
-{
-  unsigned char c = USARTD0.DATA;
-  store_char(c, &rx_buffer_d0);
-}
-HardwareSerial Serial1(&rx_buffer_d0, &USARTD0, &PORTD, PIN2_bm, PIN3_bm, USART_CLK2X_bp);
+#if defined(USARTC1)
+SERIAL_DEFINE(Serial1, C, 1);
+#endif
 
-ring_buffer rx_buffer_d1 = { { 0 }, 0, 0 };
-ISR(USARTD1_RXC_vect)
-{
-  unsigned char c = USARTD1.DATA;
-  store_char(c, &rx_buffer_d1);
-}
-HardwareSerial Serial2(&rx_buffer_d1, &USARTD1, &PORTD, PIN6_bm, PIN7_bm, USART_CLK2X_bp);
+#if defined(USARTD0)
+SERIAL_DEFINE(Serial2, D, 0);
+#endif
+
+#if defined(USARTD1)
+SERIAL_DEFINE(Serial3, D, 1);
+#endif
+
+#if defined(USARTE0)
+SERIAL_DEFINE(Serial4, E, 0);
+#endif
+
+#if defined(USARTE1)
+SERIAL_DEFINE(Serial5, E, 1);
+#endif
+
 
 #if 1
 // TODO: Move to diag.{c h}
 
 extern "C" void diag_ln() {
-    Serial1.println();
+    Serial2.println();
 }
 
 extern "C" void diag(const char* str) {
-    Serial1.print(str);
+    Serial2.print(str);
 }
 
 extern "C" void diagln(const char* str) {
@@ -227,11 +217,11 @@ extern "C" void diagln(const char* str) {
 }
 
 extern "C" void diagN(long n) {
-    Serial1.print(n);
+    Serial2.print(n);
 }
 
 extern "C" void diagN2(long n, int base) {
-    Serial1.print(n,base);
+    Serial2.print(n,base);
 }
 
 #endif
