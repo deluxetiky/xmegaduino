@@ -47,9 +47,11 @@ int analogRead12(uint8_t pin)
     ADC_t* adc;
     if ( pin < 8 ) {
         adc = &ADCA;
+#if defined(ADCB)
     } else if ( pin < 16 ) {
         adc = &ADCB;
         pin -= 8;
+#endif
     } else {
         return -1;
     }
@@ -108,8 +110,10 @@ const uint8_t PROGMEM timer_to_channel_register_PGM[] = {
     &TCE0.CCBBUF,
     &TCE0.CCCBUF,
     &TCE0.CCDBUF,
+#if defined(TCE1)
     &TCE1.CCABUF,
     &TCE1.CCBBUF,
+#endif
 };
 
 #define timerToChannelRegister(T) ( (volatile uint16_t *)( pgm_read_word( timer_to_channel_register_PGM + (T))) )

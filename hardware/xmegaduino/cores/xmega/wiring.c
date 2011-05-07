@@ -207,12 +207,14 @@ void init()
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTB.PIN0CTRL  = PULLDOWN;
 	PORTB.DIR       = 0;
-#if defined ADCBCAL0
+#if defined(ADCB) 
+#if defined ADCBCAL0 
 // TODO: Linux avr-gcc doesn't seem to declare CAL[LH]
         ADCB.CALL       = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCBCAL0) );
         ADCB.CALH       = ReadCalibrationByte( offsetof(NVM_PROD_SIGNATURES_t, ADCBCAL1) );
 #endif
         initAdc(&ADCB);
+#endif
 	
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTC.PIN0CTRL  = OUT_PULL_CONFIG;
@@ -223,8 +225,10 @@ void init()
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTE.PIN0CTRL  = OUT_PULL_CONFIG;
 
+#if defined(PORTF) 
 	PORTCFG.MPCMASK = 0xFF; //do this for all pins of the following command
 	PORTF.PIN0CTRL  = PULLUP;
+#endif
 
         /*************************************/
         /* Enable reset button               */
