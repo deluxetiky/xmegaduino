@@ -34,15 +34,13 @@ class HardwareSerial : public Print
     PORT_t      *_port;
     uint8_t     _in_bm;
     uint8_t     _out_bm;
-    uint8_t     _u2x;
   public:
     HardwareSerial(
         ring_buffer *rx_buffer,
         USART_t     *usart,
         PORT_t      *port,
         uint8_t     in_bm,
-        uint8_t     out_bm,
-        uint8_t     u2x);
+        uint8_t     out_bm);
     void begin(long);
     void end();
     uint8_t available(void);
@@ -55,11 +53,5 @@ class HardwareSerial : public Print
 extern HardwareSerial Serial;
 extern HardwareSerial Serial1;
 extern HardwareSerial Serial2;
-
-#if defined(__AVR_ATmega1280__)
-extern HardwareSerial Serial1;
-extern HardwareSerial Serial2;
-extern HardwareSerial Serial3;
-#endif
 
 #endif
